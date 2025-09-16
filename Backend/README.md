@@ -26,10 +26,10 @@ Backend/
     ├── conftest.py
     ├── test_auth_service.py
     └── test_users_service.py
-exit
+
 ---
 
-## 🛠️ Setup & Installation
+## 🛠️ **Setup & Installation**
 ### 1️⃣ Activate Virtual Environment
 ```bash
 source venv/bin/activate  # Linux/macOS
