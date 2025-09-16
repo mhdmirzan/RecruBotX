@@ -26,7 +26,7 @@ Backend/
     ├── conftest.py
     ├── test_auth_service.py
     └── test_users_service.py
-
+exit
 ---
 
 ## 🛠️ Setup & Installation
@@ -34,10 +34,12 @@ Backend/
 ```bash
 source venv/bin/activate  # Linux/macOS
 venv\Scripts\Activate     # Windows
+exit
 
 ### 2️⃣ Install Dependencies
 ```bash
 pip install -r requirements.txt
+exit
 
 ### 3️⃣ Environment Variables
 Create a .env file in the Backend/ folder and configure as needed (e.g., database URL, secret keys).
@@ -45,6 +47,7 @@ Create a .env file in the Backend/ folder and configure as needed (e.g., databas
 Start the FastAPI server with hot reload:
 ```bash
 uvicorn src.main:app --reload
+exit
 
 Then visit:
 
@@ -55,6 +58,7 @@ ReDoc UI: http://127.0.0.1:8000/redoc
 ### 5️⃣ Running Tests
 ```bash
 pytest
+exit
 
 ---
 
