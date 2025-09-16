@@ -63,17 +63,17 @@ pytest
 
 ## 🚀 Features
 
-FastAPI – High-performance Python web framework
-JWT Authentication – Secure login and token management
-SQLAlchemy ORM – Database modeling
-pytest – Testing framework
-Rate Limiting – Controlled API request handling
-Modular Structure – Organized code with src/ and tests/ directories
+- FastAPI – High-performance Python web framework
+- JWT Authentication – Secure login and token management
+- SQLAlchemy ORM – Database modeling
+- pytest – Testing framework
+- Rate Limiting – Controlled API request handling
+- Modular Structure – Organized code with src/ and tests/ directories
 
 ---
 
 ## 🧪 Notes
 
-The test.db file is used for local SQLite database storage.
-Refer to requirements-dev.txt for development dependencies.
-Customize .env based on your environment setup.
+- The test.db file is used for local SQLite database storage.
+- Refer to requirements-dev.txt for development dependencies.
+- Customize .env based on your environment setup.
