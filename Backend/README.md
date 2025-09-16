@@ -1,7 +1,9 @@
 RecruBotX Backend
 This is the backend service for RecruBotX, built using FastAPI. It handles authentication, database operations, API endpoints, and includes rate limiting functionality. Testing is managed with pytest.
 
-📂 Project Structure
+## 📂 Project Structure
+
+```bash
 Backend/
 ├── .gitignore
 ├── requirements-dev.txt
@@ -18,24 +20,26 @@ Backend/
 │   ├── main.py
 │   ├── rate_limiter.py
 └── tests/
-│   ├── __init__.py
-│   ├── conftest.py
-│   ├── test_auth_service.py
-│   └── test_users_service.py
+    ├── __init__.py
+    ├── conftest.py
+    ├── test_auth_service.py
+    └── test_users_service.py
 
-
-🛠️ Setup & Installation
+## 🛠️ Setup & Installation
 1️⃣ Activate Virtual Environment
+bash
 source venv/bin/activate  # Linux/macOS
 venv\Scripts\Activate     # Windows
 
 2️⃣ Install Dependencies
+bash
 pip install -r requirements.txt
 
 3️⃣ Environment Variables
 Create a .env file in the Backend/ folder and configure as needed (e.g., database URL, secret keys).
 4️⃣ Running the Backend
 Start the FastAPI server with hot reload:
+bash
 uvicorn src.main:app --reload
 
 Then visit:
@@ -45,6 +49,7 @@ Swagger UI: http://127.0.0.1:8000/docs
 ReDoc UI: http://127.0.0.1:8000/redoc
 
 5️⃣ Running Tests
+bash
 pytest
 
 
