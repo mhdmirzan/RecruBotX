@@ -1,5 +1,7 @@
 ## RecruBotX Backend
-This is the backend service for RecruBotX, built using FastAPI. It handles authentication, database operations, API endpoints, and includes rate limiting functionality. Testing is managed with pytest.
+- This is the backend service for RecruBotX, built using FastAPI.
+- It handles authentication, database operations, API endpoints, and includes rate limiting functionality.
+- Testing is managed with pytest.
 
 ---
 
