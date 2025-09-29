@@ -1,17 +1,13 @@
-test.db
-.env
-/.pytest_cache
-/.venv
-
-src/__pycache__/
-auth/__pycache__/
-entities/__pycache__/
-api/__pycache__/
-database/__pycache__/
-logging/__pycache__/
-tests/__pycache__/
+# Python-generated files
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
-*.sqlite3
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+venv
+.env
+cv

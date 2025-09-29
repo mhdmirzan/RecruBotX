@@ -1,81 +1,118 @@
-## RecruBotX Backend
-- This is the backend service for RecruBotX, built using FastAPI.
-- It handles authentication, database operations, API endpoints, and includes rate limiting functionality.
-- Testing is managed with pytest.
+# RecruBotX - AI Interviewer System
 
----
+A comprehensive AI-powered solution for screening CVs against job descriptions and conducting voice-based interview practice sessions.
 
-## 📂 Project Structure
+## Features
 
+### CV Screening
+- Extract and parse information from PDF CVs
+- Generate embeddings for CVs and job descriptions
+- Calculate similarity scores between CVs and job descriptions
+- Rank candidates based on relevance to job requirements
+
+### Interview Practice
+- Voice-based interview simulation
+- Multiple job role support (Software Engineer, Data Scientist, Product Manager, Marketing Manager)
+- Real-time speech-to-text transcription
+- AI-powered answer analysis with confidence scoring
+- Detailed feedback and suggestions for improvement
+
+## Tech Stack
+
+### Backend
+- **Framework**: FastAPI
+- **Database**: SQLAlchemy with SQLite/PostgreSQL
+- **AI/ML**:
+  - Sentence Transformers for text embeddings
+
+### Frontend
+- Interactive API documentation with Swagger UI
+- RESTful API endpoints for easy integration
+
+## Getting Started
+
+### Prerequisites
+- Python 3.8+
+- pip (Python package manager)
+
+### Installation
+
+1. Clone the repository:
+   ```bash
+   git clone <repository-url>
+   cd FYP
+   ```
+
+2. Create and activate a virtual environment:
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # On Windows: .\venv\Scripts\activate
+   ```
+
+3. Install dependencies:
+   ```bash
+   pip install uv
+   uv init
+   uv add -r requirements.txt
+   ```
+
+### Running the Application
+
+Start the FastAPI development server:
 ```bash
-Backend/
-├── .gitignore
-├── requirements-dev.txt
-├── requirements.txt
-├── src/
-│   ├── auth/
-│   ├── database/
-│   ├── entities/
-│   ├── users/
+uvicorn main:app --reload
+```
+
+The API will be available at `http://localhost:8000`
+
+## API Documentation
+
+Once the server is running, you can access the interactive API documentation at:
+- Swagger UI: `http://localhost:8000/docs`
+- ReDoc: `http://localhost:8000/redoc`
+
+## Usage
+
+### CV Screening Endpoints
+
+- `POST /api/v1/sceen-cvs/`: Upload CVs and do screening
+- `POST /api/v1/cv_results/{batch_id}`: Get CV results of certain batch
+- `POST /api/v1/cv_results/`: Get all CV results
+- `GET /api/v1/recommendations/`: Get CV recommendations
+
+
+
+## Project Structure
+
+```
+FYP/
+├── api/
 │   ├── __init__.py
-│   ├── api.py
-│   ├── exceptions.py
-│   ├── logging.py
-│   ├── main.py
-│   ├── rate_limiter.py
-└── tests/
-    ├── __init__.py
-    ├── conftest.py
-    ├── test_auth_service.py
-    └── test_users_service.py
+│   ├── cv_screener.py  # CV screening endpoints
+├── database/
+│   ├── __init__.py
+│   ├── db.py           # Database configuration
+│   └── cv_screener.py    # Database operations for interviews
+├── models/
+│   ├── __init__.py
+│   ├── cv_screener.py  # CV screening models
+├── utils/
+│   └── __init__.py
+├── main.py             # Main application entry point
+├── requirements.txt    # Project dependencies
+└── README.md           # This file
 ```
 
-## 🛠️ Setup & Installation
-### 1️⃣ Activate Virtual Environment
-```bash
-source venv/bin/activate  # Linux/macOS
-venv\Scripts\Activate     # Windows
-```
+## License
 
-### 2️⃣ Install Dependencies
-```bash
-pip install -r requirements.txt
-```
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-### 3️⃣ Environment Variables
-Create a .env file in the Backend/ folder and configure as needed (e.g., database URL, secret keys).
-### 4️⃣ Running the Backend
-Start the FastAPI server with hot reload:
-```bash
-uvicorn src.main:app --reload
-```
+## Acknowledgments
+- [FastAPI](https://fastapi.tiangolo.com/) - The web framework used
+- [Hugging Face](https://huggingface.co/) - For the transformer models
+- [PyTorch](https://pytorch.org/) - Deep learning framework
+- [SQLAlchemy](https://www.sqlalchemy.org/) - Database ORM
 
-Then visit:
+## Contact
 
-API Base URL: http://127.0.0.1:8000
-Swagger UI: http://127.0.0.1:8000/docs
-ReDoc UI: http://127.0.0.1:8000/redoc
-
-### 5️⃣ Running Tests
-```bash
-pytest
-```
-
----
-
-## 🚀 Features
-
-- FastAPI – High-performance Python web framework
-- JWT Authentication – Secure login and token management
-- SQLAlchemy ORM – Database modeling
-- pytest – Testing framework
-- Rate Limiting – Controlled API request handling
-- Modular Structure – Organized code with src/ and tests/ directories
-
----
-
-## 🧪 Notes
-
-- The test.db file is used for local SQLite database storage.
-- Refer to requirements-dev.txt for development dependencies.
-- Customize .env based on your environment setup.
+For any questions or suggestions, please open an issue or contact the project maintainers.
