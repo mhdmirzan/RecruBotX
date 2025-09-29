@@ -11,3 +11,4 @@ wheels/
 venv
 .env
 cv
+cv_screener/parsed_cv.json
