@@ -1,6 +1,7 @@
 from fastapi import APIRouter, File, UploadFile, Depends, HTTPException, Form
 from sqlalchemy.orm import Session
 from typing import List, Optional
+import json
 import os
 import shutil
 import tempfile
@@ -15,7 +16,8 @@ from cv_screener.pdf_parser import CVParser
 from groq import Groq
 
 # TODO: Add your Groq API key to your .env file and load it here
-client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
+_groq_api_key = os.environ.get("GROQ_API_KEY")
+client = Groq(api_key=_groq_api_key) if _groq_api_key else None
 
 router = APIRouter()
 
@@ -314,3 +316,197 @@ async def get_cv_recommendations(
                 os.remove(temp_file)
             except OSError:
                 pass  # File might already be deleted
+
+
+@router.post("/candidate/analyze-resume")
+async def analyze_candidate_resume(
+    cv_file: Optional[UploadFile] = File(default=None),
+    file: Optional[UploadFile] = File(default=None, alias="file"),
+    job_description_file: Optional[UploadFile] = File(default=None),
+    job_description_file_alt: Optional[UploadFile] = File(default=None, alias="job_description_upload"),
+    job_description_text: Optional[str] = Form(default=None),
+    job_description: Optional[str] = Form(default=None, alias="job_description")
+):
+    """Generate a rich analysis for a single candidate resume."""
+    actual_cv_file = cv_file or file
+    if actual_cv_file is None:
+        raise HTTPException(status_code=400, detail="A CV file is required under field name 'cv_file' or 'file'.")
+
+    if not actual_cv_file.filename.endswith(".pdf"):
+        raise HTTPException(status_code=400, detail="CV file must be a PDF file.")
+
+    has_job_file = (
+        (job_description_file or job_description_file_alt) is not None
+        and hasattr(job_description_file or job_description_file_alt, "filename")
+        and (job_description_file or job_description_file_alt).filename
+    )
+    has_job_text = (job_description_text or job_description) is not None and (job_description_text or job_description).strip()
+
+    if has_job_file and has_job_text:
+        raise HTTPException(
+            status_code=400,
+            detail="Provide either job_description_file or job_description_text, not both.",
+        )
+
+    if has_job_file and not (
+        (job_description_file or job_description_file_alt).filename.endswith(".pdf")
+        or (job_description_file or job_description_file_alt).filename.endswith(".txt")
+    ):
+        raise HTTPException(
+            status_code=400,
+            detail="Job description file must be a PDF or TXT file.",
+        )
+
+    if client is None:
+        raise HTTPException(
+            status_code=500,
+            detail="Groq API client is not configured. Set the GROQ_API_KEY environment variable.",
+        )
+
+    temp_files: List[str] = []
+
+    try:
+        cv_temp = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
+        shutil.copyfileobj(actual_cv_file.file, cv_temp)
+        cv_temp.close()
+        temp_files.append(cv_temp.name)
+
+        cv_parser = CVParser()
+        parsed_cv = cv_parser.parse_pdf(cv_temp.name)
+        cv_text = parsed_cv.full_text
+
+        jd_text = ""
+        job_description_source = "none"
+
+        effective_job_file = job_description_file or job_description_file_alt
+
+        if has_job_file and effective_job_file:
+            job_description_source = "file"
+            if effective_job_file.filename.endswith(".pdf"):
+                jd_temp = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
+                shutil.copyfileobj(effective_job_file.file, jd_temp)
+                jd_temp.close()
+                temp_files.append(jd_temp.name)
+
+                jd_parser = CVParser()
+                jd_parsed = jd_parser.parse_pdf(jd_temp.name)
+                jd_text = jd_parsed.full_text
+            else:
+                jd_bytes = await effective_job_file.read()
+                jd_text = jd_bytes.decode("utf-8")
+        elif has_job_text:
+            job_description_source = "text"
+            jd_text = (job_description_text or job_description).strip()
+
+        if jd_text:
+            prompt = f"""You are an expert career counselor and technical recruiter. Analyze the candidate's resume in context of the job description and provide a comprehensive, well-formatted analysis.
+
+**Job Description:**
+{jd_text}
+
+**Candidate Resume:**
+{cv_text}
+
+Please provide a detailed analysis with the following sections:
+
+📝 **PROFESSIONAL SUMMARY**
+Write a concise 2-3 sentence summary of the candidate's profile and experience.
+
+💪 **CORE STRENGTHS**
+List 5-7 key strengths that stand out in the resume:
+• Strength 1
+• Strength 2
+(etc.)
+
+✅ **JOB FIT ANALYSIS**
+Explain how well the candidate matches the job requirements. Mention specific skills and experiences that align.
+
+💼 **RECOMMENDED ROLES**
+Based on the resume, suggest 3-5 job titles the candidate would be suitable for:
+• Role 1
+• Role 2
+(etc.)
+
+📚 **SKILL GAPS & AREAS FOR IMPROVEMENT**
+Identify skills mentioned in the job description that are missing or could be strengthened in the resume:
+• Gap 1 - Suggestion for improvement
+• Gap 2 - Suggestion for improvement
+(etc.)
+
+🎯 **NEXT STEPS & RECOMMENDATIONS**
+Provide 4-5 actionable recommendations to improve the candidate's profile or chances:
+• Action 1
+• Action 2
+(etc.)
+
+Format the response in a clear, professional manner with proper spacing and bullet points."""
+        else:
+            prompt = f"""You are an expert career counselor. Analyze the candidate's resume and provide a comprehensive career development analysis.
+
+**Candidate Resume:**
+{cv_text}
+
+Please provide a detailed analysis with the following sections:
+
+📝 **PROFESSIONAL SUMMARY**
+Write a concise 2-3 sentence summary of the candidate's profile and experience.
+
+💪 **CORE STRENGTHS**
+List 5-7 key strengths that stand out in the resume:
+• Strength 1
+• Strength 2
+(etc.)
+
+💼 **RECOMMENDED CAREER PATHS**
+Based on the resume, suggest 3-5 job titles or career directions the candidate would be suitable for:
+• Role/Path 1
+• Role/Path 2
+(etc.)
+
+📚 **SKILLS TO DEVELOP**
+Identify skills the candidate should develop to advance their career:
+• Skill 1 - Why it's important
+• Skill 2 - Why it's important
+(etc.)
+
+🎯 **NEXT STEPS & RECOMMENDATIONS**
+Provide 4-5 actionable recommendations for career development:
+• Action 1
+• Action 2
+(etc.)
+
+Format the response in a clear, professional manner with proper spacing and bullet points."""
+
+        chat_completion = client.chat.completions.create(
+            messages=[
+                {"role": "user", "content": prompt},
+            ],
+            model="llama-3.1-8b-instant",
+        )
+
+        analysis_text = chat_completion.choices[0].message.content.strip()
+
+        # Return the formatted text directly
+        analysis = {
+            "formatted_analysis": analysis_text
+        }
+
+        return {
+            "message": "Candidate resume analyzed successfully",
+            "cv_filename": actual_cv_file.filename,
+            "job_description_source": job_description_source,
+            "analysis": analysis,
+        }
+
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(
+            status_code=500, detail=f"Error analyzing resume: {str(exc)}"
+        ) from exc
+    finally:
+        for temp_file in temp_files:
+            try:
+                os.remove(temp_file)
+            except OSError:
+                pass
