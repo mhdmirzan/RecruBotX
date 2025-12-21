@@ -1,0 +1,16 @@
+# Audio processing
+sounddevice>=0.4.6
+soundfile>=0.12.1
+deepgram-sdk>=3.0.0
+PyAudio>=0.2.13
+
+# Environment management
+python-dotenv>=1.0.0
+
+# API requests
+requests>=2.31.0
+
+# Google Generative AI
+google-generativeai>=0.3.0
+flet>=0.20.2
+reportlab>=3.6.12
