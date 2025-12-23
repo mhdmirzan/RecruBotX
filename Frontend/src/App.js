@@ -1,3 +1,4 @@
+// App.js
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
@@ -8,7 +9,7 @@ import Footer from "./components/Footer";
 import PricingPage from "./components/PricingPage";
 import HowItWorksPage from "./components/HowItWorksPage";
 
-// Home Page Components (all inside home folder)
+// Home
 import Hero from "./components/home/Hero";
 import WorkingProcess from "./components/home/WorkingProcess";
 import About from "./components/home/About";
@@ -18,89 +19,90 @@ import FAQ from "./components/home/FAQ";
 import Signup from "./components/home/Signup";
 import Reviews from "./components/home/Reviews";
 
-// ✅ Candidate Pages
+// Candidate
 import CandidatePage from "./CandidatePage";
 import CandidateDashboard from "./CandidateDashboard";
 import CandidateSettings from "./CandidateSettings";
-import CandidateApplication from "./CandidateApplication"; 
-import AnalyzeResume from "./analyze_resume"; // <-- ✅ Import your new page
+import CandidateApplication from "./CandidateApplication";
+import AnalyzeResume from "./analyze_resume";
+
+// Recruiter (HR)
+import RecruiterSignupPage from "./RecruiterSignupPage";
+import RecruiterDashboard from "./RecruiterDashboard";
+// import RecruiterSigninPage from "./RecruiterSigninPage"; // optional
+
+// Resume Builder Pages
+import ExperienceLevel from "./pages/ExperienceLevel";
+import TemplateSelect from "./pages/TemplateSelect";
+import ResumeSource from "./pages/ResumeSource";
+import ResumeBuilder from "./pages/ResumeBuilder";
 
 function App() {
   return (
     <Router>
-      <div className="font-sans bg-gray-50 text-gray-900">
-        <Navbar />
+      <Navbar />
 
-        <Routes>
-          {/* Homepage */}
-          <Route
-            path="/"
-            element={
-              <>
-                <Hero />
-                <WorkingProcess />
-                <About />
-                <Security />
-                <Stats />
-                <Reviews />
-                <FAQ />
-                <Footer />
-              </>
-            }
-          />
+      <Routes>
+        {/* ===== HOME ===== */}
+        <Route
+          path="/"
+          element={
+            <>
+              <Hero />
+              <WorkingProcess />
+              <About />
+              <Security />
+              <Stats />
+              <Reviews />
+              <FAQ />
+              <Footer />
+            </>
+          }
+        />
 
-          {/* Contact Page */}
-          <Route
-            path="/contact"
-            element={
-              <>
-                <Contact />
-                <Footer />
-              </>
-            }
-          />
+        <Route path="/contact" element={<><Contact /><Footer /></>} />
+        <Route path="/how-it-works" element={<><HowItWorksPage /><Footer /></>} />
+        <Route path="/pricing" element={<><PricingPage /><Footer /></>} />
+        <Route path="/signup" element={<Signup />} />
 
-          {/* How It Works Page */}
-          <Route
-            path="/how-it-works"
-            element={
-              <>
-                <HowItWorksPage />
-                <Footer />
-              </>
-            }
-          />
+        {/* ===== CANDIDATE ===== */}
+        <Route path="/candidate" element={<CandidatePage />} />
+        <Route path="/candidate/dashboard" element={<CandidateDashboard />} />
+        <Route path="/candidate/settings" element={<CandidateSettings />} />
+        <Route path="/candidate/application" element={<CandidateApplication />} />
+        <Route path="/candidate/analyze-resume" element={<AnalyzeResume />} />
 
-          {/* Pricing Page */}
-          <Route
-            path="/pricing"
-            element={
-              <>
-                <PricingPage />
-                <Footer />
-              </>
-            }
-          />
+        {/* ===== RESUME BUILDER FLOW ===== */}
+        <Route
+          path="/candidate/resume/experience-level"
+          element={<ExperienceLevel />}
+        />
+        <Route
+          path="/candidate/resume/choose-template"
+          element={<TemplateSelect />}
+        />
+        <Route
+          path="/candidate/resume/select-resume"
+          element={<ResumeSource />}
+        />
+        <Route
+          path="/candidate/resume/builder"
+          element={<ResumeBuilder />}
+        />
 
-          {/* Signup Page → redirects to dashboard on success */}
-          <Route path="/signup" element={<Signup />} />
+        {/* ===== RECRUITER (HR) ===== */}
+        <Route
+          path="/signup/recruiter"
+          element={<RecruiterSignupPage />}
+        />
 
-          {/* Candidate Auth Page */}
-          <Route path="/candidate" element={<CandidatePage />} />
+        <Route path="/recruiter/dashboard" element={<RecruiterDashboard />} />
 
-          {/* Candidate Dashboard */}
-          <Route path="/candidate/dashboard" element={<CandidateDashboard />} />
-
-          {/* Candidate Settings */}
-          <Route path="/candidate/settings" element={<CandidateSettings />} />
-
-          {/* Candidate Application */}
-          <Route path="/candidate/application" element={<CandidateApplication />} />
-
-          {/* ✅ Analyze Resume Page */}
-          <Route path="/candidate/analyze-resume" element={<AnalyzeResume />} />
-        </Routes>
-      </div>
+        {/*
+        Optional:
+        <Route path="/signin/recruiter" element={<RecruiterSigninPage />} />
+        */}
+      </Routes>
     </Router>
   );
 }

@@ -1,32 +1,12 @@
-fastapi
-uvicorn[standard]
-python-multipart
-pydantic
-psycopg2-binary
-sqlalchemy
-passlib
-python-jose[cryptography]
-pyjwt
-sentence-transformers
-python-dotenv
-torch
-torchaudio
-# Use a Py3.12/torch-friendly NumPy
-numpy
-pdfplumber
-groq
-# Satisfy coqui-tts (>=4.52.1,<4.56)
-transformers
-datasets
-accelerate
-# Use librosa >=0.11.0 (required by coqui-tts, no numba dependency)
-librosa
-soundfile
-# Pin coqui-tts release that depends on transformers >=4.52.1,<4.56
-coqui-tts
-speechrecognition
-pydub
-safetensors
-requests
-groq
-sentence-transformers
+fastapi>=0.104.0
+uvicorn>=0.24.0
+python-multipart>=0.0.6
+google-genai>=0.8.0
+python-dotenv>=1.0.0
+pydantic>=2.5.0
+PyPDF2>=3.0.0
+python-docx>=1.1.0
+aiofiles>=23.2.0
+motor>=3.3.0
+pymongo>=4.6.0
+dnspython>=2.3.0
