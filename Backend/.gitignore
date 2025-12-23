@@ -10,6 +10,12 @@ wheels/
 .venv
 cv
 cv_screener/parsed_cv.json
+uv
+
+
+vc_agent/output
+vc_agent/.vscode
+vc_agent/.venv
 .env
 
 # Virtual environment
