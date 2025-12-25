@@ -1,9 +1,9 @@
 import React from "react";
 import { Link } from "react-router-dom";   // 👈 Import Link for navigation
-import Img1 from "./2.jpg";
-import Img2 from "./4.jpeg";
-import Img3 from "./5.png";
-import Img4 from "./3.jpg";
+import Img1 from "../../assets/images/home/2.jpg";
+import Img2 from "../../assets/images/home/4.jpeg";
+import Img3 from "../../assets/images/home/5.png";
+import Img4 from "../../assets/images/home/3.jpg";
 
 const Hero = () => {
   return (

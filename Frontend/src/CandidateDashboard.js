@@ -1,9 +1,22 @@
-import React from "react";
-import { Bell, LogOut, Settings } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { LogOut, FileText, Mic, Search, Sparkles, LayoutDashboard, Cog } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
+import { getCurrentUser, logoutUser } from "./utils/userDatabase";
 
 const CandidateDashboard = () => {
   const navigate = useNavigate();
+  const [user, setUser] = useState(null);
+
+  // Get current user on component mount
+  useEffect(() => {
+    const currentUser = getCurrentUser();
+    if (!currentUser) {
+      // Redirect to login if not authenticated
+      navigate("/signin/candidate");
+    } else {
+      setUser(currentUser);
+    }
+  }, [navigate]);
 
   // ✅ Dynamic Date
   const today = new Date().toLocaleDateString("en-US", {
@@ -13,23 +26,10 @@ const CandidateDashboard = () => {
     year: "numeric",
   });
 
-  // ✅ Stats Data
-  const stats = [
-    { value: "83%", label: "Profile Complete", bg: "bg-yellow-100", text: "text-yellow-700" },
-    { value: "3", label: "Scheduled Interviews", bg: "bg-blue-100", text: "text-blue-700" },
-    { value: "91", label: "Practice Sessions", bg: "bg-pink-100", text: "text-pink-700" },
-    { value: "126", label: "Reports Generated", bg: "bg-purple-100", text: "text-purple-700" },
-  ];
-
-  // ✅ Activities Data
-  const activities = [
-    { title: "Interview Scheduled – AI Engineer", date: "March 5, 2025 – 3:00 PM", status: "Upcoming", color: "text-green-600" },
-    { title: "Practice Simulation Completed", date: "March 1, 2025", status: "Completed", color: "text-purple-600" },
-  ];
-
   // ✅ Logout Handler
   const handleLogout = () => {
-    navigate("/login");
+    logoutUser();
+    navigate("/signin/candidate");
   };
 
   // ✅ Start Interview Handler
@@ -39,116 +39,156 @@ const CandidateDashboard = () => {
 
   // ✅ CV Screening Handler
   const handleCVScreening = () => {
-    navigate("/candidate/analyze-resume"); // ✅ fixed route
+    navigate("/candidate/analyze-resume");
   };
 
-  // ✅ Reusable Stat Card
-  const StatCard = ({ value, label, bg, text }) => (
-    <div className={`${bg} p-6 rounded-xl shadow text-center`}>
-      <h3 className={`text-2xl font-bold ${text}`}>{value}</h3>
-      <p className="text-gray-700">{label}</p>
-    </div>
-  );
+  // ✅ Create Resume Handler
+  const handleCreateResume = () => {
+    navigate("/candidate/resume/experience-level");
+  };
+
+  // Show loading state while checking authentication
+  if (!user) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-gray-100">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Action cards data
+  const actionCards = [
+    {
+      id: "interview",
+      title: "Start Interview",
+      description: "Practice with AI-powered mock interviews tailored to your target role.",
+      icon: <Mic className="w-7 h-7 text-blue-600" />,
+      bgColor: "bg-blue-50",
+      hoverBgColor: "hover:bg-blue-100",
+      iconBg: "bg-blue-100",
+      textColor: "text-gray-800",
+      onClick: handleStartInterview,
+    },
+    {
+      id: "resume",
+      title: "Create Resume",
+      description: "Build a professional, ATS-friendly resume with AI assistance.",
+      icon: <FileText className="w-7 h-7 text-indigo-600" />,
+      bgColor: "bg-indigo-50",
+      hoverBgColor: "hover:bg-indigo-100",
+      iconBg: "bg-indigo-100",
+      textColor: "text-gray-800",
+      onClick: handleCreateResume,
+    },
+    {
+      id: "screening",
+      title: "CV Screening",
+      description: "Analyze your resume against specific job descriptions.",
+      icon: <Search className="w-7 h-7 text-sky-600" />,
+      bgColor: "bg-sky-50",
+      hoverBgColor: "hover:bg-sky-100",
+      iconBg: "bg-sky-100",
+      textColor: "text-gray-800",
+      onClick: handleCVScreening,
+    },
+  ];
 
   return (
-    <div className="min-h-screen flex bg-gray-100">
-      {/* Sidebar */}
-      <aside className="w-64 bg-white shadow-lg flex flex-col p-6">
-        <nav className="flex flex-col space-y-8 text-gray-700">
+    <div className="h-screen w-screen flex bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden fixed inset-0">
+      {/* Sidebar - Always Visible, No Scroll */}
+      <aside className="w-72 h-screen bg-white shadow-xl flex flex-col p-6 border-r border-gray-200 flex-shrink-0">
+        {/* User Profile Section */}
+        <div className="mb-6 text-center pb-6 border-b border-gray-200 flex-shrink-0">
+          <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4 text-white font-bold text-2xl shadow-lg overflow-hidden">
+            {user.profileImage ? (
+              <img src={user.profileImage} alt="Profile" className="w-full h-full object-cover" />
+            ) : (
+              <>{user.firstName?.charAt(0)}{user.lastName?.charAt(0)}</>
+            )}
+          </div>
+          <h3 className="font-bold text-gray-800 text-lg">{user.firstName} {user.lastName}</h3>
+          <p className="text-sm text-gray-500 mt-1">{user.email}</p>
+        </div>
+
+        <nav className="flex flex-col space-y-4 text-gray-700 flex-shrink-0">
           <NavLink
             to="/candidate/dashboard"
             className={({ isActive }) =>
-              `font-medium ${isActive ? "text-blue-600" : "text-gray-700 hover:text-blue-600"}`
+              `font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 ${isActive ? "bg-blue-50 text-blue-600" : "text-gray-700 hover:bg-gray-50 hover:text-blue-600"}`
             }
           >
-            🏠 Dashboard
+            <LayoutDashboard className="w-5 h-5" /> Dashboard
           </NavLink>
           <NavLink
             to="/candidate/settings"
             className={({ isActive }) =>
-              `font-medium ${isActive ? "text-blue-600" : "text-gray-700 hover:text-blue-600"}`
+              `font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 ${isActive ? "bg-blue-50 text-blue-600" : "text-gray-700 hover:bg-gray-50 hover:text-blue-600"}`
             }
           >
-            ⚙️ Settings
+            <Cog className="w-5 h-5" /> Settings
           </NavLink>
         </nav>
-        <div className="mt-auto">
+        
+        <div className="mt-auto flex-shrink-0">
           <button
             onClick={handleLogout}
-            className="flex items-center gap-2 bg-red-500 px-4 py-2 rounded-lg text-white hover:bg-red-600"
+            className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-red-500 to-red-600 px-4 py-3 rounded-xl text-white hover:from-red-600 hover:to-red-700 transition-all shadow-md"
           >
             <LogOut className="w-5 h-5" /> Logout
           </button>
         </div>
       </aside>
 
-      {/* Main Content */}
-      <main className="flex-1 p-10">
+      {/* Main Content - Non-scrollable */}
+      <main className="flex-1 h-screen flex flex-col overflow-hidden py-6 px-10">
+        {/* RecruBotX Logo */}
+        <div className="mb-6 flex-shrink-0">
+          <h1 className="text-3xl font-bold text-blue-600">RecruBotX</h1>
+        </div>
+
         {/* Top Header */}
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex justify-between items-center mb-3 flex-shrink-0">
           <div>
-            <h1 className="text-2xl font-bold text-gray-800">Dashboard</h1>
-            <p className="text-gray-500">{today}</p>
+            <h2 className="text-xl font-bold text-gray-800">Dashboard</h2>
+            <p className="text-gray-500 text-sm mt-1">{today}</p>
           </div>
-          <div className="flex items-center gap-6">
-            <Bell className="text-gray-600 w-6 h-6 cursor-pointer" />
-            <Settings className="text-gray-600 w-6 h-6 cursor-pointer hover:text-blue-600" />
-            <div className="bg-blue-100 text-blue-600 rounded-full w-10 h-10 flex items-center justify-center font-bold">
-              FN
+        </div>
+
+        {/* Welcome Banner */}
+        <div className="bg-gradient-to-r from-[#0a2a5e] to-[#1e4a8e] text-white rounded-2xl p-6 shadow-xl mb-4 flex items-center justify-between flex-shrink-0">
+          <div className="flex items-center gap-8">
+            <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm">
+              <Sparkles className="w-7 h-7 text-yellow-300" />
+            </div>
+            <div>
+              <h3 className="text-2xl font-bold">
+                Welcome back, {user.firstName}!
+              </h3>
+              <p className="mt-1 text-blue-100 text-sm">Ready to ace your next interview? Let's get started.</p>
             </div>
           </div>
+          
         </div>
 
-        {/* Welcome Section */}
-        <div className="bg-[#0a2a5e] text-white rounded-2xl p-8 flex justify-between items-center shadow-lg mb-10">
-          <div>
-            <h2 className="text-3xl font-bold">Hi, Fatima 👋</h2>
-            <p className="mt-2 text-lg">Ready to start your day with interviews?</p>
-
-            {/* Buttons */}
-            <div className="flex gap-4 mt-6">
-              <button
-                onClick={handleStartInterview}
-                className="bg-white text-[#0a2a5e] px-6 py-3 rounded-lg font-semibold shadow hover:bg-gray-100 transition"
-              >
-                Record Intro Video
-              </button>
-              <button
-                onClick={handleCVScreening}
-                className="bg-green-500 text-white px-6 py-3 rounded-lg font-semibold shadow hover:bg-green-600 transition"
-              >
-                CV Screening
-              </button>
-            </div>
-          </div>
-          <img
-            src="https://cdn-icons-png.flaticon.com/512/2922/2922510.png"
-            alt="Candidate"
-            className="w-28 h-28"
-          />
-        </div>
-
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
-          {stats.map((s, i) => (
-            <StatCard key={i} {...s} />
-          ))}
-        </div>
-
-        {/* Recent Activities */}
-        <div>
-          <h3 className="text-xl font-semibold text-gray-800 mb-4">Recent Activities</h3>
-          {activities.map((activity, index) => (
-            <div
-              key={index}
-              className="bg-white p-6 rounded-xl shadow mb-4 flex justify-between items-center"
+        {/* Action Cards - Light background design */}
+        <div className="grid grid-cols-3 gap-10 flex-1 my-8">
+          {actionCards.map((card) => (
+            <button
+              key={card.id}
+              onClick={card.onClick}
+              className={`${card.bgColor} ${card.hoverBgColor} border border-gray-200
+                rounded-2xl p-10 shadow-sm hover:shadow-lg transition-all duration-300 
+                transform hover:scale-[1.02] flex flex-col items-center justify-center text-center cursor-pointer group`}
             >
-              <div>
-                <h4 className="font-bold text-gray-800">{activity.title}</h4>
-                <p className="text-gray-500 text-sm">{activity.date}</p>
+              <div className={`w-14 h-14 ${card.iconBg} rounded-2xl flex items-center justify-center mb-5 transition-transform duration-300 group-hover:scale-110`}>
+                {card.icon}
               </div>
-              <span className={`${activity.color} font-medium`}>{activity.status}</span>
-            </div>
+              <h3 className={`text-xl font-bold mb-2 ${card.textColor}`}>{card.title}</h3>
+              <p className="text-gray-600 text-sm leading-relaxed">{card.description}</p>
+            </button>
           ))}
         </div>
       </main>

@@ -418,3 +418,140 @@ async def clear_all(db=Depends(get_database)):
     await db.screening_batches.delete_many({})
     
     return {"message": "All data cleared successfully"}
+
+
+# ==================== User Authentication ====================
+
+class UserRegisterRequest(BaseModel):
+    firstName: str
+    lastName: str
+    email: str
+    password: str
+
+
+class UserLoginRequest(BaseModel):
+    email: str
+    password: str
+
+
+class UserResponse(BaseModel):
+    id: str
+    firstName: str
+    lastName: str
+    email: str
+    createdAt: str
+    isActive: bool
+
+
+@router.post("/auth/register", response_model=dict)
+async def register_user(
+    user_data: UserRegisterRequest,
+    db=Depends(get_database)
+):
+    """Register a new candidate user."""
+    # Check database connection
+    if db is None:
+        raise HTTPException(
+            status_code=503,
+            detail="Database connection unavailable. MongoDB is not connected. Please check DNS settings or use a standard connection string."
+        )
+    
+    # Check if user already exists
+    existing_user = await crud.get_user_by_email(db, user_data.email)
+    if existing_user:
+        raise HTTPException(
+            status_code=400,
+            detail="User already exists with this email"
+        )
+    
+    # Create new user
+    user_id = await crud.create_candidate_user(
+        db,
+        user_data.firstName,
+        user_data.lastName,
+        user_data.email,
+        user_data.password  # In production, hash this!
+    )
+    
+    # Get created user
+    user = await crud.get_user_by_id(db, user_id)
+    
+    return {
+        "success": True,
+        "message": "User registered successfully",
+        "user": {
+            "id": user["_id"],
+            "firstName": user["first_name"],
+            "lastName": user["last_name"],
+            "email": user["email"],
+            "createdAt": user["created_at"].isoformat(),
+            "isActive": user["is_active"]
+        }
+    }
+
+
+@router.post("/auth/login", response_model=dict)
+async def login_user(
+    login_data: UserLoginRequest,
+    db=Depends(get_database)
+):
+    """Login a candidate user."""
+    # Check database connection
+    if db is None:
+        raise HTTPException(
+            status_code=503,
+            detail="Database connection unavailable. MongoDB is not connected."
+        )
+    
+    # Get user by email
+    user = await crud.get_user_by_email(db, login_data.email)
+    
+    if not user:
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid email or password"
+        )
+    
+    # Check password (in production, use bcrypt to compare hashed passwords)
+    if user["password"] != login_data.password:
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid email or password"
+        )
+    
+    # Check if user is active
+    if not user.get("is_active", True):
+        raise HTTPException(
+            status_code=403,
+            detail="User account is inactive"
+        )
+    
+    return {
+        "success": True,
+        "message": "Login successful",
+        "user": {
+            "id": user["_id"],
+            "firstName": user["first_name"],
+            "lastName": user["last_name"],
+            "email": user["email"],
+            "createdAt": user["created_at"].isoformat(),
+            "isActive": user["is_active"]
+        }
+    }
+
+
+@router.get("/auth/users", response_model=List[dict])
+async def get_all_users(db=Depends(get_database)):
+    """Get all registered users (admin endpoint)."""
+    users = await crud.get_all_users(db)
+    return [
+        {
+            "id": user["_id"],
+            "firstName": user["first_name"],
+            "lastName": user["last_name"],
+            "email": user["email"],
+            "createdAt": user["created_at"].isoformat(),
+            "isActive": user["is_active"]
+        }
+        for user in users
+    ]

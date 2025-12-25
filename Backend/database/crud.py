@@ -250,3 +250,74 @@ async def get_statistics(db: AsyncIOMotorDatabase) -> Dict[str, Any]:
         "total_cvs": total_cvs,
         "total_screenings": total_screenings
     }
+
+
+# ==================== Candidate Users ====================
+
+async def create_candidate_user(
+    db: AsyncIOMotorDatabase,
+    first_name: str,
+    last_name: str,
+    email: str,
+    password: str
+) -> str:
+    """Create a new candidate user."""
+    user = {
+        "first_name": first_name,
+        "last_name": last_name,
+        "email": email.lower(),
+        "password": password,  # In production, hash this with bcrypt
+        "created_at": datetime.utcnow(),
+        "updated_at": datetime.utcnow(),
+        "is_active": True
+    }
+    result = await db.candidate_users.insert_one(user)
+    return str(result.inserted_id)
+
+
+async def get_user_by_email(
+    db: AsyncIOMotorDatabase,
+    email: str
+) -> Optional[Dict[str, Any]]:
+    """Get a user by email."""
+    user = await db.candidate_users.find_one({"email": email.lower()})
+    if user:
+        user["_id"] = str(user["_id"])
+    return user
+
+
+async def get_user_by_id(
+    db: AsyncIOMotorDatabase,
+    user_id: str
+) -> Optional[Dict[str, Any]]:
+    """Get a user by ID."""
+    user = await db.candidate_users.find_one({"_id": ObjectId(user_id)})
+    if user:
+        user["_id"] = str(user["_id"])
+    return user
+
+
+async def get_all_users(
+    db: AsyncIOMotorDatabase
+) -> List[Dict[str, Any]]:
+    """Get all candidate users."""
+    users = []
+    cursor = db.candidate_users.find({})
+    async for user in cursor:
+        user["_id"] = str(user["_id"])
+        users.append(user)
+    return users
+
+
+async def update_user(
+    db: AsyncIOMotorDatabase,
+    user_id: str,
+    update_data: Dict[str, Any]
+) -> bool:
+    """Update user information."""
+    update_data["updated_at"] = datetime.utcnow()
+    result = await db.candidate_users.update_one(
+        {"_id": ObjectId(user_id)},
+        {"$set": update_data}
+    )
+    return result.modified_count > 0

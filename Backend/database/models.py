@@ -126,3 +126,22 @@ class ScreeningBatchModel(BaseModel):
         json_encoders={ObjectId: str},
         populate_by_name=True,
     )
+
+
+class CandidateUserModel(BaseModel):
+    """Candidate user account model."""
+    
+    id: Optional[PyObjectId] = Field(alias="_id", default=None)
+    first_name: str
+    last_name: str
+    email: str
+    password: str  # Should be hashed in production
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    is_active: bool = True
+    
+    model_config = ConfigDict(
+        arbitrary_types_allowed=True,
+        json_encoders={ObjectId: str},
+        populate_by_name=True,
+    )
