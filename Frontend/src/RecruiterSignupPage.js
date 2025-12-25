@@ -11,7 +11,7 @@ import {
   CheckCircle,
   Briefcase
 } from "lucide-react";
-import recruiterHero from "./image1.jpg"; // you can change image later
+import recruiterHero from "./assets/images/general/image1.jpg"; // you can change image later
 
 const RecruiterSignupPage = () => {
   const navigate = useNavigate();

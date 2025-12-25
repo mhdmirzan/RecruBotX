@@ -1,5 +1,5 @@
 import React from "react";
-import teamImage from "./Rectangle 95.png";
+import teamImage from "../../assets/images/home/Rectangle-95.png";
 
 const About = () => {
   return (

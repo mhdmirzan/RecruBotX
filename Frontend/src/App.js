@@ -21,6 +21,7 @@ import Reviews from "./components/home/Reviews";
 
 // Candidate
 import CandidatePage from "./CandidatePage";
+import CandidateLoginPage from "./CandidateLoginPage";
 import CandidateDashboard from "./CandidateDashboard";
 import CandidateSettings from "./CandidateSettings";
 import CandidateApplication from "./CandidateApplication";
@@ -36,6 +37,12 @@ import ExperienceLevel from "./pages/ExperienceLevel";
 import TemplateSelect from "./pages/TemplateSelect";
 import ResumeSource from "./pages/ResumeSource";
 import ResumeBuilder from "./pages/ResumeBuilder";
+
+// Initialize user database
+import { initializeDummyUsers } from "./utils/userDatabase";
+
+// Initialize dummy users on app load
+initializeDummyUsers();
 
 function App() {
   return (
@@ -67,6 +74,7 @@ function App() {
 
         {/* ===== CANDIDATE ===== */}
         <Route path="/candidate" element={<CandidatePage />} />
+        <Route path="/signin/candidate" element={<CandidateLoginPage />} />
         <Route path="/candidate/dashboard" element={<CandidateDashboard />} />
         <Route path="/candidate/settings" element={<CandidateSettings />} />
         <Route path="/candidate/application" element={<CandidateApplication />} />

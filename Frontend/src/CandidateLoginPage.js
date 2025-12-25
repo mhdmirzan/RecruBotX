@@ -2,35 +2,29 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { 
-  User, 
   Mail, 
   Lock, 
   Eye, 
   EyeOff,
   ArrowRight,
   CheckCircle,
-  Play,
   Users
 } from "lucide-react";
+import { loginUser } from "./utils/userDatabase";
 import image1 from "./assets/images/general/image1.jpg";
-import { registerUser } from "./utils/userDatabase";
 
-const CandidateSignupPage = () => {
-  const navigate = useNavigate(); // ✅ for redirect after signup
+const CandidateLoginPage = () => {
+  const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
     email: "",
     password: "",
-    confirmPassword: "",
-    agreeToTerms: false,
+    rememberMe: false,
   });
 
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const fadeInUp = {
     initial: { opacity: 0, y: 20 },
@@ -50,31 +44,15 @@ const CandidateSignupPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-
-    if (formData.password !== formData.confirmPassword) {
-      setError("Passwords don't match");
-      return;
-    }
-    if (!formData.agreeToTerms) {
-      setError("Please agree to the terms and conditions.");
-      return;
-    }
-
     setIsLoading(true);
 
-    // Register user in MongoDB database
-    const result = await registerUser({
-      firstName: formData.firstName,
-      lastName: formData.lastName,
-      email: formData.email,
-      password: formData.password,
-    });
-
+    // Login user
+    const result = await loginUser(formData.email, formData.password);
+    
     setIsLoading(false);
 
     if (result.success) {
-      alert(`Account created successfully! Welcome, ${result.user.firstName}!`);
-      // Redirect to Candidate Dashboard
+      alert(`Welcome back, ${result.user.firstName}!`);
       navigate("/candidate/dashboard");
     } else {
       setError(result.message);
@@ -94,7 +72,7 @@ const CandidateSignupPage = () => {
     <div className="h-screen bg-gray-50 flex overflow-hidden">
       <div className="grid grid-cols-1 lg:grid-cols-2 w-full h-full">
         
-        {/* Left Side - Signup Form */}
+        {/* Left Side - Login Form */}
         <div className="flex items-center justify-center p-6 lg:p-12 h-full">
           <motion.div 
             className="w-full max-w-md bg-white shadow-lg rounded-2xl p-8"
@@ -105,10 +83,10 @@ const CandidateSignupPage = () => {
                 <Users className="w-8 h-8 text-white" />
               </div>
               <h1 className="text-2xl font-bold text-gray-800 mb-2">
-                Join as Candidate
+                Welcome Back
               </h1>
               <p className="text-gray-500">
-                Start practicing interviews with AI and land your dream job
+                Sign in to continue your interview practice journey
               </p>
             </div>
 
@@ -119,29 +97,6 @@ const CandidateSignupPage = () => {
             )}
 
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Name Fields */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                  <input
-                    name="firstName"
-                    value={formData.firstName}
-                    onChange={handleInputChange}
-                    placeholder="First Name"
-                    className="w-full border rounded-lg px-10 py-2 focus:ring focus:ring-blue-200"
-                    required
-                  />
-                </div>
-                <input
-                  name="lastName"
-                  value={formData.lastName}
-                  onChange={handleInputChange}
-                  placeholder="Last Name"
-                  className="w-full border rounded-lg px-4 py-2 focus:ring focus:ring-blue-200"
-                  required
-                />
-              </div>
-
               {/* Email */}
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -177,46 +132,23 @@ const CandidateSignupPage = () => {
                 </button>
               </div>
 
-              {/* Confirm Password */}
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input
-                  type={showConfirmPassword ? "text" : "password"}
-                  name="confirmPassword"
-                  value={formData.confirmPassword}
-                  onChange={handleInputChange}
-                  placeholder="Confirm Password"
-                  className="w-full border rounded-lg px-10 py-2 pr-10 focus:ring focus:ring-blue-200"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                >
-                  {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
-              </div>
-
-              {/* Terms */}
-              <div className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  name="agreeToTerms"
-                  checked={formData.agreeToTerms}
-                  onChange={handleInputChange}
-                  className="h-4 w-4"
-                />
-                <label className="text-sm text-gray-600">
-                  I agree to the{" "}
-                  <Link to="/terms" className="text-blue-600 hover:underline">
-                    Terms of Service
-                  </Link>{" "}
-                  and{" "}
-                  <Link to="/privacy" className="text-blue-600 hover:underline">
-                    Privacy Policy
-                  </Link>
-                </label>
+              {/* Remember Me & Forgot Password */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    name="rememberMe"
+                    checked={formData.rememberMe}
+                    onChange={handleInputChange}
+                    className="h-4 w-4"
+                  />
+                  <label className="text-sm text-gray-600">
+                    Remember me
+                  </label>
+                </div>
+                <Link to="/forgot-password" className="text-sm text-blue-600 hover:underline">
+                  Forgot Password?
+                </Link>
               </div>
 
               {/* Submit */}
@@ -225,22 +157,29 @@ const CandidateSignupPage = () => {
                 disabled={isLoading}
                 className="w-full bg-blue-600 text-white py-2 rounded-lg font-medium hover:bg-blue-700 flex items-center justify-center disabled:bg-gray-400 disabled:cursor-not-allowed"
               >
-                {isLoading ? "Creating Account..." : "Create Account"}
+                {isLoading ? "Signing In..." : "Sign In"}
                 {!isLoading && <ArrowRight className="ml-2 w-4 h-4" />}
               </button>
             </form>
 
+            {/* Demo Credentials */}
+            <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-xs font-semibold text-blue-800 mb-1">Demo Credentials:</p>
+              <p className="text-xs text-blue-700">Create an account to test!</p>
+              <p className="text-xs text-gray-600 mt-1">User data is stored in MongoDB</p>
+            </div>
+
             <p className="text-center text-sm text-gray-500 mt-6">
-              Already have an account?{" "}
-              <Link to="/signin/candidate" className="text-blue-600 hover:underline font-medium">
-                Sign in here
+              Don't have an account?{" "}
+              <Link to="/candidate" className="text-blue-600 hover:underline font-medium">
+                Sign up here
               </Link>
             </p>
           </motion.div>
         </div>
 
         {/* Right Side - Benefits */}
-        <div className="hidden lg:flex bg-gradient-to-br from-blue-50 to-indigo-100 items-center justify-center p-6 lg:p-12 lg:sticky lg:top-0 lg:h-screen">
+        <div className="hidden lg:flex bg-gradient-to-br from-blue-50 to-indigo-100 items-center justify-center p-6 lg:p-12 h-full">
           <motion.div 
             className="w-full max-w-lg text-center"
             initial={{ opacity: 0, x: 50 }}
@@ -276,14 +215,6 @@ const CandidateSignupPage = () => {
                 </motion.div>
               ))}
             </div>
-
-            <Link
-              to="/demo"
-              className="inline-flex items-center px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100"
-            >
-              <Play className="mr-2 w-4 h-4" />
-              Watch Demo
-            </Link>
           </motion.div>
         </div>
       </div>
@@ -291,4 +222,4 @@ const CandidateSignupPage = () => {
   );
 };
 
-export default CandidateSignupPage;
+export default CandidateLoginPage;

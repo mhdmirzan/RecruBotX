@@ -1,6 +1,6 @@
 // src/components/Security.jsx
 import React from "react";
-import bgImage from "./background.png";
+import bgImage from "../../assets/images/home/background.png";
 
 
 const Security = () => {
