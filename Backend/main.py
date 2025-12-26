@@ -1,25 +1,96 @@
+"""
+CV Screener Backend - Main Application
+Uses Gemini 2.5 Flash for CV screening against Job Descriptions
+Integrated with MongoDB for data persistence
+"""
+
+import os
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from dotenv import load_dotenv
 
-from database.db import engine
-from models.cv_screener import Base
-from api.cv_screener import router as cv_screener_router
+from api.routes import router as api_router
+from database.connection import db_manager
 
-# Delete database tables
-Base.metadata.drop_all(bind=engine)
+# Load environment variables
+load_dotenv()
 
-# Create database tables
-Base.metadata.create_all(bind=engine)
-
+# Create FastAPI app
 app = FastAPI(
-    title="CV Screening API",
-    description="An API for screening CVs against job descriptions using AI-powered similarity matching",
-    version="1.0.0"
+    title="RecruBotX CV Screener API",
+    description="API for screening CVs against Job Descriptions using Gemini 2.5 Flash and MongoDB",
+    version="2.0.0"
 )
 
-# Include routers
-app.include_router(cv_screener_router, prefix="/api/v1", tags=["CV Screening"])
+# Configure CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+    allow_headers=["*"],
+    expose_headers=["*"],
+)
+
+# Include API routes
+app.include_router(api_router, prefix="/api/v1")
+
+
+@app.on_event("startup")
+async def startup_event():
+    """Initialize database connection on startup."""
+    strict_startup = os.getenv("MONGODB_STRICT_STARTUP", "true").lower() in {
+        "1",
+        "true",
+        "yes",
+        "y",
+        "on",
+    }
+    try:
+        await db_manager.connect()
+    except Exception:
+        if strict_startup:
+            raise
+        # Allow app to boot so /health can report the failure.
+        print("! Continuing without MongoDB (MONGODB_STRICT_STARTUP=false)")
+
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Close database connection on shutdown."""
+    await db_manager.disconnect()
+
 
 @app.get("/")
-def read_root():
-    return {"message": "Welcome to the CV Screening API"}
+async def root():
+    return {
+        "message": "RecruBotX CV Screener API",
+        "version": "2.0.0",
+        "status": "running",
+        "database": "MongoDB"
+    }
 
+
+@app.get("/health")
+async def health_check():
+    """Health check endpoint."""
+    try:
+        # Check database connection
+        await db_manager.client.admin.command('ping')
+        db_status = "connected"
+    except Exception:
+        db_status = "disconnected"
+    
+    return {
+        "status": "healthy",
+        "database": db_status
+    }
+
+
+if __name__ == "__main__":
+    import uvicorn
+    
+    host = os.getenv("HOST", "0.0.0.0")
+    port = int(os.getenv("PORT", 8000))
+    
+    uvicorn.run("main:app", host=host, port=port, reload=True)
