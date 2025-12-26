@@ -1,7 +1,19 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 const Navbar = () => {
+  const location = useLocation();
+
+  // Hide navbar on candidate dashboard pages
+  if (
+    location.pathname === "/candidate/dashboard" ||
+    location.pathname === "/candidate/analyze-resume" ||
+    location.pathname === "/candidate/settings" ||
+    location.pathname === "/candidate/application"
+  ) {
+    return null;
+  }
+
   return (
     <nav className="bg-white shadow-md">
       <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">

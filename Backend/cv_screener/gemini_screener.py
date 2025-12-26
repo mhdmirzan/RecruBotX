@@ -15,20 +15,19 @@ Key Features:
 - Multi-candidate comparison and ranking
 
 Author: RecruBotX Team
-Version: 1.0.0
+Version: 2.0.0
 """
 
 import os
 import json
 import re
+import asyncio
 from pathlib import Path
 from typing import Dict, Any, List, Optional
-from google import genai
-from google.genai import types
+import google.generativeai as genai
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
-# Try to find .env in Backend directory or parent directories
 env_path = Path(__file__).resolve().parent.parent / ".env"
 if env_path.exists():
     load_dotenv(dotenv_path=env_path)
@@ -40,24 +39,12 @@ class GeminiCVScreener:
     """
     AI-Powered CV Screening System
     
-    This class uses Google's Gemini 2.5 Flash model to analyze and score
+    This class uses Google's Gemini model to analyze and score
     candidate CVs against job descriptions.
-    
-    Attributes:
-        model: Gemini AI model instance
-        screening_prompt: Template for CV analysis
-    
-    Raises:
-        ValueError: If GEMINI_API_KEY is not found in environment variables
-    
-    Example:
-        screener = GeminiCVScreener()
-        result = await screener.screen_cv(job_desc, cv_content, "resume.pdf")
-        print(f"Score: {result['overall_score']}")
     """
     
-    # Gemini model identifier
-    MODEL_NAME = "gemini-2.5-flash-preview-05-20"
+    # Gemini model identifier - using stable model
+    MODEL_NAME = "gemini-2.5-flash"
     
     def __init__(self, api_key: Optional[str] = None):
         """
@@ -65,18 +52,73 @@ class GeminiCVScreener:
         
         Args:
             api_key: Optional API key. If not provided, reads from environment.
-        
-        Raises:
-            ValueError: If API key is not found
         """
         # Get API key from parameter or environment
-        api_key = api_key or os.getenv("GEMINI_API_KEY")
+        self.api_key = api_key or os.getenv("GEMINI_API_KEY")
         
-        if not api_key:
+        if not self.api_key:
             raise ValueError(
                 "GEMINI_API_KEY not found. Please set it in .env file or pass as parameter."
             )
         
+        # Configure the Gemini API
+        genai.configure(api_key=self.api_key)
+        
+        # Create the model
+        self.model = genai.GenerativeModel(
+            model_name=self.MODEL_NAME,
+            generation_config={
+                "temperature": 0.1,
+                "top_p": 0.95,
+                "top_k": 40,
+                "max_output_tokens": 8192,
+            }
+        )
+        
+        self.screening_prompt = """
+You are an elite HR recruiter, talent acquisition specialist, and career strategist with 20+ years of experience. Your task is to perform a comprehensive CV/resume analysis against a job description and provide professional, actionable feedback.
+
+## JOB DESCRIPTION TO MATCH AGAINST:
+{job_description}
+
+## CANDIDATE'S CV/RESUME:
+{cv_content}
+
+## YOUR MISSION:
+Conduct a thorough analysis comparing the candidate's qualifications against the job requirements. Evaluate skills alignment, experience relevance, and overall fit. Provide specific, actionable insights.
+
+## REQUIRED OUTPUT FORMAT (Return ONLY valid JSON - no markdown, no code blocks, no extra text):
+{{
+    "candidate_name": "Extract the candidate's full name from CV",
+    "overall_score": <integer 0-100>,
+    "skills_match": <integer 0-100>,
+    "experience_match": <integer 0-100>,
+    "education_match": <integer 0-100>,
+    "strengths": [
+        "Specific strength 1 that directly matches a JD requirement",
+        "Specific strength 2 highlighting a key skill or achievement",
+        "Specific strength 3 showing unique value proposition",
+        "Specific strength 4 demonstrating relevant experience",
+        "Specific strength 5 highlighting a competitive advantage"
+    ],
+    "weaknesses": [
+        "Specific gap 1 with actionable details - e.g., 'Missing Java Spring Boot experience (3+ years required) - consider taking online courses or certifications'",
+        "Specific gap 2 with improvement path - e.g., 'No cloud deployment experience mentioned - suggest learning AWS/Azure fundamentals and deploying sample projects'",
+        "Specific gap 3 with precise requirements - e.g., 'PMP certification not present but required for the role - recommend pursuing this credential'",
+        "Specific gap 4 with development plan - e.g., 'Limited team leadership experience (managed 2 people vs 5+ required) - seek opportunities to lead larger teams or cross-functional projects'"
+    ],
+    "recommendation": "Strongly Recommend OR Recommend OR Consider OR Not Recommended",
+    "summary": "2-3 sentence executive summary explaining the overall fit and key recommendation."
+}}
+
+## SCORING RUBRIC:
+- 90-100: Exceptional match - exceeds all major requirements
+- 75-89: Strong match - meets most key requirements
+- 60-74: Moderate match - meets core requirements but has gaps
+- 40-59: Below average - missing several key requirements
+- 0-39: Poor fit - fundamental misalignment with role
+
+Be SPECIFIC, OBJECTIVE, and CONSTRUCTIVE. Reference actual skills from the CV.
         # Create an async client (Google Gen AI SDK)
         # Docs: https://googleapis.github.io/python-genai/
         self.client = genai.Client(api_key=api_key).aio
@@ -163,14 +205,13 @@ Be fair, objective, and base your assessment solely on the information provided.
         )
         
         try:
-            response = await self.client.models.generate_content(
-                model=self.MODEL_NAME,
-                contents=prompt,
-                config=types.GenerateContentConfig(
-                    temperature=0,
-                    response_mime_type="application/json",
-                ),
+            # Run the synchronous API call in a thread pool
+            loop = asyncio.get_event_loop()
+            response = await loop.run_in_executor(
+                None,
+                lambda: self.model.generate_content(prompt)
             )
+            
             result_text = (response.text or "").strip()
             
             # Clean up the response - remove markdown code blocks if present
@@ -188,7 +229,7 @@ Be fair, objective, and base your assessment solely on the information provided.
                 if json_match:
                     result = json.loads(json_match.group())
                 else:
-                    raise ValueError("Could not parse JSON from response")
+                    raise ValueError(f"Could not parse JSON from response: {result_text[:200]}")
             
             # Add file name to result
             result["file_name"] = file_name
@@ -207,6 +248,8 @@ Be fair, objective, and base your assessment solely on the information provided.
             return result
             
         except Exception as e:
+            error_msg = str(e)
+            print(f"Error analyzing CV: {error_msg}")
             return {
                 "candidate_name": "Unknown",
                 "file_name": file_name,
@@ -215,9 +258,9 @@ Be fair, objective, and base your assessment solely on the information provided.
                 "experience_match": 0,
                 "education_match": 0,
                 "strengths": [],
-                "weaknesses": ["Error processing CV"],
-                "recommendation": "Error",
-                "summary": f"Error during screening: {str(e)}"
+                "weaknesses": [f"Error during analysis: {error_msg}"],
+                "recommendation": "Unable to Evaluate",
+                "summary": f"An error occurred during CV analysis: {error_msg}. Please try again or contact support if the issue persists."
             }
 
     async def compare_candidates(
@@ -267,10 +310,10 @@ Provide a 3-4 sentence summary comparing the top candidates and your hiring reco
 """
         
         try:
-            response = await self.client.models.generate_content(
-                model=self.MODEL_NAME,
-                contents=comparison_prompt,
-                config=types.GenerateContentConfig(temperature=0),
+            loop = asyncio.get_event_loop()
+            response = await loop.run_in_executor(
+                None,
+                lambda: self.model.generate_content(comparison_prompt)
             )
             
             return {
