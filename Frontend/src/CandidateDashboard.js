@@ -100,17 +100,10 @@ const CandidateDashboard = () => {
     <div className="h-screen w-screen flex bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden fixed inset-0">
       {/* Sidebar - Always Visible, No Scroll */}
       <aside className="w-72 h-screen bg-white shadow-xl flex flex-col p-6 border-r border-gray-200 flex-shrink-0">
-        {/* User Profile Section */}
-        <div className="mb-6 text-center pb-6 border-b border-gray-200 flex-shrink-0">
-          <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4 text-white font-bold text-2xl shadow-lg overflow-hidden">
-            {user.profileImage ? (
-              <img src={user.profileImage} alt="Profile" className="w-full h-full object-cover" />
-            ) : (
-              <>{user.firstName?.charAt(0)}{user.lastName?.charAt(0)}</>
-            )}
-          </div>
-          <h3 className="font-bold text-gray-800 text-lg">{user.firstName} {user.lastName}</h3>
-          <p className="text-sm text-gray-500 mt-1">{user.email}</p>
+
+        {/* Logo */}
+        <div className="mb-8 text-center flex-shrink-0">
+          <h1 className="text-3xl font-bold text-blue-600">RecruBotX</h1>
         </div>
 
         <nav className="flex flex-col space-y-4 text-gray-700 flex-shrink-0">
@@ -131,8 +124,22 @@ const CandidateDashboard = () => {
             <Cog className="w-5 h-5" /> Settings
           </NavLink>
         </nav>
-        
+
+        {/* Bottom Section */}
         <div className="mt-auto flex-shrink-0">
+          {/* User Profile Section */}
+          <div className="mb-4 text-center pb-4 border-b border-gray-200">
+            <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4 text-white font-bold text-2xl shadow-lg overflow-hidden">
+              {user.profileImage ? (
+                <img src={user.profileImage} alt="Profile" className="w-full h-full object-cover" />
+              ) : (
+                <>{user.firstName?.charAt(0)}{user.lastName?.charAt(0)}</>
+              )}
+            </div>
+            <h3 className="font-bold text-gray-800 text-lg">{user.firstName} {user.lastName}</h3>
+            <p className="text-sm text-gray-500 mt-1">{user.email}</p>
+          </div>
+
           <button
             onClick={handleLogout}
             className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-red-500 to-red-600 px-4 py-3 rounded-xl text-white hover:from-red-600 hover:to-red-700 transition-all shadow-md"
@@ -144,16 +151,11 @@ const CandidateDashboard = () => {
 
       {/* Main Content - Non-scrollable */}
       <main className="flex-1 h-screen flex flex-col overflow-hidden py-6 px-10">
-        {/* RecruBotX Logo */}
-        <div className="mb-6 flex-shrink-0">
-          <h1 className="text-3xl font-bold text-blue-600">RecruBotX</h1>
-        </div>
-
         {/* Top Header */}
         <div className="flex justify-between items-center mb-3 flex-shrink-0">
           <div>
-            <h2 className="text-xl font-bold text-gray-800">Dashboard</h2>
-            <p className="text-gray-500 text-sm mt-1">{today}</p>
+            <h2 className="text-3xl font-bold text-gray-800">Dashboard</h2>
+            <p className="text-gray-500 text-md mt-1 py-4">{today}</p>
           </div>
         </div>
 
