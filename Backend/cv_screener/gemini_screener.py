@@ -2,7 +2,7 @@
 Gemini CV Screener
 ==================
 
-AI-powered CV screening using Google Gemini model.
+AI-powered CV screening using Google Gemini 2.5 Flash model.
 
 This module provides intelligent CV analysis by comparing candidate resumes
 against job descriptions and generating detailed scoring and recommendations.
@@ -119,6 +119,47 @@ Conduct a thorough analysis comparing the candidate's qualifications against the
 - 0-39: Poor fit - fundamental misalignment with role
 
 Be SPECIFIC, OBJECTIVE, and CONSTRUCTIVE. Reference actual skills from the CV.
+        # Create an async client (Google Gen AI SDK)
+        # Docs: https://googleapis.github.io/python-genai/
+        self.client = genai.Client(api_key=api_key).aio
+        
+        self.screening_prompt = """
+You are an expert HR recruiter and talent acquisition specialist. Your task is to analyze a candidate's CV/resume against a job description and provide a detailed assessment.
+
+## Job Description:
+{job_description}
+
+## Candidate's CV/Resume:
+{cv_content}
+
+## Instructions:
+Analyze the CV against the job description and provide your assessment in the following JSON format. Be objective and thorough in your analysis.
+
+Return ONLY valid JSON in this exact format (no markdown, no code blocks, just the JSON):
+{{
+    "candidate_name": "Extract the candidate's full name from the CV",
+    "overall_score": <number between 0-100 representing overall match>,
+    "skills_match": <number between 0-100>,
+    "experience_match": <number between 0-100>,
+    "education_match": <number between 0-100>,
+    "strengths": [
+        "List 3-5 key strengths that align with the job requirements"
+    ],
+    "weaknesses": [
+        "List 2-4 gaps or areas where the candidate may not fully meet requirements"
+    ],
+    "recommendation": "<One of: 'Strongly Recommend', 'Recommend', 'Consider', 'Not Recommended'>",
+    "summary": "A 2-3 sentence executive summary of the candidate's fit for the role"
+}}
+
+Scoring Guidelines:
+- 90-100: Exceptional match, exceeds requirements
+- 75-89: Strong match, meets most requirements
+- 60-74: Moderate match, meets some requirements
+- 40-59: Weak match, significant gaps
+- 0-39: Poor match, does not meet basic requirements
+
+Be fair, objective, and base your assessment solely on the information provided.
 """
 
     async def screen_cv(
@@ -129,6 +170,34 @@ Be SPECIFIC, OBJECTIVE, and CONSTRUCTIVE. Reference actual skills from the CV.
     ) -> Dict[str, Any]:
         """
         Analyze a single CV against a job description.
+        
+        Performs comprehensive analysis including skills matching, experience
+        evaluation, education assessment, and generates recommendations.
+        
+        Args:
+            job_description: Job requirements and description text
+            cv_content: Parsed text content from the CV
+            file_name: Original CV filename (for tracking)
+            
+        Returns:
+            Dictionary containing:
+                - candidate_name: Extracted candidate name
+                - overall_score: Overall match score (0-100)
+                - skills_match: Skills alignment score (0-100)
+                - experience_match: Experience relevance score (0-100)
+                - education_match: Education fit score (0-100)
+                - strengths: List of candidate strengths
+                - weaknesses: List of areas for improvement
+                - recommendation: Hiring recommendation
+                - summary: Executive summary
+                - file_name: Original filename
+                
+        Example:
+            result = await screener.screen_cv(
+                job_description="Software Engineer needed...",
+                cv_content="John Doe\nSoftware Developer...",
+                file_name="john_doe.pdf"
+            )
         """
         prompt = self.screening_prompt.format(
             job_description=job_description,
@@ -147,6 +216,7 @@ Be SPECIFIC, OBJECTIVE, and CONSTRUCTIVE. Reference actual skills from the CV.
             
             # Clean up the response - remove markdown code blocks if present
             if result_text.startswith("```"):
+                # Remove markdown code block
                 result_text = re.sub(r'^```(?:json)?\s*\n?', '', result_text)
                 result_text = re.sub(r'\n?```\s*$', '', result_text)
             
@@ -200,6 +270,26 @@ Be SPECIFIC, OBJECTIVE, and CONSTRUCTIVE. Reference actual skills from the CV.
     ) -> Dict[str, Any]:
         """
         Compare and rank multiple candidates.
+        
+        Analyzes all screened candidates and provides a comparative summary
+        with rankings based on their overall scores.
+        
+        Args:
+            job_description: Job requirements text
+            candidates: List of screening result dictionaries from screen_cv()
+            
+        Returns:
+            Dictionary containing:
+                - ranked_candidates: List sorted by overall_score (highest first)
+                - comparison_summary: AI-generated comparison text
+                - top_recommendation: Best candidate's full result
+                
+        Example:
+            comparison = await screener.compare_candidates(
+                job_description,
+                [result1, result2, result3]
+            )
+            print(comparison['ranked_candidates'][0]['candidate_name'])
         """
         if not candidates:
             return {"error": "No candidates to compare"}

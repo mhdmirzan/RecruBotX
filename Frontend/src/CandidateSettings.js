@@ -177,6 +177,7 @@ const CandidateSettings = () => {
           </button>
         </div>
       </aside>
+
       {/* Main Content - Scrollable */}
       <main className="flex-1 h-screen flex flex-col overflow-hidden py-6 px-10">
         {/* RecruBotX Logo */}
