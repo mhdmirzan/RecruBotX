@@ -48,6 +48,10 @@ vc_agent/*.tmp
 vc_agent/*.temp
 
 # Audio files (if generated locally)
+
+# Uploaded CV files
+uploads/
+uploads/interview_cvs/*.pdf
 vc_agent/*.wav
 vc_agent/*.mp3
 vc_agent/*.ogg

@@ -99,6 +99,38 @@ See detailed schema above.
 ### 4. **screening_batches**
 Tracks batch screening sessions.
 
+---
+
+### 5. **interview_cvs**
+Stores extracted CV information for voice interview sessions.
+
+**Key Fields:**
+- `session_id` (string): Unique interview session identifier
+- `candidate_name` (string): Full name of candidate
+- `phone_number` (string): Contact phone number
+- `email_address` (string): Email address
+- `education` (array): List of educational qualifications
+- `projects` (array): List of projects with descriptions
+- `skills` (array): List of technical and professional skills
+- `experience` (string): Years of experience or description
+- `certifications` (array): List of professional certifications
+- `summary` (string): Professional summary
+- `cv_file_name` (string): Original CV filename
+- `cv_file_path` (string): Path where CV is stored
+- `interview_field` (string): Field of interview
+- `position_level` (string): Position level (Junior/Intermediate/Senior)
+- `created_at` (date): Timestamp of creation
+
+**Indexes:**
+- `session_id` (unique)
+- `created_at`
+- `interview_field`
+
+**Purpose:**
+Stores detailed candidate information extracted from CV PDFs during voice interview setup. Links to interview sessions and provides candidate profile data for analysis.
+
+---
+
 **Key Fields:**
 - `job_description_id` (ObjectId)
 - `cv_ids` (array of ObjectIds)

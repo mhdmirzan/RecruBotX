@@ -12,7 +12,13 @@ from cv_screener.cv_parser import parse_cv_file
 from database.connection import get_database
 from database import crud
 
+# Import voice interview routes
+from vc_agent.api_routes import router as voice_router
+
 router = APIRouter()
+
+# Include voice interview routes
+router.include_router(voice_router)
 
 # Initialize the Gemini screener
 screener = GeminiCVScreener()

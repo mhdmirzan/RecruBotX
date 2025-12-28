@@ -119,47 +119,6 @@ Conduct a thorough analysis comparing the candidate's qualifications against the
 - 0-39: Poor fit - fundamental misalignment with role
 
 Be SPECIFIC, OBJECTIVE, and CONSTRUCTIVE. Reference actual skills from the CV.
-        # Create an async client (Google Gen AI SDK)
-        # Docs: https://googleapis.github.io/python-genai/
-        self.client = genai.Client(api_key=api_key).aio
-        
-        self.screening_prompt = """
-You are an expert HR recruiter and talent acquisition specialist. Your task is to analyze a candidate's CV/resume against a job description and provide a detailed assessment.
-
-## Job Description:
-{job_description}
-
-## Candidate's CV/Resume:
-{cv_content}
-
-## Instructions:
-Analyze the CV against the job description and provide your assessment in the following JSON format. Be objective and thorough in your analysis.
-
-Return ONLY valid JSON in this exact format (no markdown, no code blocks, just the JSON):
-{{
-    "candidate_name": "Extract the candidate's full name from the CV",
-    "overall_score": <number between 0-100 representing overall match>,
-    "skills_match": <number between 0-100>,
-    "experience_match": <number between 0-100>,
-    "education_match": <number between 0-100>,
-    "strengths": [
-        "List 3-5 key strengths that align with the job requirements"
-    ],
-    "weaknesses": [
-        "List 2-4 gaps or areas where the candidate may not fully meet requirements"
-    ],
-    "recommendation": "<One of: 'Strongly Recommend', 'Recommend', 'Consider', 'Not Recommended'>",
-    "summary": "A 2-3 sentence executive summary of the candidate's fit for the role"
-}}
-
-Scoring Guidelines:
-- 90-100: Exceptional match, exceeds requirements
-- 75-89: Strong match, meets most requirements
-- 60-74: Moderate match, meets some requirements
-- 40-59: Weak match, significant gaps
-- 0-39: Poor match, does not meet basic requirements
-
-Be fair, objective, and base your assessment solely on the information provided.
 """
 
     async def screen_cv(

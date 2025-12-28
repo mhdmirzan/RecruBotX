@@ -34,7 +34,7 @@ const CandidateDashboard = () => {
 
   // ✅ Start Interview Handler
   const handleStartInterview = () => {
-    navigate("/candidate/application");
+    navigate("/candidate/interview");
   };
 
   // ✅ CV Screening Handler
@@ -76,10 +76,10 @@ const CandidateDashboard = () => {
       id: "resume",
       title: "Create Resume",
       description: "Build a professional, ATS-friendly resume with AI assistance.",
-      icon: <FileText className="w-7 h-7 text-indigo-600" />,
-      bgColor: "bg-indigo-50",
-      hoverBgColor: "hover:bg-indigo-100",
-      iconBg: "bg-indigo-100",
+      icon: <FileText className="w-7 h-7 text-blue-600" />,
+      bgColor: "bg-blue-50",
+      hoverBgColor: "hover:bg-blue-100",
+      iconBg: "bg-blue-100",
       textColor: "text-gray-800",
       onClick: handleCreateResume,
     },
@@ -87,10 +87,10 @@ const CandidateDashboard = () => {
       id: "screening",
       title: "CV Screening",
       description: "Analyze your resume against specific job descriptions.",
-      icon: <Search className="w-7 h-7 text-sky-600" />,
-      bgColor: "bg-sky-50",
-      hoverBgColor: "hover:bg-sky-100",
-      iconBg: "bg-sky-100",
+      icon: <Search className="w-7 h-7 text-blue-600" />,
+      bgColor: "bg-blue-50",
+      hoverBgColor: "hover:bg-blue-100",
+      iconBg: "bg-blue-100",
       textColor: "text-gray-800",
       onClick: handleCVScreening,
     },

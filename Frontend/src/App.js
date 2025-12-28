@@ -26,6 +26,7 @@ import CandidateDashboard from "./CandidateDashboard";
 import CandidateSettings from "./CandidateSettings";
 import CandidateApplication from "./CandidateApplication";
 import AnalyzeResume from "./analyze_resume";
+import VoiceInterview from "./VoiceInterview";
 
 // Recruiter (HR)
 import RecruiterSignupPage from "./RecruiterSignupPage";
@@ -77,7 +78,7 @@ function App() {
         <Route path="/signin/candidate" element={<CandidateLoginPage />} />
         <Route path="/candidate/dashboard" element={<CandidateDashboard />} />
         <Route path="/candidate/settings" element={<CandidateSettings />} />
-        <Route path="/candidate/application" element={<CandidateApplication />} />
+        <Route path="/candidate/interview" element={<VoiceInterview />} />
         <Route path="/candidate/analyze-resume" element={<AnalyzeResume />} />
 
         {/* ===== RESUME BUILDER FLOW ===== */}

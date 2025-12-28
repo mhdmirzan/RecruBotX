@@ -1,0 +1,439 @@
+"""
+Voice Interview API Routes
+Provides REST API endpoints for voice-based interview system
+"""
+
+from fastapi import APIRouter, HTTPException, UploadFile, File, Form
+from fastapi.responses import StreamingResponse, FileResponse
+from pydantic import BaseModel
+from typing import Optional, Dict, Any, List
+import os
+import tempfile
+import json
+from pathlib import Path
+import asyncio
+import shutil
+from datetime import datetime
+
+# Import from parent directory
+import sys
+sys.path.append(str(Path(__file__).parent.parent))
+from vc_agent.voice_agent import VoiceAgent
+from cv_screener.cv_parser import parse_cv_file
+from cv_screener.cv_extractor import extract_cv_information
+from database.connection import get_database
+from database.crud import create_interview_cv
+
+router = APIRouter(prefix="/voice-interview", tags=["Voice Interview"])
+
+# Store active interview sessions (in production, use Redis or database)
+active_sessions: Dict[str, VoiceAgent] = {}
+
+
+class InterviewConfig(BaseModel):
+    interview_field: str
+    position_level: str
+    num_questions: int = 5
+    session_id: Optional[str] = None
+
+
+class AnswerSubmission(BaseModel):
+    session_id: str
+    audio_data: Optional[str] = None  # base64 encoded audio
+    text_answer: Optional[str] = None  # for testing without audio
+
+
+class InterviewStatus(BaseModel):
+    session_id: str
+    current_question: int
+    total_questions: int
+    questions_asked: List[str]
+    avg_score: float
+
+
+@router.post("/start-session-with-cv")
+async def start_interview_with_cv(
+    cv_file: UploadFile = File(...),
+    interview_field: str = Form(...),
+    position_level: str = Form(...),
+    num_questions: int = Form(5),
+    candidate_name: str = Form(...),
+    phone_number: str = Form(...),
+    email_address: str = Form(...),
+    education: str = Form(...),
+    projects: str = Form(...),
+    skills: str = Form(...),
+    experience: str = Form(...)
+):
+    """
+    Initialize a new voice interview session with CV upload and candidate details.
+    Saves CV file and all candidate information to database.
+    Returns session_id and first question.
+    """
+    try:
+        # Generate unique session ID
+        import uuid
+        session_id = str(uuid.uuid4())
+        
+        # Validate CV file is PDF
+        if not cv_file.filename.lower().endswith('.pdf'):
+            raise HTTPException(status_code=400, detail="Only PDF files are accepted")
+        
+        # Create upload directory if it doesn't exist
+        upload_dir = Path("uploads/interview_cvs")
+        upload_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Save CV file
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        safe_filename = f"{session_id}_{timestamp}_{cv_file.filename}"
+        file_path = upload_dir / safe_filename
+        
+        with file_path.open("wb") as buffer:
+            shutil.copyfileobj(cv_file.file, buffer)
+        
+        print(f"[INFO] CV file saved: {file_path}")
+        
+        # Prepare candidate data for database (using manual input from form)
+        cv_data = {
+            "candidate_name": candidate_name,
+            "phone_number": phone_number,
+            "email_address": email_address,
+            "education": [e.strip() for e in education.split('\n') if e.strip()],
+            "projects": [p.strip() for p in projects.split('\n') if p.strip()],
+            "skills": [s.strip() for s in skills.split(',') if s.strip()],
+            "experience": experience,
+            "cv_file_name": cv_file.filename,
+            "cv_file_path": str(file_path),
+            "interview_field": interview_field,
+            "position_level": position_level
+        }
+        
+        # Store in database
+        print("[INFO] Storing candidate data and CV in database...")
+        db = await get_database()
+        cv_id = await create_interview_cv(db, session_id, cv_data)
+        print(f"[INFO] Stored candidate data with CV ID: {cv_id}")
+        
+        # Initialize voice agent
+        agent = VoiceAgent(
+            interview_field=interview_field,
+            position_level=position_level,
+            num_questions=num_questions
+        )
+        
+        # Store session
+        active_sessions[session_id] = agent
+        
+        # Generate first question
+        agent.question_count = 1
+        first_question = agent.generate_question()
+        
+        return {
+            "success": True,
+            "session_id": session_id,
+            "cv_id": cv_id,
+            "interview_field": interview_field,
+            "position_level": position_level,
+            "total_questions": num_questions,
+            "current_question": 1,
+            "question": first_question,
+            "candidate_details": {
+                "name": candidate_name,
+                "email": email_address,
+                "phone": phone_number,
+                "cv_filename": cv_file.filename
+            },
+            "message": "Interview session started successfully with candidate details and CV saved"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"[ERROR] Failed to start session: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Failed to start session: {str(e)}")
+
+
+@router.post("/start-session")
+async def start_interview_session(config: InterviewConfig):
+    """
+    Initialize a new voice interview session
+    Returns session_id and first question
+    """
+    try:
+        # Generate unique session ID
+        import uuid
+        session_id = config.session_id or str(uuid.uuid4())
+        
+        # Initialize voice agent
+        agent = VoiceAgent(
+            interview_field=config.interview_field,
+            position_level=config.position_level,
+            num_questions=config.num_questions
+        )
+        
+        # Store session
+        active_sessions[session_id] = agent
+        
+        # Generate first question
+        agent.question_count = 1
+        first_question = agent.generate_question()
+        
+        return {
+            "success": True,
+            "session_id": session_id,
+            "interview_field": config.interview_field,
+            "position_level": config.position_level,
+            "total_questions": config.num_questions,
+            "current_question": 1,
+            "question": first_question,
+            "message": "Interview session started successfully"
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to start session: {str(e)}")
+
+
+@router.post("/next-question")
+async def get_next_question(session_id: str):
+    """
+    Get the next question in the interview
+    """
+    if session_id not in active_sessions:
+        raise HTTPException(status_code=404, detail="Session not found")
+    
+    agent = active_sessions[session_id]
+    
+    # Check if interview is complete
+    if agent.question_count >= agent.max_questions:
+        return {
+            "success": True,
+            "complete": True,
+            "message": "Interview completed",
+            "current_question": agent.question_count,
+            "total_questions": agent.max_questions
+        }
+    
+    try:
+        # Increment and generate next question
+        agent.question_count += 1
+        next_question = agent.generate_question()
+        
+        return {
+            "success": True,
+            "complete": False,
+            "session_id": session_id,
+            "current_question": agent.question_count,
+            "total_questions": agent.max_questions,
+            "question": next_question
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to generate question: {str(e)}")
+
+
+@router.post("/submit-answer")
+async def submit_answer(
+    session_id: str = Form(...),
+    audio_file: Optional[UploadFile] = File(None),
+    text_answer: Optional[str] = Form(None)
+):
+    """
+    Submit an answer (either audio or text) and get feedback
+    """
+    if session_id not in active_sessions:
+        raise HTTPException(status_code=404, detail="Session not found")
+    
+    agent = active_sessions[session_id]
+    
+    # Get current question
+    if not agent.interview_data["questions"]:
+        raise HTTPException(status_code=400, detail="No question has been asked yet")
+    
+    current_question = agent.interview_data["questions"][-1] if agent.interview_data["questions"] else ""
+    
+    try:
+        answer_text = None
+        
+        # Process audio file if provided
+        if audio_file:
+            # Save temporary audio file
+            temp_audio = tempfile.NamedTemporaryFile(delete=False, suffix=".webm")
+            content = await audio_file.read()
+            temp_audio.write(content)
+            temp_audio.close()
+            
+            try:
+                # Use Deepgram to transcribe audio
+                from deepgram import DeepgramClient, PrerecordedOptions
+                import os
+                
+                deepgram_key = os.getenv('DEEPGRAM_API_KEY')
+                if not deepgram_key:
+                    raise HTTPException(status_code=500, detail="Deepgram API key not configured")
+                
+                deepgram = DeepgramClient(deepgram_key)
+                
+                with open(temp_audio.name, 'rb') as audio:
+                    source = {'buffer': audio.read(), 'mimetype': 'audio/webm'}
+                    
+                    options = PrerecordedOptions(
+                        model="nova-2",
+                        smart_format=True,
+                        punctuate=True
+                    )
+                    
+                    response = deepgram.listen.rest.v('1').transcribe_file(source, options)
+                    
+                    # Extract transcription
+                    if response.results and response.results.channels:
+                        transcript = response.results.channels[0].alternatives[0].transcript
+                        answer_text = transcript.strip() if transcript else None
+                    
+                    if not answer_text or len(answer_text) < 3:
+                        answer_text = text_answer or "I couldn't understand that."
+                        
+            except Exception as e:
+                print(f"⚠️ Deepgram transcription error: {e}")
+                # Fallback to text answer if provided
+                answer_text = text_answer or "Audio transcription failed. Please try again or type your answer."
+            finally:
+                # Clean up temp file
+                try:
+                    os.unlink(temp_audio.name)
+                except:
+                    pass
+        
+        # Use text answer if no audio
+        if not answer_text:
+            answer_text = text_answer
+        
+        if not answer_text:
+            raise HTTPException(status_code=400, detail="No answer provided")
+        
+        # Store answer
+        agent.interview_data["answers"].append(answer_text)
+        
+        # Analyze answer
+        feedback = agent.analyze_answer(current_question, answer_text)
+        agent.interview_data["feedback"].append(feedback)
+        
+        # Extract score
+        score = agent.interview_data["scores"][-1] if agent.interview_data["scores"] else 0
+        
+        return {
+            "success": True,
+            "feedback": feedback,
+            "score": score,
+            "current_question": agent.question_count,
+            "total_questions": agent.max_questions,
+            "is_complete": agent.question_count >= agent.max_questions
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to process answer: {str(e)}")
+
+
+@router.get("/session-status/{session_id}")
+async def get_session_status(session_id: str):
+    """
+    Get current status of an interview session
+    """
+    if session_id not in active_sessions:
+        raise HTTPException(status_code=404, detail="Session not found")
+    
+    agent = active_sessions[session_id]
+    
+    avg_score = sum(agent.interview_data["scores"]) / len(agent.interview_data["scores"]) \
+        if agent.interview_data["scores"] else 0
+    
+    return {
+        "success": True,
+        "session_id": session_id,
+        "interview_field": agent.interview_type,
+        "position_level": agent.position_level,
+        "current_question": agent.question_count,
+        "total_questions": agent.max_questions,
+        "questions_asked": agent.interview_data["questions"],
+        "answers_given": agent.interview_data["answers"],
+        "scores": agent.interview_data["scores"],
+        "avg_score": round(avg_score, 1),
+        "is_complete": agent.question_count >= agent.max_questions
+    }
+
+
+@router.post("/generate-report/{session_id}")
+async def generate_report(session_id: str):
+    """
+    Generate final interview report
+    """
+    if session_id not in active_sessions:
+        raise HTTPException(status_code=404, detail="Session not found")
+    
+    agent = active_sessions[session_id]
+    
+    try:
+        # Generate report
+        report_path = agent.generate_report()
+        
+        # Calculate final metrics
+        avg_score = sum(agent.interview_data["scores"]) / len(agent.interview_data["scores"]) \
+            if agent.interview_data["scores"] else 0
+        
+        # Get performance level
+        performance_level = agent._get_performance_level(avg_score)
+        
+        # Get strengths and improvements
+        strengths, improvements = agent._analyze_performance()
+        
+        return {
+            "success": True,
+            "session_id": session_id,
+            "report_path": report_path,
+            "summary": {
+                "interview_field": agent.interview_type,
+                "position_level": agent.position_level,
+                "total_questions": len(agent.interview_data["questions"]),
+                "avg_score": round(avg_score, 1),
+                "performance_level": performance_level,
+                "strengths": strengths,
+                "improvements": improvements,
+                "questions": agent.interview_data["questions"],
+                "answers": agent.interview_data["answers"],
+                "scores": agent.interview_data["scores"],
+                "feedback": agent.interview_data["feedback"]
+            }
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to generate report: {str(e)}")
+
+
+@router.delete("/end-session/{session_id}")
+async def end_session(session_id: str):
+    """
+    End and cleanup an interview session
+    """
+    if session_id not in active_sessions:
+        raise HTTPException(status_code=404, detail="Session not found")
+    
+    # Remove session
+    del active_sessions[session_id]
+    
+    return {
+        "success": True,
+        "message": "Session ended successfully"
+    }
+
+
+@router.get("/available-fields")
+async def get_available_fields():
+    """
+    Get list of available interview fields
+    """
+    return {
+        "success": True,
+        "fields": VoiceAgent.FIELDS,
+        "levels": VoiceAgent.LEVELS
+    }

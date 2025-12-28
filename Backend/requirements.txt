@@ -1,7 +1,6 @@
 fastapi>=0.104.0
 uvicorn>=0.24.0
 python-multipart>=0.0.6
-google-generativeai>=0.8.0
 python-dotenv>=1.0.0
 pydantic>=2.5.0
 PyPDF2>=3.0.0
@@ -10,3 +9,16 @@ aiofiles>=23.2.0
 motor>=3.3.0
 pymongo>=4.6.0
 dnspython>=2.3.0
+
+# Audio processing
+sounddevice>=0.4.6
+soundfile>=0.12.1
+deepgram-sdk>=3.0.0
+PyAudio>=0.2.13
+
+# API requests
+requests>=2.31.0
+
+# Google Generative AI (stable version)
+google-generativeai>=0.3.0
+reportlab>=3.6.12
