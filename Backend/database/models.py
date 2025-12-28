@@ -145,3 +145,30 @@ class CandidateUserModel(BaseModel):
         json_encoders={ObjectId: str},
         populate_by_name=True,
     )
+
+
+class InterviewCVModel(BaseModel):
+    """Interview CV details extracted from candidate resume."""
+    
+    id: Optional[PyObjectId] = Field(alias="_id", default=None)
+    session_id: str  # Link to interview session
+    candidate_name: Optional[str] = None
+    phone_number: Optional[str] = None
+    email_address: Optional[str] = None
+    education: List[str] = Field(default_factory=list)  # List of educational qualifications
+    projects: List[str] = Field(default_factory=list)  # List of projects
+    skills: List[str] = Field(default_factory=list)  # List of skills
+    experience: Optional[str] = None  # Years of experience or description
+    certifications: List[str] = Field(default_factory=list)  # Professional certifications
+    summary: Optional[str] = None  # Professional summary
+    cv_file_name: str  # Original CV filename
+    cv_file_path: Optional[str] = None  # Path where CV is stored
+    interview_field: str  # Field of interview
+    position_level: str  # Position level (Junior/Intermediate/Senior)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    
+    model_config = ConfigDict(
+        arbitrary_types_allowed=True,
+        json_encoders={ObjectId: str},
+        populate_by_name=True,
+    )

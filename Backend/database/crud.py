@@ -14,7 +14,8 @@ from database.models import (
     JobDescriptionModel,
     CVModel,
     ScreeningResultModel,
-    ScreeningBatchModel
+    ScreeningBatchModel,
+    InterviewCVModel
 )
 
 
@@ -318,6 +319,83 @@ async def update_user(
     update_data["updated_at"] = datetime.utcnow()
     result = await db.candidate_users.update_one(
         {"_id": ObjectId(user_id)},
+        {"$set": update_data}
+    )
+    return result.modified_count > 0
+
+
+# ==================== Interview CV Details ====================
+
+async def create_interview_cv(
+    db: AsyncIOMotorDatabase,
+    session_id: str,
+    cv_data: Dict[str, Any]
+) -> str:
+    """Create a new interview CV record with extracted details."""
+    interview_cv = {
+        "session_id": session_id,
+        "candidate_name": cv_data.get("candidate_name"),
+        "phone_number": cv_data.get("phone_number"),
+        "email_address": cv_data.get("email_address"),
+        "education": cv_data.get("education", []),
+        "projects": cv_data.get("projects", []),
+        "skills": cv_data.get("skills", []),
+        "experience": cv_data.get("experience"),
+        "certifications": cv_data.get("certifications", []),
+        "summary": cv_data.get("summary"),
+        "cv_file_name": cv_data.get("cv_file_name"),
+        "cv_file_path": cv_data.get("cv_file_path"),
+        "interview_field": cv_data.get("interview_field"),
+        "position_level": cv_data.get("position_level"),
+        "created_at": datetime.utcnow()
+    }
+    result = await db.interview_cvs.insert_one(interview_cv)
+    return str(result.inserted_id)
+
+
+async def get_interview_cv_by_session(
+    db: AsyncIOMotorDatabase,
+    session_id: str
+) -> Optional[Dict[str, Any]]:
+    """Get interview CV details by session ID."""
+    cv = await db.interview_cvs.find_one({"session_id": session_id})
+    if cv:
+        cv["_id"] = str(cv["_id"])
+    return cv
+
+
+async def get_interview_cv_by_id(
+    db: AsyncIOMotorDatabase,
+    cv_id: str
+) -> Optional[Dict[str, Any]]:
+    """Get interview CV details by ID."""
+    cv = await db.interview_cvs.find_one({"_id": ObjectId(cv_id)})
+    if cv:
+        cv["_id"] = str(cv["_id"])
+    return cv
+
+
+async def get_all_interview_cvs(
+    db: AsyncIOMotorDatabase,
+    limit: int = 100
+) -> List[Dict[str, Any]]:
+    """Get all interview CV records."""
+    cvs = []
+    cursor = db.interview_cvs.find({}).sort("created_at", -1).limit(limit)
+    async for cv in cursor:
+        cv["_id"] = str(cv["_id"])
+        cvs.append(cv)
+    return cvs
+
+
+async def update_interview_cv(
+    db: AsyncIOMotorDatabase,
+    cv_id: str,
+    update_data: Dict[str, Any]
+) -> bool:
+    """Update interview CV information."""
+    result = await db.interview_cvs.update_one(
+        {"_id": ObjectId(cv_id)},
         {"$set": update_data}
     )
     return result.modified_count > 0

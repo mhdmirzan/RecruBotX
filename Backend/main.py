@@ -5,6 +5,7 @@ Integrated with MongoDB for data persistence
 """
 
 import os
+from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
@@ -14,6 +15,15 @@ from database.connection import db_manager
 
 # Load environment variables
 load_dotenv()
+
+# Create upload directories
+UPLOAD_DIRS = [
+    Path("uploads/interview_cvs"),
+    Path("uploads/screening_cvs")
+]
+for upload_dir in UPLOAD_DIRS:
+    upload_dir.mkdir(parents=True, exist_ok=True)
+    print(f"✅ Upload directory ready: {upload_dir}")
 
 # Create FastAPI app
 app = FastAPI(
@@ -33,7 +43,7 @@ app.add_middleware(
 )
 
 # Include API routes
-app.include_router(api_router, prefix="/api/v1")
+app.include_router(api_router, prefix="/api")
 
 
 @app.on_event("startup")
@@ -48,11 +58,15 @@ async def startup_event():
     }
     try:
         await db_manager.connect()
-    except Exception:
+    except Exception as e:
+        print(f"⚠ MongoDB connection failed: {e}")
         if strict_startup:
+            print("❌ MONGODB_STRICT_STARTUP=true, shutting down...")
             raise
         # Allow app to boot so /health can report the failure.
-        print("! Continuing without MongoDB (MONGODB_STRICT_STARTUP=false)")
+        print("✓ Continuing without MongoDB (MONGODB_STRICT_STARTUP=false)")
+        print("  → Authentication and database features will be unavailable")
+        print("  → To fix: Start MongoDB or update MONGODB_URL in .env")
 
 
 @app.on_event("shutdown")
@@ -76,9 +90,13 @@ async def health_check():
     """Health check endpoint."""
     try:
         # Check database connection
-        await db_manager.client.admin.command('ping')
-        db_status = "connected"
-    except Exception:
+        if db_manager.client is None:
+            db_status = "disconnected"
+        else:
+            await db_manager.client.admin.command('ping')
+            db_status = "connected"
+    except Exception as e:
+        db_status = f"error: {str(e)[:50]}"
         db_status = "disconnected"
     
     return {
