@@ -1,209 +1,153 @@
-import React, { useState } from "react";
-import ResumePreview from "../components/ResumePreview";
+import React, { useState, useEffect } from "react";
+import { LogOut, LayoutDashboard, Cog, Download, Eye } from "lucide-react";
+import { useNavigate, NavLink } from "react-router-dom";
+import { getCurrentUser, logoutUser } from "../utils/userDatabase";
 import DownloadButton from "../components/DownloadButton";
 
-const Section = ({ title, children }) => (
-  <div className="bg-white rounded-2xl shadow-sm border p-6 space-y-4">
-    <h2 className="text-lg font-semibold text-gray-800">{title}</h2>
-    <div className="space-y-3">{children}</div>
-  </div>
-);
-
-const Input = (props) => (
-  <input
-    {...props}
-    className="w-full rounded-xl border border-gray-300 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-  />
-);
-
-const Textarea = (props) => (
-  <textarea
-    {...props}
-    className="w-full rounded-xl border border-gray-300 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-  />
-);
-
-const AddButton = ({ onClick, label }) => (
-  <button
-    onClick={onClick}
-    className="text-sm font-medium text-blue-600 hover:underline"
-  >
-    + {label}
-  </button>
-);
+// Import Builder Components
+import DoubleColumnBuilder from "./builders/DoubleColumnBuilder";
+import SimpleBuilder from "./builders/SimpleBuilder";
+import ElegantBuilder from "./builders/ElegantBuilder";
 
 const ResumeBuilder = () => {
-  const [resume, setResume] = useState({
-    name: "",
-    role: "",
-    email: "",
-    phone: "",
-    address: "",
-    linkedin: "",
-    summary: "",
-    skills: [""],
-    education: [{ degree: "", institute: "", year: "" }],
-    experience: [{ role: "", company: "", duration: "", description: "" }],
-    projects: [{ title: "", description: "" }],
-    certifications: [""],
-    references: "",
-  });
+  const [user, setUser] = useState(null);
+  const [showPreview, setShowPreview] = useState(false);
+  const navigate = useNavigate();
 
-  const handleChange = (e) =>
-    setResume({ ...resume, [e.target.name]: e.target.value });
+  // Get current user on component mount
+  useEffect(() => {
+    const currentUser = getCurrentUser();
+    if (!currentUser) {
+      navigate("/signin/candidate");
+    } else {
+      setUser(currentUser);
+    }
+  }, [navigate]);
 
-  const handleArrayChange = (section, index, field, value) => {
-    const updated = [...resume[section]];
-    updated[index][field] = value;
-    setResume({ ...resume, [section]: updated });
+  // Logout Handler
+  const handleLogout = () => {
+    logoutUser();
+    navigate("/signin/candidate");
   };
 
-  const addItem = (section, item) =>
-    setResume({ ...resume, [section]: [...resume[section], item] });
+  // Get selected template from localStorage safely
+  // Default to "simple" if nothing selected
+  const selectedTemplate = localStorage.getItem("selectedTemplate") || "Simple";
+
+  // common props to pass to builders
+  const builderProps = {
+    user,
+    handleLogout,
+    showPreview,
+    setShowPreview
+  };
+
+  // Render the appropriate builder based on template ID
+  const renderBuilder = () => {
+    // Normalize string to handle case sensitivity issues (e.g. "Simple" vs "simple")
+    const templateId = selectedTemplate.toLowerCase();
+
+    switch (templateId) {
+      case "double-column":
+        return <DoubleColumnBuilder {...builderProps} />;
+      case "simple":
+        return <SimpleBuilder {...builderProps} />;
+      case "elegant":
+        return <ElegantBuilder {...builderProps} />;
+      default:
+        // Fallback to simple if unknown
+        return <SimpleBuilder {...builderProps} />;
+    }
+  };
+
+  if (!user) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-gray-100">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gray-100">
-
-      {/* Header */}
-      <div className="sticky top-0 z-10 bg-white border-b px-10 py-4 flex justify-between items-center">
-        <h1 className="text-xl font-bold text-gray-800">
-          Resume Builder
-        </h1>
-        <DownloadButton />
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 p-8">
-
-        {/* LEFT – FORM */}
-        <div className="space-y-6 overflow-y-auto max-h-[88vh] pr-2">
-
-          <Section title="Personal Information">
-            <Input name="name" placeholder="Full Name" onChange={handleChange} />
-            <Input name="role" placeholder="Job Title / Role" onChange={handleChange} />
-            <Input name="email" placeholder="Email" onChange={handleChange} />
-            <Input name="phone" placeholder="Phone" onChange={handleChange} />
-            <Input name="address" placeholder="Address" onChange={handleChange} />
-            <Input name="linkedin" placeholder="LinkedIn Profile" onChange={handleChange} />
-          </Section>
-
-          <Section title="Professional Summary">
-            <Textarea
-              name="summary"
-              rows="4"
-              placeholder="Brief summary highlighting your strengths..."
-              onChange={handleChange}
-            />
-          </Section>
-
-          <Section title="Skills">
-            {resume.skills.map((skill, i) => (
-              <Input
-                key={i}
-                value={skill}
-                placeholder={`Skill ${i + 1}`}
-                onChange={(e) => {
-                  const skills = [...resume.skills];
-                  skills[i] = e.target.value;
-                  setResume({ ...resume, skills });
-                }}
-              />
-            ))}
-            <AddButton label="Add Skill" onClick={() => addItem("skills", "")} />
-          </Section>
-
-          <Section title="Education">
-            {resume.education.map((edu, i) => (
-              <div key={i} className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <Input placeholder="Degree" onChange={(e) =>
-                  handleArrayChange("education", i, "degree", e.target.value)
-                } />
-                <Input placeholder="Institute" onChange={(e) =>
-                  handleArrayChange("education", i, "institute", e.target.value)
-                } />
-                <Input placeholder="Year" onChange={(e) =>
-                  handleArrayChange("education", i, "year", e.target.value)
-                } />
-              </div>
-            ))}
-            <AddButton label="Add Education" onClick={() =>
-              addItem("education", { degree: "", institute: "", year: "" })
-            } />
-          </Section>
-
-          <Section title="Experience">
-            {resume.experience.map((exp, i) => (
-              <div key={i} className="space-y-2">
-                <Input placeholder="Role" onChange={(e) =>
-                  handleArrayChange("experience", i, "role", e.target.value)
-                } />
-                <Input placeholder="Company" onChange={(e) =>
-                  handleArrayChange("experience", i, "company", e.target.value)
-                } />
-                <Input placeholder="Duration" onChange={(e) =>
-                  handleArrayChange("experience", i, "duration", e.target.value)
-                } />
-                <Textarea placeholder="What did you achieve?" rows="3"
-                  onChange={(e) =>
-                    handleArrayChange("experience", i, "description", e.target.value)
-                  }
-                />
-              </div>
-            ))}
-            <AddButton label="Add Experience" onClick={() =>
-              addItem("experience", { role: "", company: "", duration: "", description: "" })
-            } />
-          </Section>
-
-          <Section title="Projects">
-            {resume.projects.map((proj, i) => (
-              <div key={i} className="space-y-2">
-                <Input placeholder="Project Title" onChange={(e) =>
-                  handleArrayChange("projects", i, "title", e.target.value)
-                } />
-                <Textarea placeholder="Project Description" rows="3"
-                  onChange={(e) =>
-                    handleArrayChange("projects", i, "description", e.target.value)
-                  }
-                />
-              </div>
-            ))}
-            <AddButton label="Add Project" onClick={() =>
-              addItem("projects", { title: "", description: "" })
-            } />
-          </Section>
-
-          <Section title="Certifications">
-            {resume.certifications.map((c, i) => (
-              <Input
-                key={i}
-                placeholder={`Certification ${i + 1}`}
-                onChange={(e) => {
-                  const certs = [...resume.certifications];
-                  certs[i] = e.target.value;
-                  setResume({ ...resume, certifications: certs });
-                }}
-              />
-            ))}
-            <AddButton label="Add Certification" onClick={() =>
-              addItem("certifications", "")
-            } />
-          </Section>
-
-          <Section title="References (Optional)">
-            <Textarea
-              name="references"
-              rows="2"
-              placeholder="Available upon request"
-              onChange={handleChange}
-            />
-          </Section>
+    <div className="h-screen w-screen flex bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden fixed inset-0">
+      {/* Sidebar */}
+      <aside className="w-72 h-screen bg-white shadow-xl flex flex-col p-6 border-r border-gray-200 flex-shrink-0">
+        {/* Logo */}
+        <div className="mb-8 text-center flex-shrink-0">
+          <h1 className="text-3xl font-bold text-blue-600">RecruBotX</h1>
         </div>
 
-        {/* RIGHT – PREVIEW */}
-        <div className="bg-white rounded-2xl shadow border p-6 overflow-y-auto max-h-[88vh]">
-          <ResumePreview resume={resume} />
+        <nav className="flex flex-col space-y-4 text-gray-700 flex-shrink-0">
+          <NavLink
+            to="/candidate/dashboard"
+            className={({ isActive }) =>
+              `font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 ${isActive ? "bg-blue-50 text-blue-600" : "text-gray-700 hover:bg-gray-50 hover:text-blue-600"}`
+            }
+          >
+            <LayoutDashboard className="w-5 h-5" /> Dashboard
+          </NavLink>
+          <NavLink
+            to="/candidate/settings"
+            className={({ isActive }) =>
+              `font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 ${isActive ? "bg-blue-50 text-blue-600" : "text-gray-700 hover:bg-gray-50 hover:text-blue-600"}`
+            }
+          >
+            <Cog className="w-5 h-5" /> Settings
+          </NavLink>
+        </nav>
+
+        {/* Bottom Section */}
+        <div className="mt-auto flex-shrink-0">
+          {/* User Profile Section */}
+          <div className="mb-4 text-center pb-4 border-b border-gray-200">
+            <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4 text-white font-bold text-2xl shadow-lg overflow-hidden">
+              {user.profileImage ? (
+                <img src={user.profileImage} alt="Profile" className="w-full h-full object-cover" />
+              ) : (
+                <>{user.firstName?.charAt(0)}{user.lastName?.charAt(0)}</>
+              )}
+            </div>
+            <h3 className="font-bold text-gray-800 text-lg">{user.firstName} {user.lastName}</h3>
+            <p className="text-sm text-gray-500 mt-1">{user.email}</p>
+          </div>
+
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-red-500 to-red-600 px-4 py-3 rounded-xl text-white hover:from-red-600 hover:to-red-700 transition-all shadow-md"
+          >
+            <LogOut className="w-5 h-5" /> Logout
+          </button>
         </div>
-      </div>
+      </aside>
+
+      {/* Main Content */}
+      <main className="flex-1 h-screen flex flex-col overflow-hidden">
+        {/* Top Header */}
+        <div className="flex justify-between items-center py-6 px-10 flex-shrink-0">
+          <div>
+            <h2 className="text-3xl font-bold text-gray-800">Build Your Resume</h2>
+            <p className="mt-1 text-gray-500 text-md">Fill in your details and watch your professional resume come to life.</p>
+          </div>
+          <div className="flex gap-3">
+            <button
+              onClick={() => setShowPreview(!showPreview)}
+              className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition shadow-md"
+            >
+              <Eye className="w-5 h-5" />
+              {showPreview ? "Edit" : "Preview"}
+            </button>
+            <DownloadButton />
+          </div>
+        </div>
+
+        {/* Builder Content - Dynamic based on template */}
+        <div className="flex-1 overflow-hidden px-10 pb-8">
+          {renderBuilder()}
+        </div>
+      </main>
     </div>
   );
 };

@@ -34,9 +34,7 @@ import RecruiterDashboard from "./RecruiterDashboard";
 // import RecruiterSigninPage from "./RecruiterSigninPage"; // optional
 
 // Resume Builder Pages
-import ExperienceLevel from "./pages/ExperienceLevel";
 import TemplateSelect from "./pages/TemplateSelect";
-import ResumeSource from "./pages/ResumeSource";
 import ResumeBuilder from "./pages/ResumeBuilder";
 
 // Initialize user database
@@ -83,16 +81,8 @@ function App() {
 
         {/* ===== RESUME BUILDER FLOW ===== */}
         <Route
-          path="/candidate/resume/experience-level"
-          element={<ExperienceLevel />}
-        />
-        <Route
           path="/candidate/resume/choose-template"
           element={<TemplateSelect />}
-        />
-        <Route
-          path="/candidate/resume/select-resume"
-          element={<ResumeSource />}
         />
         <Route
           path="/candidate/resume/builder"
