@@ -44,7 +44,7 @@ const CandidateDashboard = () => {
 
   // ✅ Create Resume Handler
   const handleCreateResume = () => {
-    navigate("/candidate/resume/experience-level");
+    navigate("/candidate/resume/choose-template");
   };
 
   // Show loading state while checking authentication

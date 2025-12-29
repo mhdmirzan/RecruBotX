@@ -1,39 +1,26 @@
-import { useState } from "react";
-import ExperienceLevel from "./ExperienceLevel";
+import React, { useState } from "react";
+
+// import all steps correctly
 import TemplateSelect from "./TemplateSelect";
-import ResumeSource from "./ResumeSource";
 import ResumeBuilder from "./ResumeBuilder";
 
 const ResumeFlow = () => {
   const [step, setStep] = useState(1);
-  const [experienceLevel, setExperienceLevel] = useState("");
   const [template, setTemplate] = useState("");
 
   return (
     <>
       {step === 1 && (
-        <ExperienceLevel
-          onNext={(level) => {
-            setExperienceLevel(level);
+        <TemplateSelect
+          onNext={(selectedTemplate) => {
+            setTemplate(selectedTemplate);
             setStep(2);
           }}
         />
       )}
 
       {step === 2 && (
-        <TemplateSelect
-          onNext={(tpl) => {
-            setTemplate(tpl);
-            setStep(3);
-          }}
-        />
-      )}
-
-      {step === 3 && <ResumeSource onNext={() => setStep(4)} />}
-
-      {step === 4 && (
         <ResumeBuilder
-          experienceLevel={experienceLevel}
           template={template}
         />
       )}
