@@ -147,6 +147,29 @@ class CandidateUserModel(BaseModel):
     )
 
 
+class RecruiterUserModel(BaseModel):
+    """Recruiter user account model."""
+    
+    id: Optional[PyObjectId] = Field(alias="_id", default=None)
+    first_name: str
+    last_name: str
+    email: str
+    password: str  # Should be hashed in production
+    company_name: Optional[str] = None
+    company_website: Optional[str] = None
+    phone: Optional[str] = None
+    profile_image: Optional[str] = None  # Base64 encoded image
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    is_active: bool = True
+    
+    model_config = ConfigDict(
+        arbitrary_types_allowed=True,
+        json_encoders={ObjectId: str},
+        populate_by_name=True,
+    )
+
+
 class InterviewCVModel(BaseModel):
     """Interview CV details extracted from candidate resume."""
     

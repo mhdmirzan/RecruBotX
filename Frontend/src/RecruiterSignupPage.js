@@ -20,6 +20,8 @@ const RecruiterSignupPage = () => {
     firstName: "",
     lastName: "",
     companyName: "",
+    companyWebsite: "",
+    phone: "",
     email: "",
     password: "",
     confirmPassword: "",
@@ -28,6 +30,8 @@ const RecruiterSignupPage = () => {
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const fadeInUp = {
     initial: { opacity: 0, y: 20 },
@@ -41,22 +45,58 @@ const RecruiterSignupPage = () => {
       ...formData,
       [name]: type === "checkbox" ? checked : value,
     });
+    setError(""); // Clear error on input change
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
 
     if (formData.password !== formData.confirmPassword) {
-      alert("Passwords don't match");
+      setError("Passwords don't match");
       return;
     }
     if (!formData.agreeToTerms) {
-      alert("Please agree to the terms and conditions.");
+      setError("Please agree to the terms and conditions.");
       return;
     }
 
-    alert("Recruiter account created successfully!");
-    navigate("/recruiter/dashboard");
+    setIsLoading(true);
+
+    try {
+      const response = await fetch("http://localhost:8000/api/recruiter/auth/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email,
+          password: formData.password,
+          companyName: formData.companyName,
+          companyWebsite: formData.companyWebsite,
+          phone: formData.phone,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.detail || "Registration failed");
+      }
+
+      // Store user data in localStorage
+      localStorage.setItem("recruiterUser", JSON.stringify(data.user));
+
+      alert("Recruiter account created successfully!");
+      navigate("/recruiter/dashboard");
+    } catch (error) {
+      console.error("Registration error:", error);
+      setError(error.message || "Failed to create account. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const benefits = [
@@ -127,6 +167,37 @@ const RecruiterSignupPage = () => {
                   required
                 />
               </div>
+
+              {/* Company Website (Optional) */}
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                  name="companyWebsite"
+                  value={formData.companyWebsite}
+                  onChange={handleInputChange}
+                  placeholder="Company Website (Optional)"
+                  className="w-full border rounded-lg px-10 py-2 focus:ring focus:ring-indigo-200"
+                />
+              </div>
+
+              {/* Phone (Optional) */}
+              <div className="relative">
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleInputChange}
+                  placeholder="Phone Number (Optional)"
+                  className="w-full border rounded-lg px-10 py-2 focus:ring focus:ring-indigo-200"
+                />
+              </div>
+
+              {/* Error Message */}
+              {error && (
+                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+                  {error}
+                </div>
+              )}
 
               {/* Email */}
               <div className="relative">
@@ -208,10 +279,14 @@ const RecruiterSignupPage = () => {
               {/* Submit */}
               <button
                 type="submit"
-                className="w-full bg-indigo-600 text-white py-2 rounded-lg font-medium hover:bg-indigo-700 flex items-center justify-center"
+                disabled={isLoading}
+                className={`w-full py-2 rounded-lg font-medium flex items-center justify-center ${isLoading
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : "bg-indigo-600 text-white hover:bg-indigo-700"
+                  }`}
               >
-                Create Recruiter Account
-                <ArrowRight className="ml-2 w-4 h-4" />
+                {isLoading ? "Creating Account..." : "Create Recruiter Account"}
+                {!isLoading && <ArrowRight className="ml-2 w-4 h-4" />}
               </button>
             </form>
 

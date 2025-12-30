@@ -8,7 +8,7 @@ const Footer = () => {
       <div className="max-w-7xl mx-auto px-6 py-16">
         {/* Main Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-          
+
           {/* Left: Logo & Tagline */}
           <div className="space-y-6">
             <Link to="/" className="flex items-center space-x-2">
@@ -52,7 +52,7 @@ const Footer = () => {
               <Link to="/" className="text-sm hover:text-primary-accent transition">Home</Link>
               <Link to="/how-it-works" className="text-sm hover:text-primary-accent transition">How it Works</Link>
               <Link to="/candidates" className="text-sm hover:text-primary-accent transition">Candidates</Link>
-              <Link to="/recruiters" className="text-sm hover:text-primary-accent transition">Recruiters</Link>
+              <Link to="/recruiter" className="text-sm hover:text-primary-accent transition">Recruiters</Link>
               <Link to="/pricing" className="text-sm hover:text-primary-accent transition">Pricing</Link>
               <Link to="/about" className="text-sm hover:text-primary-accent transition">About</Link>
               <Link to="/contact" className="text-sm hover:text-primary-accent transition">Contact</Link>
@@ -98,7 +98,7 @@ const Footer = () => {
         {/* Bottom Section */}
         <div className="border-t border-white/20 mt-12 pt-8 text-center">
           <p className="text-sm leading-relaxed">
-            © 2024 RecruBotX. All rights reserved.  
+            © 2024 RecruBotX. All rights reserved.
             <br className="block md:hidden" /> Built with AI for the future of recruitment.
           </p>
         </div>

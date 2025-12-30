@@ -30,8 +30,13 @@ import VoiceInterview from "./VoiceInterview";
 
 // Recruiter (HR)
 import RecruiterSignupPage from "./RecruiterSignupPage";
+import RecruiterSigninPage from "./RecruiterSigninPage";
 import RecruiterDashboard from "./RecruiterDashboard";
-// import RecruiterSigninPage from "./RecruiterSigninPage"; // optional
+import RecruiterSettings from "./RecruiterSettings";
+import JobPosting from "./JobPosting";
+import Ranking from "./Ranking";
+import Evaluation from "./Evaluation";
+import CandidateReport from "./CandidateReport";
 
 // Resume Builder Pages
 import TemplateSelect from "./pages/TemplateSelect";
@@ -90,17 +95,32 @@ function App() {
         />
 
         {/* ===== RECRUITER (HR) ===== */}
-        <Route
-          path="/signup/recruiter"
-          element={<RecruiterSignupPage />}
-        />
+        {/* Main recruiter route - opens signup page */}
+        <Route path="/recruiter" element={<RecruiterSignupPage />} />
 
+        {/* Recruiter signup route */}
+        <Route path="/signup/recruiter" element={<RecruiterSignupPage />} />
+
+        {/* Recruiter signin route */}
+        <Route path="/signin/recruiter" element={<RecruiterSigninPage />} />
+
+        {/* Recruiter dashboard */}
         <Route path="/recruiter/dashboard" element={<RecruiterDashboard />} />
 
-        {/*
-        Optional:
-        <Route path="/signin/recruiter" element={<RecruiterSigninPage />} />
-        */}
+        {/* Recruiter settings */}
+        <Route path="/recruiter/settings" element={<RecruiterSettings />} />
+
+        {/* Job posting */}
+        <Route path="/recruiter/job-posting" element={<JobPosting />} />
+
+        {/* Ranking */}
+        <Route path="/recruiter/ranking" element={<Ranking />} />
+
+        {/* Evaluation */}
+        <Route path="/recruiter/evaluation" element={<Evaluation />} />
+
+        {/* Candidate Report */}
+        <Route path="/recruiter/report/:rankingId" element={<CandidateReport />} />
       </Routes>
     </Router>
   );
