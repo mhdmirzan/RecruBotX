@@ -13,18 +13,17 @@ This project is configured for easy deployment on [Render](https://render.com).
 1. Go to [Render Dashboard](https://dashboard.render.com).
 2. Click **New** -> **Blueprint**.
 3. Connect your GitHub repository.
-4. Render will detect `render.yaml` and configure the services.
+4. Render will detect `render.yaml`. It will now use **Docker** for the backend to handle system audio dependencies.
 5. Provide the required Environment Variables when prompted.
 
 ### Option B: Manual Setup
 
 #### Backend (Web Service)
 1. **New** -> **Web Service**.
-2. Environment: `Python`.
-3. Root Directory: `Backend`.
-4. Build Command: `pip install -r requirements.txt`.
-5. Start Command: `uvicorn main:app --host 0.0.0.0 --port $PORT`.
-6. Add Environment Variables:
+2. Connect your repository.
+3. Environment/Runtime: **Docker**.
+4. Root Directory: `Backend`.
+5. Add Environment Variables:
    - `MONGODB_URL`: Your MongoDB connection string.
    - `GEMINI_API_KEY`: Your Google Gemini API key.
    - `DEEPGRAM_API_KEY`: Your Deepgram API key.
