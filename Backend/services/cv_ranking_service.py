@@ -60,8 +60,9 @@ class CVRankingService:
                 
                 # Screen CV against job description
                 screening_result = await self.screener.screen_cv(
-                    cv_text=cv_text,
-                    job_description=job_description
+                    job_description=job_description,
+                    cv_content=cv_text,
+                    file_name=f"Candidate_{idx+1}.pdf"
                 )
                 
                 # Extract candidate name from CV text (simple extraction)

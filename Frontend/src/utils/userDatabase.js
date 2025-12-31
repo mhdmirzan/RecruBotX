@@ -1,6 +1,6 @@
 // User database integration with MongoDB backend
 
-const API_BASE_URL = 'http://localhost:8000/api';
+import API_BASE_URL from "../apiConfig";
 const CURRENT_USER_KEY = 'recrubotx_current_user';
 
 // No longer need to initialize dummy users - they're in MongoDB
@@ -49,24 +49,24 @@ export const registerUser = async (userData) => {
     const data = await response.json();
 
     if (!response.ok) {
-      return { 
-        success: false, 
-        message: data.detail || 'Registration failed' 
+      return {
+        success: false,
+        message: data.detail || 'Registration failed'
       };
     }
 
     // Store logged in user (without password)
     localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(data.user));
 
-    return { 
-      success: true, 
-      user: data.user 
+    return {
+      success: true,
+      user: data.user
     };
   } catch (error) {
     console.error('Registration error:', error);
-    return { 
-      success: false, 
-      message: 'Network error. Please check if the backend server is running.' 
+    return {
+      success: false,
+      message: 'Network error. Please check if the backend server is running.'
     };
   }
 };
@@ -88,24 +88,24 @@ export const loginUser = async (email, password) => {
     const data = await response.json();
 
     if (!response.ok) {
-      return { 
-        success: false, 
-        message: data.detail || 'Login failed' 
+      return {
+        success: false,
+        message: data.detail || 'Login failed'
       };
     }
 
     // Store logged in user (without password)
     localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(data.user));
 
-    return { 
-      success: true, 
-      user: data.user 
+    return {
+      success: true,
+      user: data.user
     };
   } catch (error) {
     console.error('Login error:', error);
-    return { 
-      success: false, 
-      message: 'Network error. Please check if the backend server is running.' 
+    return {
+      success: false,
+      message: 'Network error. Please check if the backend server is running.'
     };
   }
 };
