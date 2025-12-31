@@ -13,7 +13,8 @@ import sounddevice as sd
 import soundfile as sf
 import requests
 import json
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 import numpy as np
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
@@ -81,8 +82,8 @@ class VoiceAgent:
             print("Please get a free API key from: https://makersuite.google.com/app/apikey")
             gemini_key = input("Enter your Gemini API key: ").strip()
         
-        genai.configure(api_key=gemini_key)
-        self.gemini_model = genai.GenerativeModel('gemini-2.5-flash')
+        self.gemini_client = genai.Client(api_key=gemini_key)
+        self.gemini_model_name = 'gemini-1.5-flash' # Using 1.5 flash for stability across regions
         
         print("Voice Agent initialized successfully!\n")
         print("Note: Using Deepgram Nova-2 (STT), Deepgram Aura (TTS), and Gemini 2.5 Flash (Questions & Evaluation)\n")
@@ -360,7 +361,10 @@ Return ONLY the short question text, ending with a question mark. No preamble, n
             print(f"🤔 Generating question {self.question_count} with Gemini... (attempt {attempt + 1}/{max_retries})")
             
             try:
-                response = self.gemini_model.generate_content(prompt)
+                response = self.gemini_client.models.generate_content(
+                    model=self.gemini_model_name,
+                    contents=prompt
+                )
                 question = response.text.strip()
                 
                 # Clean up the question
@@ -560,7 +564,10 @@ Example: "Score: 82/100 - Demonstrates strong conceptual understanding with accu
         
         try:
             # Use Gemini to intelligently evaluate the answer with deep understanding assessment
-            response = self.gemini_model.generate_content(prompt)
+            response = self.gemini_client.models.generate_content(
+                model=self.gemini_model_name,
+                contents=prompt
+            )
             feedback = response.text.strip()
             
             # Extract first meaningful line if multiple lines returned

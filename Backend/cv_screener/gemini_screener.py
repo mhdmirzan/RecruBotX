@@ -24,7 +24,8 @@ import re
 import asyncio
 from pathlib import Path
 from typing import Dict, Any, List, Optional
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
@@ -44,7 +45,7 @@ class GeminiCVScreener:
     """
     
     # Gemini model identifier - using stable model
-    MODEL_NAME = "gemini-2.5-flash"
+    MODEL_NAME = "gemini-1.5-flash"
     
     def __init__(self, api_key: Optional[str] = None):
         """
@@ -61,18 +62,15 @@ class GeminiCVScreener:
                 "GEMINI_API_KEY not found. Please set it in .env file or pass as parameter."
             )
         
-        # Configure the Gemini API
-        genai.configure(api_key=self.api_key)
+        # Initialize the Google Gen AI Client
+        self.client = genai.Client(api_key=self.api_key)
         
-        # Create the model
-        self.model = genai.GenerativeModel(
-            model_name=self.MODEL_NAME,
-            generation_config={
-                "temperature": 0.1,
-                "top_p": 0.95,
-                "top_k": 40,
-                "max_output_tokens": 8192,
-            }
+        # Configure generation settings
+        self.generation_config = types.GenerateContentConfig(
+            temperature=0.1,
+            top_p=0.95,
+            top_k=40,
+            max_output_tokens=8192,
         )
         
         self.screening_prompt = """
@@ -168,7 +166,11 @@ Be SPECIFIC, OBJECTIVE, and CONSTRUCTIVE. Reference actual skills from the CV.
             loop = asyncio.get_event_loop()
             response = await loop.run_in_executor(
                 None,
-                lambda: self.model.generate_content(prompt)
+                lambda: self.client.models.generate_content(
+                    model=self.MODEL_NAME,
+                    contents=prompt,
+                    config=self.generation_config
+                )
             )
             
             result_text = (response.text or "").strip()
