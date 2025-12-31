@@ -1,19 +1,23 @@
-# Use an official Python runtime as a parent image
-FROM python:3.10-slim
+# Use an official Python runtime as a parent image (Bullseye is more stable for these packages)
+FROM python:3.10-slim-bullseye
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
+ENV DEBIAN_FRONTEND=noninteractive
 
 # Install system dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends ca-certificates && \
+    apt-get update && \
+    apt-get install -y --no-install-recommends \
     build-essential \
     libportaudio2 \
     libasound2-dev \
-    libgl1-mesa-glx \
+    libgl1 \ 
     libglib2.0-0 \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+    && apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 # Set the working directory in the container
 WORKDIR /app
