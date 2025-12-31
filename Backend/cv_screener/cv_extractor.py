@@ -16,7 +16,8 @@ Extracts:
 Author: RecruBotX Team
 """
 
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 import os
 import json
 from typing import Dict, Any, List
@@ -26,12 +27,15 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Configure Gemini
-GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+# Prefer GEMINI_API_KEY for consistency across the project
+GOOGLE_API_KEY = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
+
 if not GOOGLE_API_KEY:
-    print("[WARNING] GOOGLE_API_KEY not found in environment variables!")
+    print("[WARNING] GEMINI_API_KEY not found in environment variables!")
+    client = None
 else:
-    genai.configure(api_key=GOOGLE_API_KEY)
-    print("[DEBUG] Google Generative AI configured successfully")
+    client = genai.Client(api_key=GOOGLE_API_KEY)
+    print("[DEBUG] Google Gen AI Client initialized successfully")
 
 
 def extract_cv_information(cv_text: str) -> Dict[str, Any]:
@@ -79,8 +83,8 @@ JSON Output:
 """
     
     # Check if API key is configured
-    if not GOOGLE_API_KEY:
-        print("[ERROR] Cannot extract CV info: GOOGLE_API_KEY not configured")
+    if not client:
+        print("[ERROR] Cannot extract CV info: Google Gen AI Client not initialized")
         return {
             "candidate_name": None,
             "phone_number": None,
@@ -91,13 +95,18 @@ JSON Output:
             "experience": None,
             "certifications": [],
             "summary": None,
-            "error": "GOOGLE_API_KEY not configured"
+            "error": "Google API Client not configured"
         }
     
     try:
         print(f"[DEBUG] Sending {len(cv_text)} characters to Gemini for extraction...")
-        model = genai.GenerativeModel("gemini-2.5-flash")
-        response = model.generate_content(prompt)
+        response = client.models.generate_content(
+            model="gemini-1.5-flash",
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                temperature=0.1,
+            )
+        )
         
         # Extract JSON from response
         response_text = response.text.strip()
