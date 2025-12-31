@@ -22,3 +22,9 @@ requests>=2.31.0
 # Google Generative AI (stable version)
 google-generativeai>=0.3.0
 reportlab>=3.6.12
+
+opencv-python
+numpy
+mediapipe
+deepface
+tensorflow

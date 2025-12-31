@@ -1,25 +1,25 @@
 import React, { useState, useEffect, useRef } from "react";
-import { NavLink, useNavigate } from "react-router-dom";
-import { 
-  Mic, MicOff, Send, CheckCircle, XCircle, Volume2, Loader, 
-  LogOut, LayoutDashboard, Cog, Sparkles, Play, RotateCcw,
-  Clock, Target, Award, TrendingUp, Upload, FileText
+import { useNavigate } from "react-router-dom";
+import {
+  Mic, MicOff, Send, CheckCircle, XCircle, Volume2, Loader,
+  Sparkles, Play, RotateCcw, Clock, Target, Award, TrendingUp, Upload, FileText
 } from "lucide-react";
-import { getCurrentUser, logoutUser } from "./utils/userDatabase";
+import { getCurrentUser } from "./utils/userDatabase";
+import CandidateSidebar from "./components/CandidateSidebar";
 
 const VoiceInterview = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [sessionId, setSessionId] = useState(null);
   const [isSetupComplete, setIsSetupComplete] = useState(false);
-  
+
   // Setup state
   const [interviewField, setInterviewField] = useState("");
   const [positionLevel, setPositionLevel] = useState("");
   const [numQuestions, setNumQuestions] = useState(5);
   const [availableFields, setAvailableFields] = useState([]);
   const [availableLevels, setAvailableLevels] = useState([]);
-  
+
   // Candidate Information
   const [candidateName, setCandidateName] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
@@ -29,7 +29,7 @@ const VoiceInterview = () => {
   const [skills, setSkills] = useState("");
   const [experience, setExperience] = useState("");
   const [cvFile, setCvFile] = useState(null);
-  
+
   // Interview state
   const [currentQuestion, setCurrentQuestion] = useState("");
   const [currentQuestionNum, setCurrentQuestionNum] = useState(0);
@@ -41,14 +41,14 @@ const VoiceInterview = () => {
   const [feedback, setFeedback] = useState("");
   const [currentScore, setCurrentScore] = useState(null);
   const [isComplete, setIsComplete] = useState(false);
-  
+
   // Final report
   const [reportData, setReportData] = useState(null);
-  
+
   // Audio visualization
   const [audioLevel, setAudioLevel] = useState(0);
   const animationRef = useRef(null);
-  
+
   // Audio recording
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
@@ -70,11 +70,6 @@ const VoiceInterview = () => {
     fetchAvailableFields();
   }, [navigate]);
 
-  const handleLogout = () => {
-    logoutUser();
-    navigate("/signin/candidate");
-  };
-
   const fetchAvailableFields = async () => {
     try {
       const response = await fetch("http://localhost:8000/api/voice-interview/available-fields");
@@ -86,7 +81,7 @@ const VoiceInterview = () => {
     } catch (error) {
       console.error("Error fetching fields:", error);
       setAvailableFields([
-        "Software Engineering", "Data Science", "Web Development", 
+        "Software Engineering", "Data Science", "Web Development",
         "Machine Learning", "DevOps", "Cybersecurity"
       ]);
       setAvailableLevels(["Junior", "Intermediate", "Senior"]);
@@ -107,8 +102,8 @@ const VoiceInterview = () => {
 
   const startInterview = async () => {
     // Validate all required fields
-    if (!interviewField || !positionLevel || !candidateName || !phoneNumber || 
-        !emailAddress || !education || !projects || !skills || !experience || !cvFile) {
+    if (!interviewField || !positionLevel || !candidateName || !phoneNumber ||
+      !emailAddress || !education || !projects || !skills || !experience || !cvFile) {
       alert("Please fill in all required fields including CV upload");
       return;
     }
@@ -147,7 +142,7 @@ const VoiceInterview = () => {
         setCurrentQuestionNum(data.current_question);
         setTotalQuestions(data.total_questions);
         setIsSetupComplete(true);
-        
+
         // Speak the question
         speakQuestion(data.question);
       } else {
@@ -185,11 +180,11 @@ const VoiceInterview = () => {
       // Setup audio context for real-time level monitoring
       const audioContext = new (window.AudioContext || window.webkitAudioContext)();
       audioContextRef.current = audioContext;
-      
+
       const analyser = audioContext.createAnalyser();
       analyser.fftSize = 256;
       analyserRef.current = analyser;
-      
+
       const source = audioContext.createMediaStreamSource(stream);
       source.connect(analyser);
 
@@ -204,7 +199,7 @@ const VoiceInterview = () => {
 
       mediaRecorder.onstop = async () => {
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-        
+
         // Clean up
         if (audioContextRef.current) {
           audioContextRef.current.close();
@@ -212,7 +207,7 @@ const VoiceInterview = () => {
         if (audioStreamRef.current) {
           audioStreamRef.current.getTracks().forEach(track => track.stop());
         }
-        
+
         // Clear timers
         if (silenceTimerRef.current) {
           clearInterval(silenceTimerRef.current);
@@ -220,7 +215,7 @@ const VoiceInterview = () => {
         if (recordingTimerRef.current) {
           clearTimeout(recordingTimerRef.current);
         }
-        
+
         await submitAudioAnswer(audioBlob);
       };
 
@@ -269,7 +264,7 @@ const VoiceInterview = () => {
     } else {
       // Check if 4 seconds of silence
       const silenceDuration = (currentTime - lastSoundTimeRef.current) / 1000;
-      
+
       if (silenceDuration >= 4 && isRecording) {
         console.log("🤫 4 seconds of silence detected, stopping recording...");
         stopRecording();
@@ -282,7 +277,7 @@ const VoiceInterview = () => {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
       setAudioLevel(0);
-      
+
       // Clear intervals
       if (silenceTimerRef.current) {
         clearInterval(silenceTimerRef.current);
@@ -311,7 +306,7 @@ const VoiceInterview = () => {
       if (data.success) {
         setFeedback(data.feedback);
         setCurrentScore(data.score);
-        
+
         // Check if interview is complete
         if (data.is_complete) {
           setIsComplete(true);
@@ -352,7 +347,7 @@ const VoiceInterview = () => {
       if (data.success) {
         setFeedback(data.feedback);
         setCurrentScore(data.score);
-        
+
         // Check if interview is complete
         if (data.is_complete) {
           setIsComplete(true);
@@ -482,71 +477,39 @@ const VoiceInterview = () => {
     );
   }
 
-  // Sidebar Component
-  const Sidebar = () => (
-    <aside className="w-72 h-screen bg-white shadow-xl flex flex-col p-6 border-r border-gray-200 flex-shrink-0">
-      <div className="mb-8 text-center flex-shrink-0">
-        <h1 className="text-3xl font-bold text-blue-600">RecruBotX</h1>
-      </div>
-
-      <nav className="flex flex-col space-y-4 text-gray-700 flex-shrink-0">
-        <NavLink
-          to="/candidate/dashboard"
-          className={({ isActive }) =>
-            `font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 ${isActive ? "bg-blue-50 text-blue-600" : "text-gray-700 hover:bg-gray-50 hover:text-blue-600"}`
-          }
-        >
-          <LayoutDashboard className="w-5 h-5" /> Dashboard
-        </NavLink>
-        
-        <NavLink
-          to="/candidate/settings"
-          className={({ isActive }) =>
-            `font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 ${isActive ? "bg-blue-50 text-blue-600" : "text-gray-700 hover:bg-gray-50 hover:text-blue-600"}`
-          }
-        >
-          <Cog className="w-5 h-5" /> Settings
-        </NavLink>
-      </nav>
-
-      <div className="mt-auto flex-shrink-0">
-        <div className="mb-4 text-center pb-4 border-b border-gray-200">
-          <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4 text-white font-bold text-2xl shadow-lg overflow-hidden">
-            {user.profileImage ? (
-              <img src={user.profileImage} alt="Profile" className="w-full h-full object-cover" />
-            ) : (
-              <>{user.firstName?.charAt(0)}{user.lastName?.charAt(0)}</>
-            )}
-          </div>
-          <h3 className="font-bold text-gray-800 text-lg">{user.firstName} {user.lastName}</h3>
-          <p className="text-sm text-gray-500 mt-1">{user.email}</p>
-        </div>
-
-        <button
-          onClick={handleLogout}
-          className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-red-500 to-red-600 px-4 py-3 rounded-xl text-white hover:from-red-600 hover:to-red-700 transition-all shadow-md"
-        >
-          <LogOut className="w-5 h-5" /> Logout
-        </button>
-      </div>
-    </aside>
-  );
-
   // Setup Screen
   if (!isSetupComplete) {
     return (
       <div className="h-screen w-screen flex bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden fixed inset-0">
-        <Sidebar />
-        
-        <main className="flex-1 h-screen flex flex-col overflow-hidden py-6 px-10">
-          {/* Welcome Banner */}
-                  {/* Top Header */}
-        <div className="flex justify-between items-center mb-3 flex-shrink-0">
-          <div>
-            <h2 className="text-3xl font-bold text-gray-800">AI Voice Interview</h2>
-            <p className="mt-1 text-gray-500 text-md py-4">Practice technical interviews with intelligent feedback.</p>
+        <CandidateSidebar />
+
+        <main className="flex-1 h-screen flex flex-col overflow-hidden py-8 px-8">
+          {/* Top Header */}
+          <div className="mb-6 flex-shrink-0 flex justify-between items-center">
+            <div>
+              <h2 className="text-3xl font-bold text-gray-800">AI Voice Interview</h2>
+              <p className="text-gray-500 text-md mt-1 py-4">Practice technical interviews with intelligent feedback.</p>
+            </div>
+
+            {/* User Profile - Top Right */}
+            {user && (
+              <div className="flex items-center gap-3">
+                <div className="text-right">
+                  <h3 className="font-bold text-gray-800">
+                    {user.firstName} {user.lastName}
+                  </h3>
+                  <p className="text-sm text-gray-500">{user.email}</p>
+                </div>
+                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg overflow-hidden">
+                  {user.profileImage ? (
+                    <img src={user.profileImage} alt="Profile" className="w-full h-full object-cover" />
+                  ) : (
+                    <>{user.firstName?.charAt(0)}{user.lastName?.charAt(0)}</>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
-        </div>
 
           {/* Setup Form */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 overflow-hidden">
@@ -557,7 +520,7 @@ const VoiceInterview = () => {
                 Configure Your Interview
               </h3>
 
-              <div className="space-y-4 overflow-y-auto pr-2" style={{maxHeight: 'calc(100vh - 300px)'}}>
+              <div className="space-y-4 overflow-y-auto pr-2" style={{ maxHeight: 'calc(100vh - 300px)' }}>
                 {/* Personal Information */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -626,11 +589,10 @@ const VoiceInterview = () => {
                         key={level}
                         type="button"
                         onClick={() => setPositionLevel(level)}
-                        className={`p-3 rounded-xl border-2 transition-all ${
-                          positionLevel === level
+                        className={`p-3 rounded-xl border-2 transition-all ${positionLevel === level
                             ? "border-blue-500 bg-blue-50 text-blue-700"
                             : "border-gray-200 hover:border-blue-300 hover:bg-gray-50"
-                        }`}
+                          }`}
                       >
                         <div className="font-semibold text-sm">{level}</div>
                         <div className="text-xs text-gray-500 mt-1">
@@ -751,12 +713,12 @@ const VoiceInterview = () => {
             </div>
 
             {/* Info Card */}
-            <div className="bg-white rounded-2xl shadow-lg p-6 flex-shrink-0 overflow-y-auto"  style={{maxHeight: 'calc(100vh - 180px)'}}>
+            <div className="bg-white rounded-2xl shadow-lg p-6 flex-shrink-0 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 180px)' }}>
               <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
                 <Sparkles className="w-5 h-5 text-yellow-500" />
                 How It Works
               </h3>
-              
+
               <div className="space-y-4">
                 <div className="flex items-start gap-3 py-2">
                   <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 font-bold text-sm flex-shrink-0">1</div>
@@ -915,13 +877,12 @@ const VoiceInterview = () => {
           <div className="flex justify-center mb-8">
             <div className="relative">
               <div
-                className={`w-32 h-32 rounded-full flex items-center justify-center transition-all duration-300 ${
-                  isSpeaking
+                className={`w-32 h-32 rounded-full flex items-center justify-center transition-all duration-300 ${isSpeaking
                     ? "bg-gradient-to-br from-blue-400 to-purple-500 shadow-xl"
                     : isRecording
-                    ? "bg-gradient-to-br from-red-400 to-pink-500 shadow-xl"
-                    : "bg-gradient-to-br from-gray-300 to-gray-400"
-                }`}
+                      ? "bg-gradient-to-br from-red-400 to-pink-500 shadow-xl"
+                      : "bg-gradient-to-br from-gray-300 to-gray-400"
+                  }`}
                 style={{
                   transform: `scale(${1 + audioLevel / 200})`,
                 }}
@@ -934,7 +895,7 @@ const VoiceInterview = () => {
                   <MicOff className="w-16 h-16 text-white" />
                 )}
               </div>
-              
+
               {/* Animated rings */}
               {(isSpeaking || isRecording) && (
                 <>

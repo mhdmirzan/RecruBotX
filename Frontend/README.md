@@ -1,70 +1,92 @@
-# Getting Started with Create React App
+# RecruBotX Frontend - Interactive AI Recruitment Platform
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+## 🚀 Overview
+RecruBotX is a cutting-edge AI recruitment platform built with React. It provides an intuitive interface for both candidates and recruiters to manage the hiring process through AI-powered voice interviews, CV screening, and ranking.
 
-## Available Scripts
+---
 
-In the project directory, you can run:
+## 🛠️ Getting Started
 
-### `npm start`
+### 1. Installation
+```bash
+cd Frontend
+npm install
+```
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+### 2. Environment Configuration
+Create a `.env` file in the `Frontend` directory:
+```env
+REACT_APP_API_URL=http://localhost:8000
+```
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+### 3. Available Scripts
+- `npm start`: Runs the app in development mode at [http://localhost:3000](http://localhost:3000)
+- `npm run build`: Builds the production bundle
+- `npm test`: Launches the test runner
 
-### `npm test`
+---
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## 👥 Candidate Features
 
-### `npm run build`
+### 1. AI Voice Interview
+- Interactive AI-driven interviews with real-time speech-to-text and text-to-speech.
+- PDF CV upload integrated directly into the interview start flow.
+- AI-powered information extraction from uploaded CVs.
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### 2. Resume Builder & Management
+- Multiple templates to choose from.
+- PDF generation and download of created resumes.
+- "Analyze Resume" feature to screen CVs against job descriptions.
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+### 3. Candidate Dashboard
+- View all active job applications.
+- Track interview status and dates.
+- Interactive job details modal with background blur.
+- Quick navigation to CV screening and resume builder.
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+---
 
-### `npm run eject`
+## 👔 Recruiter Features
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+### 1. Job Posting & Management
+- Create job postings with rich text descriptions.
+- Advanced formatting tools (bold, italic, bullets).
+- Upload multiple candidate CVs for batch processing.
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+### 2. Candidate Ranking
+- AI-powered scoring based on CV match, interview performance, and technical skills.
+- Sorting and filtering candidates by score and status.
+- Detailed candidate reports with strengths and weaknesses analysis.
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+### 3. Evaluation Dashboard
+- Visual progress bars for skill assessment.
+- High/Medium/Low score filtering.
+- Bulk download of evaluation reports in JSON format.
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+---
 
-## Learn More
+## 🗄️ Authentication & Data
+- **Candidate Auth**: Managed via API at `/signin/candidate` (stored in localStorage).
+- **Recruiter Auth**: Managed via API at `/signin/recruiter`.
+- **User Session**: Handled through `src/utils/userDatabase.js`.
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+---
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+## 📁 Project Structure
+- `src/components/`: Reusable UI components.
+- `src/pages/`: Main application pages.
+- `src/utils/`: Utility functions for API and state management.
+- `src/icons/`: SVG and Lucide-react icons.
 
-### Code Splitting
+---
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+## 🔐 Security & Best Practices
+- **Input Validation**: Enforced on all forms and file uploads.
+- **Protected Routes**: Dashboard and settings require authentication.
+- **Rich Text Control**: Managed through contentEditable with controlled resets.
 
-### Analyzing the Bundle Size
+---
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+**Version:** 1.0.0  
+**Framework:** React 18+  
+**Styling:** Tailwind CSS  
