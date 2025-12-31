@@ -1,8 +1,9 @@
 // src/pages/AnalyzeResume.jsx
 import React, { useState, useEffect } from "react";
-import { Upload, FileText, Loader2, LogOut, Cog, LayoutDashboard, Sparkles, User, Award, Target, ArrowRight, CheckCircle, ThumbsUp, AlertCircle, AlertTriangle, TrendingUp, Download } from "lucide-react";
-import { NavLink, useNavigate } from "react-router-dom";
-import { getCurrentUser, logoutUser } from "./utils/userDatabase";
+import { Upload, FileText, Loader2, Sparkles, User, Award, Target, ArrowRight, CheckCircle, ThumbsUp, AlertCircle, AlertTriangle, TrendingUp, Download } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { getCurrentUser } from "./utils/userDatabase";
+import CandidateSidebar from "./components/CandidateSidebar";
 import jsPDF from 'jspdf';
 
 const AnalyzeResume = () => {
@@ -55,12 +56,6 @@ const AnalyzeResume = () => {
       setUser(currentUser);
     }
   }, [navigate]);
-
-  // Logout Handler
-  const handleLogout = () => {
-    logoutUser();
-    navigate("/signin/candidate");
-  };
 
   const handleFileChange = (e) => {
     setFile(e.target.files[0] || null);
@@ -124,7 +119,7 @@ const AnalyzeResume = () => {
         recommendation: payload.recommendation || "",
         hasJobDescription: jobDesc.trim() !== "" // Track if JD was provided
       };
-      
+
       setAnalysis(analysisData);
     } catch (err) {
       console.error("Analyze error:", err);
@@ -189,8 +184,8 @@ const AnalyzeResume = () => {
       doc.setFont(undefined, 'bold');
       const recText = `Recommendation: ${analysis.recommendation}`;
       const recColor = analysis.recommendation === 'Strongly Recommend' ? [34, 197, 94] :
-                       analysis.recommendation === 'Recommend' ? [59, 130, 246] :
-                       analysis.recommendation === 'Consider' ? [250, 204, 21] : [239, 68, 68];
+        analysis.recommendation === 'Recommend' ? [59, 130, 246] :
+          analysis.recommendation === 'Consider' ? [250, 204, 21] : [239, 68, 68];
       doc.setTextColor(...recColor);
       doc.text(recText, margin, yPosition);
       yPosition += 10;
@@ -378,65 +373,35 @@ const AnalyzeResume = () => {
   return (
     <div className="h-screen w-screen flex bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden fixed inset-0">
       <style>{animationStyles}</style>
-      {/* Sidebar - Always Visible, No Scroll */}
-      <aside className="w-72 h-screen bg-white shadow-xl flex flex-col p-6 border-r border-gray-200 flex-shrink-0">
-
-        {/* Logo */}
-        <div className="mb-8 text-center flex-shrink-0">
-          <h1 className="text-3xl font-bold text-blue-600">RecruBotX</h1>
-        </div>
-
-        <nav className="flex flex-col space-y-4 text-gray-700 flex-shrink-0">
-          <NavLink
-            to="/candidate/dashboard"
-            className={({ isActive }) =>
-              `font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 ${isActive ? "bg-blue-50 text-blue-600" : "text-gray-700 hover:bg-gray-50 hover:text-blue-600"}`
-            }
-          >
-            <LayoutDashboard className="w-5 h-5" /> Dashboard
-          </NavLink>
-          <NavLink
-            to="/candidate/settings"
-            className={({ isActive }) =>
-              `font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 ${isActive ? "bg-blue-50 text-blue-600" : "text-gray-700 hover:bg-gray-50 hover:text-blue-600"}`
-            }
-          >
-            <Cog className="w-5 h-5" /> Settings
-          </NavLink>
-        </nav>
-
-        {/* Bottom Section */}
-        <div className="mt-auto flex-shrink-0">
-          {/* User Profile Section */}
-          <div className="mb-4 text-center pb-4 border-b border-gray-200">
-            <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4 text-white font-bold text-2xl shadow-lg overflow-hidden">
-              {user.profileImage ? (
-                <img src={user.profileImage} alt="Profile" className="w-full h-full object-cover" />
-              ) : (
-                <>{user.firstName?.charAt(0)}{user.lastName?.charAt(0)}</>
-              )}
-            </div>
-            <h3 className="font-bold text-gray-800 text-lg">{user.firstName} {user.lastName}</h3>
-            <p className="text-sm text-gray-500 mt-1">{user.email}</p>
-          </div>
-
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-red-500 to-red-600 px-4 py-3 rounded-xl text-white hover:from-red-600 hover:to-red-700 transition-all shadow-md"
-          >
-            <LogOut className="w-5 h-5" /> Logout
-          </button>
-        </div>
-      </aside>
+      <CandidateSidebar />
 
       {/* Main Content */}
-      <main className="flex-1 h-screen flex flex-col overflow-hidden py-6 px-10">
+      <main className="flex-1 h-screen flex flex-col overflow-hidden py-8 px-8">
         {/* Top Header */}
-        <div className="flex justify-between items-center mb-3 flex-shrink-0">
+        <div className="mb-6 flex-shrink-0 flex justify-between items-center">
           <div>
             <h2 className="text-3xl font-bold text-gray-800">CV Screening</h2>
-            <p className="mt-1 text-gray-500 text-md py-4">Upload your resume and paste the job description to analyze compatibility.</p>
+            <p className="text-gray-500 text-md mt-1 py-4">Upload your resume and paste the job description to analyze compatibility.</p>
           </div>
+
+          {/* User Profile - Top Right */}
+          {user && (
+            <div className="flex items-center gap-3">
+              <div className="text-right">
+                <h3 className="font-bold text-gray-800">
+                  {user.firstName} {user.lastName}
+                </h3>
+                <p className="text-sm text-gray-500">{user.email}</p>
+              </div>
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg overflow-hidden">
+                {user.profileImage ? (
+                  <img src={user.profileImage} alt="Profile" className="w-full h-full object-cover" />
+                ) : (
+                  <>{user.firstName?.charAt(0)}{user.lastName?.charAt(0)}</>
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Scrollable Content */}
@@ -529,12 +494,11 @@ const AnalyzeResume = () => {
                     </div>
                     {/* Recommendation Badge on Right Side (Only show when JD is provided) */}
                     {analysis.recommendation && analysis.hasJobDescription && (
-                      <div className={`px-6 py-3 rounded-xl text-base font-semibold shadow-lg border-2 transition-all duration-300 hover:shadow-2xl hover:scale-105 animation-pulse ${
-                        analysis.recommendation === 'Strongly Recommend' ? 'bg-gradient-to-br from-green-400 to-green-600 text-white border-green-500 hover:from-green-500 hover:to-green-700 border-pulse-green' :
-                        analysis.recommendation === 'Recommend' ? 'bg-gradient-to-br from-blue-400 to-blue-600 text-white border-blue-500 hover:from-blue-500 hover:to-blue-700 border-pulse-blue' :
-                        analysis.recommendation === 'Consider' ? 'bg-gradient-to-br from-yellow-300 to-yellow-500 text-yellow-900 border-yellow-400 hover:from-yellow-400 hover:to-yellow-600 border-pulse-yellow' :
-                        'bg-gradient-to-br from-red-300 to-red-500 text-white border-red-400 hover:from-red-400 hover:to-red-600 border-pulse-red'
-                      }`}>
+                      <div className={`px-6 py-3 rounded-xl text-base font-semibold shadow-lg border-2 transition-all duration-300 hover:shadow-2xl hover:scale-105 animation-pulse ${analysis.recommendation === 'Strongly Recommend' ? 'bg-gradient-to-br from-green-400 to-green-600 text-white border-green-500 hover:from-green-500 hover:to-green-700 border-pulse-green' :
+                          analysis.recommendation === 'Recommend' ? 'bg-gradient-to-br from-blue-400 to-blue-600 text-white border-blue-500 hover:from-blue-500 hover:to-blue-700 border-pulse-blue' :
+                            analysis.recommendation === 'Consider' ? 'bg-gradient-to-br from-yellow-300 to-yellow-500 text-yellow-900 border-yellow-400 hover:from-yellow-400 hover:to-yellow-600 border-pulse-yellow' :
+                              'bg-gradient-to-br from-red-300 to-red-500 text-white border-red-400 hover:from-red-400 hover:to-red-600 border-pulse-red'
+                        }`}>
                         <div className="flex items-center gap-2">
                           {analysis.recommendation === 'Strongly Recommend' && <CheckCircle className="w-5 h-5" />}
                           {analysis.recommendation === 'Recommend' && <ThumbsUp className="w-5 h-5" />}
@@ -617,26 +581,26 @@ const AnalyzeResume = () => {
                   </div>
                 )}
 
-                
-              {/* Areas for Improvement */}
-              {analysis.weaknesses && analysis.weaknesses.length > 0 && (
-                    <div className="bg-white p-6 rounded-xl border-l-4 border-blue-500 shadow-lg hover:shadow-xl transition">
-                      <h3 className="text-lg font-bold text-[#0a2a5e] mb-4 flex items-center gap-2">
-                        <span className="w-8 h-8 bg-white rounded-full flex items-center justify-center text-[#0a2a5e] border-2 border-blue-200">
-                          <TrendingUp className="w-5 h-5" />
-                        </span>
-                        Areas for Development
-                      </h3>
-                      <ul className="space-y-3">
-                        {analysis.weaknesses.map((weakness, index) => (
-                          <li key={index} className="flex items-start gap-3 text-gray-700">
-                            <span className="w-6 h-6 rounded-full flex items-center justify-center text-blue-600 font-bold text-xs flex-shrink-0 mt-0.5">✓</span>
-                            <span className="leading-relaxed">{weakness}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
+
+                {/* Areas for Improvement */}
+                {analysis.weaknesses && analysis.weaknesses.length > 0 && (
+                  <div className="bg-white p-6 rounded-xl border-l-4 border-blue-500 shadow-lg hover:shadow-xl transition">
+                    <h3 className="text-lg font-bold text-[#0a2a5e] mb-4 flex items-center gap-2">
+                      <span className="w-8 h-8 bg-white rounded-full flex items-center justify-center text-[#0a2a5e] border-2 border-blue-200">
+                        <TrendingUp className="w-5 h-5" />
+                      </span>
+                      Areas for Development
+                    </h3>
+                    <ul className="space-y-3">
+                      {analysis.weaknesses.map((weakness, index) => (
+                        <li key={index} className="flex items-start gap-3 text-gray-700">
+                          <span className="w-6 h-6 rounded-full flex items-center justify-center text-blue-600 font-bold text-xs flex-shrink-0 mt-0.5">✓</span>
+                          <span className="leading-relaxed">{weakness}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
 
                 {/* Next Steps - Blue Theme */}
                 {analysis.next_steps && (
