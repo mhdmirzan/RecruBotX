@@ -13,6 +13,8 @@ import {
 } from "lucide-react";
 import recruiterHero from "./assets/images/general/image1.jpg"; // you can change image later
 
+import { registerUser } from "./utils/userDatabase";
+
 const RecruiterSignupPage = () => {
   const navigate = useNavigate();
 
@@ -28,6 +30,8 @@ const RecruiterSignupPage = () => {
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const fadeInUp = {
     initial: { opacity: 0, y: 20 },
@@ -41,33 +45,46 @@ const RecruiterSignupPage = () => {
       ...formData,
       [name]: type === "checkbox" ? checked : value,
     });
+    setError("");
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
 
     if (formData.password !== formData.confirmPassword) {
-      alert("Passwords don't match");
+      setError("Passwords don't match");
       return;
     }
     if (!formData.agreeToTerms) {
-      alert("Please agree to the terms and conditions.");
+      setError("Please agree to the terms and conditions.");
       return;
     }
 
-    // Create dummy user for demo/storage
-    const dummyRecruiter = {
-      id: "rec_" + Math.random().toString(36).substr(2, 9),
+    setIsLoading(true);
+
+    // Call shared registration logic
+    const result = await registerUser({
       firstName: formData.firstName,
       lastName: formData.lastName,
       email: formData.email,
-      companyName: formData.companyName,
-      profileImage: null
-    };
+      password: formData.password,
+      companyName: formData.companyName // Passed but backend might ignore it for now
+    });
 
-    localStorage.setItem("recruiterUser", JSON.stringify(dummyRecruiter));
-    alert("Recruiter account created successfully!");
-    navigate("/recruiter/dashboard");
+    setIsLoading(false);
+
+    if (result.success) {
+      // For recruiter, we also store in a specific key to maintain current dashboard logic
+      localStorage.setItem("recruiterUser", JSON.stringify({
+        ...result.user,
+        companyName: formData.companyName
+      }));
+      alert("Recruiter account created successfully!");
+      navigate("/recruiter/dashboard");
+    } else {
+      setError(result.message);
+    }
   };
 
   const benefits = [
@@ -100,6 +117,12 @@ const RecruiterSignupPage = () => {
                 Hire smarter with AI-powered interviews
               </p>
             </div>
+
+            {error && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
+                {error}
+              </div>
+            )}
 
             <form onSubmit={handleSubmit} className="space-y-6">
 
@@ -219,10 +242,11 @@ const RecruiterSignupPage = () => {
               {/* Submit */}
               <button
                 type="submit"
-                className="w-full bg-indigo-600 text-white py-2 rounded-lg font-medium hover:bg-indigo-700 flex items-center justify-center"
+                disabled={isLoading}
+                className="w-full bg-indigo-600 text-white py-2 rounded-lg font-medium hover:bg-indigo-700 flex items-center justify-center disabled:bg-gray-400 disabled:cursor-not-allowed"
               >
-                Create Recruiter Account
-                <ArrowRight className="ml-2 w-4 h-4" />
+                {isLoading ? "Creating Account..." : "Create Recruiter Account"}
+                {!isLoading && <ArrowRight className="ml-2 w-4 h-4" />}
               </button>
             </form>
 

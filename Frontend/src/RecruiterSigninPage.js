@@ -12,6 +12,8 @@ import {
 } from "lucide-react";
 import image1 from "./assets/images/general/image1.jpg";
 
+import { loginUser } from "./utils/userDatabase";
+
 const RecruiterSigninPage = () => {
     const navigate = useNavigate();
 
@@ -45,22 +47,23 @@ const RecruiterSigninPage = () => {
         setError("");
         setIsLoading(true);
 
-        // Mock login for recruiter
-        // In a real app, you'd call a backend API
-        setTimeout(() => {
-            setIsLoading(false);
-            // For demo purposes, we'll just sign them in
-            const dummyRecruiter = {
-                id: "rec_123",
-                firstName: "Recruiter",
-                lastName: "Admin",
-                email: formData.email,
-                companyName: "RecruBotX Corp"
-            };
-            localStorage.setItem("recruiterUser", JSON.stringify(dummyRecruiter));
-            alert(`Welcome back, ${dummyRecruiter.firstName}!`);
+        // Call shared login logic
+        const result = await loginUser(formData.email, formData.password);
+
+        setIsLoading(false);
+
+        if (result.success) {
+            // Store specifically for the recruiter logic
+            localStorage.setItem("recruiterUser", JSON.stringify({
+                ...result.user,
+                // Add fallback company name if user doesn't have one in DB yet
+                companyName: result.user.companyName || "RecruBotX Corp"
+            }));
+            alert(`Welcome back, ${result.user.firstName}!`);
             navigate("/recruiter/dashboard");
-        }, 1000);
+        } else {
+            setError(result.message);
+        }
     };
 
     const benefits = [
