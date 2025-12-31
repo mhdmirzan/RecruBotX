@@ -14,8 +14,7 @@ RUN apt-get update && \
     build-essential \
     libportaudio2 \
     libasound2-dev \
-    libgl1 \
-    libgl1-mesa-glx \
+    libgl1 \ 
     libglib2.0-0 \
     && apt-get clean && \
     rm -rf /var/lib/apt/lists/*

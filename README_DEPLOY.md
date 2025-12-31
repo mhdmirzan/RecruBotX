@@ -13,24 +13,23 @@ This project is configured for easy deployment on [Render](https://render.com).
 1. Go to [Render Dashboard](https://dashboard.render.com).
 2. Click **New** -> **Blueprint**.
 3. Connect your GitHub repository.
-4. Render will detect `render.yaml` and configure the services.
+4. Render will detect `render.yaml`. It will now use **Docker** for the backend to handle system audio dependencies.
 5. Provide the required Environment Variables when prompted.
 
 ### Option B: Manual Setup
 
 #### Backend (Web Service)
 1. **New** -> **Web Service**.
-2. Environment: `Python`.
-3. Root Directory: `Backend`.
-4. Build Command: `pip install -r requirements.txt`.
-5. Start Command: `uvicorn main:app --host 0.0.0.0 --port $PORT`.
-6. Add Environment Variables:
+2. Connect your repository.
+3. Environment/Runtime: **Docker**.
+4. Root Directory: `Backend`.
+5. Add Environment Variables:
    - `MONGODB_URL`: Your MongoDB connection string.
    - `GEMINI_API_KEY`: Your Google Gemini API key.
    - `DEEPGRAM_API_KEY`: Your Deepgram API key.
    - `ALLOWED_ORIGINS`: `https://your-frontend-url.onrender.com`.
 
-#### Frontend (Static Site)
+#### Option 1: Frontend on Render (Static Site)
 1. **New** -> **Static Site**.
 2. Root Directory: `Frontend`.
 3. Build Command: `npm install && npm run build`.
@@ -41,6 +40,17 @@ This project is configured for easy deployment on [Render](https://render.com).
    - Source: `/*`
    - Destination: `/index.html`
    - Action: `Rewrite`
+
+#### Option 2: Frontend on Vercel (Recommended for Speed)
+1. Go to [Vercel](https://vercel.com) and click **Add New** -> **Project**.
+2. Import your GitHub repository.
+3. In **Configure Project**:
+   - **Root Directory**: Select `Frontend`.
+   - **Framework Preset**: `Create React App` (automatically detected).
+4. Expand **Environment Variables**:
+   - Add `REACT_APP_API_URL` with value `https://your-backend-url.onrender.com/api`.
+5. Click **Deploy**.
+6. **SPA Routing**: The `vercel.json` I created will automatically handle routing.
 
 ---
 
