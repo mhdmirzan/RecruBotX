@@ -1,7 +1,11 @@
 {
     "rewrites": [
         {
-            "source": "/(.*)",
+            "source": "/api/:path*",
+            "destination": "https://recrubotx-1-dg0g.onrender.com/api/:path*"
+        },
+        {
+            "source": "/((?!api/).*)",
             "destination": "/index.html"
         }
     ]
