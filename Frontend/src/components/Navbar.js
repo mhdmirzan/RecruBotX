@@ -4,13 +4,17 @@ import { Link, useLocation } from "react-router-dom";
 const Navbar = () => {
   const location = useLocation();
 
-  // Hide navbar on candidate dashboard pages
-  if (
-    location.pathname === "/candidate/dashboard" ||
-    location.pathname === "/candidate/analyze-resume" ||
-    location.pathname === "/candidate/settings" ||
-    location.pathname === "/candidate/application"
-  ) {
+  // Hide navbar on dashboard and portal pages
+  const hideNavbarPaths = [
+    "/candidate/",
+    "/recruiter/",
+    "/signin/",
+    "/signup/recruiter",
+    "/template/",
+    "/resume-builder"
+  ];
+
+  if (hideNavbarPaths.some(path => location.pathname.includes(path))) {
     return null;
   }
 

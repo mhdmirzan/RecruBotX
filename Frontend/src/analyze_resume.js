@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { getCurrentUser } from "./utils/userDatabase";
 import CandidateSidebar from "./components/CandidateSidebar";
 import jsPDF from 'jspdf';
+import API_BASE_URL from "./apiConfig";
 
 const AnalyzeResume = () => {
   const navigate = useNavigate();
@@ -84,7 +85,7 @@ const AnalyzeResume = () => {
         fd.append("job_description", jobDesc);
       }
 
-      const res = await fetch("http://localhost:8000/api/candidate/analyze-resume", {
+      const res = await fetch(`${API_BASE_URL}/candidate/analyze-resume`, {
         method: "POST",
         body: fd,
       });
@@ -495,9 +496,9 @@ const AnalyzeResume = () => {
                     {/* Recommendation Badge on Right Side (Only show when JD is provided) */}
                     {analysis.recommendation && analysis.hasJobDescription && (
                       <div className={`px-6 py-3 rounded-xl text-base font-semibold shadow-lg border-2 transition-all duration-300 hover:shadow-2xl hover:scale-105 animation-pulse ${analysis.recommendation === 'Strongly Recommend' ? 'bg-gradient-to-br from-green-400 to-green-600 text-white border-green-500 hover:from-green-500 hover:to-green-700 border-pulse-green' :
-                          analysis.recommendation === 'Recommend' ? 'bg-gradient-to-br from-blue-400 to-blue-600 text-white border-blue-500 hover:from-blue-500 hover:to-blue-700 border-pulse-blue' :
-                            analysis.recommendation === 'Consider' ? 'bg-gradient-to-br from-yellow-300 to-yellow-500 text-yellow-900 border-yellow-400 hover:from-yellow-400 hover:to-yellow-600 border-pulse-yellow' :
-                              'bg-gradient-to-br from-red-300 to-red-500 text-white border-red-400 hover:from-red-400 hover:to-red-600 border-pulse-red'
+                        analysis.recommendation === 'Recommend' ? 'bg-gradient-to-br from-blue-400 to-blue-600 text-white border-blue-500 hover:from-blue-500 hover:to-blue-700 border-pulse-blue' :
+                          analysis.recommendation === 'Consider' ? 'bg-gradient-to-br from-yellow-300 to-yellow-500 text-yellow-900 border-yellow-400 hover:from-yellow-400 hover:to-yellow-600 border-pulse-yellow' :
+                            'bg-gradient-to-br from-red-300 to-red-500 text-white border-red-400 hover:from-red-400 hover:to-red-600 border-pulse-red'
                         }`}>
                         <div className="flex items-center gap-2">
                           {analysis.recommendation === 'Strongly Recommend' && <CheckCircle className="w-5 h-5" />}

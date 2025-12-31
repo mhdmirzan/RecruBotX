@@ -16,6 +16,7 @@ import {
     Underline,
     List
 } from "lucide-react";
+import API_BASE_URL from "./apiConfig";
 
 const JobPosting = () => {
     // Internal styles for rich text rendering
@@ -133,7 +134,7 @@ const JobPosting = () => {
         setIsLoading(true);
 
         try {
-            const response = await fetch("http://localhost:8000/api/jobs/create", {
+            const response = await fetch(`${API_BASE_URL}/jobs/create`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

@@ -15,6 +15,7 @@ import {
   X,
   Trash2
 } from "lucide-react";
+import API_BASE_URL from "./apiConfig";
 
 const RecruiterDashboard = () => {
   const navigate = useNavigate();
@@ -42,7 +43,7 @@ const RecruiterDashboard = () => {
 
   const fetchJobPostings = async (recruiterId) => {
     try {
-      const response = await fetch(`http://localhost:8000/api/jobs/recruiter/${recruiterId}`);
+      const response = await fetch(`${API_BASE_URL}/jobs/recruiter/${recruiterId}`);
       if (!response.ok) throw new Error("Failed to fetch job postings");
       const data = await response.json();
 
@@ -80,7 +81,7 @@ const RecruiterDashboard = () => {
   const handleDeleteJob = async (jobId) => {
     if (window.confirm("Are you sure you want to delete this job posting? This action cannot be undone.")) {
       try {
-        const response = await fetch(`http://localhost:8000/api/jobs/${jobId}`, {
+        const response = await fetch(`${API_BASE_URL}/jobs/${jobId}`, {
           method: 'DELETE',
         });
         const data = await response.json();

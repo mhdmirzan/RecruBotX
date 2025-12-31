@@ -10,6 +10,7 @@ import {
     Download,
     Eye
 } from "lucide-react";
+import API_BASE_URL from "./apiConfig";
 
 const Evaluation = () => {
     const navigate = useNavigate();
@@ -34,7 +35,7 @@ const Evaluation = () => {
 
     const fetchJobPostings = async (recruiterId) => {
         try {
-            const response = await fetch(`http://localhost:8000/api/jobs/recruiter/${recruiterId}`);
+            const response = await fetch(`${API_BASE_URL}/jobs/recruiter/${recruiterId}`);
             const data = await response.json();
             setJobPostings(data);
         } catch (error) {
@@ -45,7 +46,7 @@ const Evaluation = () => {
     const fetchEvaluations = async (recruiterId) => {
         setIsLoading(true);
         try {
-            const response = await fetch(`http://localhost:8000/api/rankings/evaluations/recruiter/${recruiterId}`);
+            const response = await fetch(`${API_BASE_URL}/rankings/evaluations/recruiter/${recruiterId}`);
             const data = await response.json();
             setEvaluations(data);
         } catch (error) {
@@ -74,7 +75,7 @@ const Evaluation = () => {
 
     const handleDownload = async (evaluationId, candidateName) => {
         try {
-            const response = await fetch(`http://localhost:8000/api/rankings/evaluations/${evaluationId}/download`);
+            const response = await fetch(`${API_BASE_URL}/rankings/evaluations/${evaluationId}/download`);
             const blob = await response.blob();
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');

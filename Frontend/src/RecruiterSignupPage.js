@@ -55,6 +55,17 @@ const RecruiterSignupPage = () => {
       return;
     }
 
+    // Create dummy user for demo/storage
+    const dummyRecruiter = {
+      id: "rec_" + Math.random().toString(36).substr(2, 9),
+      firstName: formData.firstName,
+      lastName: formData.lastName,
+      email: formData.email,
+      companyName: formData.companyName,
+      profileImage: null
+    };
+
+    localStorage.setItem("recruiterUser", JSON.stringify(dummyRecruiter));
     alert("Recruiter account created successfully!");
     navigate("/recruiter/dashboard");
   };

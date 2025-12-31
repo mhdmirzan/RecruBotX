@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { getCurrentUser } from "./utils/userDatabase";
 import CandidateSidebar from "./components/CandidateSidebar";
+import API_BASE_URL from "./apiConfig";
 
 const VoiceInterview = () => {
   const navigate = useNavigate();
@@ -72,7 +73,7 @@ const VoiceInterview = () => {
 
   const fetchAvailableFields = async () => {
     try {
-      const response = await fetch("http://localhost:8000/api/voice-interview/available-fields");
+      const response = await fetch(`${API_BASE_URL}/voice-interview/available-fields`);
       const data = await response.json();
       if (data.success) {
         setAvailableFields(data.fields);
@@ -130,7 +131,7 @@ const VoiceInterview = () => {
       formData.append('skills', skills);
       formData.append('experience', experience);
 
-      const response = await fetch("http://localhost:8000/api/voice-interview/start-session-with-cv", {
+      const response = await fetch(`${API_BASE_URL}/voice-interview/start-session-with-cv`, {
         method: "POST",
         body: formData,
       });
@@ -297,7 +298,7 @@ const VoiceInterview = () => {
       formData.append("session_id", sessionId);
       formData.append("audio_file", audioBlob, "recording.webm");
 
-      const response = await fetch("http://localhost:8000/api/voice-interview/submit-answer", {
+      const response = await fetch(`${API_BASE_URL}/voice-interview/submit-answer`, {
         method: "POST",
         body: formData,
       });
@@ -338,7 +339,7 @@ const VoiceInterview = () => {
       formData.append("session_id", sessionId);
       formData.append("text_answer", userAnswer);
 
-      const response = await fetch("http://localhost:8000/api/voice-interview/submit-answer", {
+      const response = await fetch(`${API_BASE_URL}/voice-interview/submit-answer`, {
         method: "POST",
         body: formData,
       });
@@ -375,7 +376,7 @@ const VoiceInterview = () => {
 
     try {
       const response = await fetch(
-        `http://localhost:8000/api/voice-interview/next-question?session_id=${sessionId}`,
+        `${API_BASE_URL}/voice-interview/next-question?session_id=${sessionId}`,
         { method: "POST" }
       );
 
@@ -400,7 +401,7 @@ const VoiceInterview = () => {
   const generateReport = async () => {
     try {
       const response = await fetch(
-        `http://localhost:8000/api/voice-interview/generate-report/${sessionId}`,
+        `${API_BASE_URL}/voice-interview/generate-report/${sessionId}`,
         { method: "POST" }
       );
 
@@ -590,8 +591,8 @@ const VoiceInterview = () => {
                         type="button"
                         onClick={() => setPositionLevel(level)}
                         className={`p-3 rounded-xl border-2 transition-all ${positionLevel === level
-                            ? "border-blue-500 bg-blue-50 text-blue-700"
-                            : "border-gray-200 hover:border-blue-300 hover:bg-gray-50"
+                          ? "border-blue-500 bg-blue-50 text-blue-700"
+                          : "border-gray-200 hover:border-blue-300 hover:bg-gray-50"
                           }`}
                       >
                         <div className="font-semibold text-sm">{level}</div>
@@ -878,10 +879,10 @@ const VoiceInterview = () => {
             <div className="relative">
               <div
                 className={`w-32 h-32 rounded-full flex items-center justify-center transition-all duration-300 ${isSpeaking
-                    ? "bg-gradient-to-br from-blue-400 to-purple-500 shadow-xl"
-                    : isRecording
-                      ? "bg-gradient-to-br from-red-400 to-pink-500 shadow-xl"
-                      : "bg-gradient-to-br from-gray-300 to-gray-400"
+                  ? "bg-gradient-to-br from-blue-400 to-purple-500 shadow-xl"
+                  : isRecording
+                    ? "bg-gradient-to-br from-red-400 to-pink-500 shadow-xl"
+                    : "bg-gradient-to-br from-gray-300 to-gray-400"
                   }`}
                 style={{
                   transform: `scale(${1 + audioLevel / 200})`,

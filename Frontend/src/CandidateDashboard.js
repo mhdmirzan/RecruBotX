@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { LogOut, FileText, Mic, Search, Sparkles, LayoutDashboard, Cog, Briefcase, Calendar, MapPin, CheckCircle, Clock, Send, ArrowRight, ChevronRight, Zap, DollarSign, Home, X } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { getCurrentUser, logoutUser } from "./utils/userDatabase";
+import API_BASE_URL from "./apiConfig";
 
 const CandidateDashboard = () => {
   const navigate = useNavigate();
@@ -52,7 +53,7 @@ const CandidateDashboard = () => {
       try {
         setIsLoadingJobs(true);
         // Fetch all job postings from all recruiters
-        const response = await fetch('http://localhost:8000/api/jobs/all');
+        const response = await fetch(`${API_BASE_URL}/jobs/all`);
         if (!response.ok) {
           throw new Error('Failed to fetch jobs');
         }

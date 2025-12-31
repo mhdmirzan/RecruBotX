@@ -30,8 +30,13 @@ import VoiceInterview from "./VoiceInterview";
 
 // Recruiter (HR)
 import RecruiterSignupPage from "./RecruiterSignupPage";
+import RecruiterSigninPage from "./RecruiterSigninPage";
 import RecruiterDashboard from "./RecruiterDashboard";
-// import RecruiterSigninPage from "./RecruiterSigninPage"; // optional
+import JobPosting from "./JobPosting";
+import Evaluation from "./Evaluation";
+import Ranking from "./Ranking";
+import CandidateReport from "./CandidateReport";
+import RecruiterSettings from "./RecruiterSettings";
 
 // Resume Builder Pages
 import TemplateSelect from "./pages/TemplateSelect";
@@ -95,12 +100,16 @@ function App() {
           element={<RecruiterSignupPage />}
         />
 
-        <Route path="/recruiter/dashboard" element={<RecruiterDashboard />} />
-
-        {/*
-        Optional:
         <Route path="/signin/recruiter" element={<RecruiterSigninPage />} />
-        */}
+        <Route path="/recruiter/dashboard" element={<RecruiterDashboard />} />
+        <Route path="/recruiter/job-posting" element={<JobPosting />} />
+        <Route path="/recruiter/evaluation" element={<Evaluation />} />
+        <Route path="/recruiter/ranking" element={<Ranking />} />
+        <Route path="/recruiter/report/:rankingId" element={<CandidateReport />} />
+        <Route path="/recruiter/settings" element={<RecruiterSettings />} />
+
+        {/* Redirect /recruiter to dashboard or signin */}
+        <Route path="/recruiter" element={<RecruiterSigninPage />} />
       </Routes>
     </Router>
   );
