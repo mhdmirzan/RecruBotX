@@ -1,232 +1,569 @@
 import React, { useState, useEffect } from "react";
-import { Section, Input, Textarea, AddButton, WordCounter } from "../../components/ResumeFormComponents";
-import ResumePreview from "../../components/ResumePreview";
 
 const SimpleBuilder = ({ user, handleLogout, showPreview, setShowPreview }) => {
-    const [resume, setResume] = useState({
-        name: "",
-        role: "",
-        email: "",
-        phone: "",
-        address: "",
-        linkedin: "",
-        summary: "",
-        skills: [""],
-        education: [{ degree: "", institute: "", year: "", description: "" }],
-        experience: [{ role: "", company: "", duration: "", description: "" }],
-        projects: [{ title: "", description: "" }],
-        certifications: [""],
-        references: "",
-    });
+  const [resume, setResume] = useState({
+    personal: {
+      name: "",
+      role: "",
+      email: "",
+      phone: "",
+      location: "",
+      linkedin: "",
+    },
+    summary: "",
+    skills: [],
+    experience: [],
+    education: [],
+    certifications: [],
+    projects: [],
+    Skills: [],
+  });
 
-    useEffect(() => {
-        const saved = sessionStorage.getItem("currentResume");
-        if (saved) {
-            try {
-                setResume(JSON.parse(saved));
-            } catch (e) {
-                console.error("Failed to parse saved resume", e);
+  // Save resume data to state whenever it changes
+  useEffect(() => {
+    const resumeData = {
+      name: resume.personal.name,
+      ...resume
+    };
+    // Store in component state instead of sessionStorage
+  }, [resume]);
+
+  const updatePersonal = (k, v) =>
+    setResume({ ...resume, personal: { ...resume.personal, [k]: v } });
+
+  const addItem = (key, item) =>
+    setResume({ ...resume, [key]: [...resume[key], item] });
+
+  const updateItem = (key, i, field, value) => {
+    const copy = [...resume[key]];
+    copy[i][field] = value;
+    setResume({ ...resume, [key]: copy });
+  };
+
+  const removeItem = (key, i) => {
+    const copy = [...resume[key]];
+    copy.splice(i, 1);
+    setResume({ ...resume, [key]: copy });
+  };
+
+  return (
+    <div className="h-full">
+      {/* LEFT PANEL - FORMS */}
+      {!showPreview && (
+      <div className="overflow-y-auto bg-white rounded-xl shadow-lg p-6 h-full">
+        <h1 className="text-2xl font-bold mb-6 text-gray-800">Resume Details</h1>
+
+        <Section title="Personal Details">
+          <Input
+            placeholder="Full Name"
+            value={resume.personal.name}
+            onChange={(e) => updatePersonal("name", e.target.value)}
+          />
+          <Input
+            placeholder="Job Title"
+            value={resume.personal.role}
+            onChange={(e) => updatePersonal("role", e.target.value)}
+          />
+          <Input
+            placeholder="City, State"
+            value={resume.personal.location}
+            onChange={(e) => updatePersonal("location", e.target.value)}
+          />
+          <Input
+            placeholder="Phone"
+            value={resume.personal.phone}
+            onChange={(e) => updatePersonal("phone", e.target.value)}
+          />
+          <Input
+            placeholder="Email"
+            value={resume.personal.email}
+            onChange={(e) => updatePersonal("email", e.target.value)}
+          />
+          <Input
+            placeholder="LinkedIn URL"
+            value={resume.personal.linkedin}
+            onChange={(e) => updatePersonal("linkedin", e.target.value)}
+          />
+        </Section>
+
+        <Section title="Professional Summary">
+          <textarea
+            className="input h-32"
+            placeholder="Brief professional summary..."
+            value={resume.summary}
+            onChange={(e) => setResume({ ...resume, summary: e.target.value })}
+          />
+        </Section>
+
+        <Section title="Work Experience">
+          {resume.experience.map((ex, i) => (
+            <Box key={i}>
+              <Input
+                placeholder="Job Title"
+                value={ex.role}
+                onChange={(e) =>
+                  updateItem("experience", i, "role", e.target.value)
+                }
+              />
+              <Input
+                placeholder="Company Name"
+                value={ex.company}
+                onChange={(e) =>
+                  updateItem("experience", i, "company", e.target.value)
+                }
+              />
+              <Input
+                placeholder="Location"
+                value={ex.location}
+                onChange={(e) =>
+                  updateItem("experience", i, "location", e.target.value)
+                }
+              />
+              <Input
+                placeholder="Duration (e.g., May 2022 - Present)"
+                value={ex.duration}
+                onChange={(e) =>
+                  updateItem("experience", i, "duration", e.target.value)
+                }
+              />
+              <textarea
+                className="input h-24"
+                placeholder="Bullet points (one per line)"
+                value={ex.description}
+                onChange={(e) =>
+                  updateItem("experience", i, "description", e.target.value)
+                }
+              />
+              <button
+                onClick={() => removeItem("experience", i)}
+                className="text-red-600 text-sm mt-2 hover:text-red-700 font-medium"
+              >
+                Remove
+              </button>
+            </Box>
+          ))}
+          <AddButton
+            onClick={() =>
+              addItem("experience", {
+                role: "",
+                company: "",
+                location: "",
+                duration: "",
+                description: "",
+              })
             }
-        }
-    }, []);
+          >
+            + Add Experience
+          </AddButton>
+        </Section>
 
-    useEffect(() => {
-        sessionStorage.setItem("currentResume", JSON.stringify(resume));
-    }, [resume]);
+        <Section title="Education">
+          {resume.education.map((ed, i) => (
+            <Box key={i}>
+              <Input
+                placeholder="Degree"
+                value={ed.degree}
+                onChange={(e) =>
+                  updateItem("education", i, "degree", e.target.value)
+                }
+              />
+              <Input
+                placeholder="University/Institution"
+                value={ed.institute}
+                onChange={(e) =>
+                  updateItem("education", i, "institute", e.target.value)
+                }
+              />
+              <Input
+                placeholder="Graduation Year"
+                value={ed.year}
+                onChange={(e) =>
+                  updateItem("education", i, "year", e.target.value)
+                }
+              />
+              <button
+                onClick={() => removeItem("education", i)}
+                className="text-red-600 text-sm mt-2 hover:text-red-700 font-medium"
+              >
+                Remove
+              </button>
+            </Box>
+          ))}
+          <AddButton
+            onClick={() =>
+              addItem("education", { degree: "", institute: "", year: "" })
+            }
+          >
+            + Add Education
+          </AddButton>
+        </Section>
 
-    const handleChange = (e) =>
-        setResume({ ...resume, [e.target.name]: e.target.value });
+        <Section title="Projects">
+          {resume.projects.map((proj, i) => (
+            <Box key={i}>
+              <Input
+                placeholder="Project Name"
+                value={proj.name}
+                onChange={(e) =>
+                  updateItem("projects", i, "name", e.target.value)
+                }
+              />
+              <Input
+                placeholder="Technologies Used (e.g., React, Node.js, MongoDB)"
+                value={proj.technologies}
+                onChange={(e) =>
+                  updateItem("projects", i, "technologies", e.target.value)
+                }
+              />
+              <Input
+                placeholder="Duration (e.g., Jan 2024 - Mar 2024)"
+                value={proj.duration}
+                onChange={(e) =>
+                  updateItem("projects", i, "duration", e.target.value)
+                }
+              />
+              <textarea
+                className="input h-24"
+                placeholder="Project description and key achievements (one per line)"
+                value={proj.description}
+                onChange={(e) =>
+                  updateItem("projects", i, "description", e.target.value)
+                }
+              />
+              <button
+                onClick={() => removeItem("projects", i)}
+                className="text-red-600 text-sm mt-2 hover:text-red-700 font-medium"
+              >
+                Remove
+              </button>
+            </Box>
+          ))}
+          <AddButton
+            onClick={() =>
+              addItem("projects", {
+                name: "",
+                technologies: "",
+                duration: "",
+                description: "",
+              })
+            }
+          >
+            + Add Project
+          </AddButton>
+        </Section>
 
-    const handleArrayChange = (section, index, field, value) => {
-        const updated = [...resume[section]];
-        if (!updated[index]) updated[index] = {};
-        updated[index][field] = value;
-        setResume({ ...resume, [section]: updated });
-    };
+        <Section title="Certifications">
+          {resume.certifications.map((cert, i) => (
+            <Box key={i}>
+              <Input
+                placeholder="Certification Name"
+                value={cert.name}
+                onChange={(e) =>
+                  updateItem("certifications", i, "name", e.target.value)
+                }
+              />
+              <Input
+                placeholder="Issuing Organization"
+                value={cert.issuer}
+                onChange={(e) =>
+                  updateItem("certifications", i, "issuer", e.target.value)
+                }
+              />
+              <Input
+                placeholder="Date Issued (e.g., December 2024)"
+                value={cert.date}
+                onChange={(e) =>
+                  updateItem("certifications", i, "date", e.target.value)
+                }
+              />
+              <Input
+                placeholder="Credential ID (optional)"
+                value={cert.credentialId}
+                onChange={(e) =>
+                  updateItem("certifications", i, "credentialId", e.target.value)
+                }
+              />
+              <button
+                onClick={() => removeItem("certifications", i)}
+                className="text-red-600 text-sm mt-2 hover:text-red-700 font-medium"
+              >
+                Remove
+              </button>
+            </Box>
+          ))}
+          <AddButton
+            onClick={() =>
+              addItem("certifications", {
+                name: "",
+                issuer: "",
+                date: "",
+                credentialId: "",
+              })
+            }
+          >
+            + Add Certification
+          </AddButton>
+        </Section>
 
-    const addItem = (section, item) =>
-        setResume({ ...resume, [section]: [...resume[section], item] });
+        <Section title="Skills">
+          <Input
+            placeholder="Type info & press Enter"
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && e.target.value.trim()) {
+                addItem("Skills", e.target.value.trim());
+                e.target.value = "";
+              }
+            }}
+          />
+          <div className="mt-2 space-y-1">
+            {resume.Skills.map((info, i) => (
+              <div key={i} className="flex justify-between items-center text-sm">
+                <span>• {info}</span>
+                <button
+                  onClick={() => removeItem("Skills", i)}
+                  className="text-red-600 hover:text-red-700 font-bold"
+                >
+                  ×
+                </button>
+              </div>
+            ))}
+          </div>
+        </Section>
+      </div>
+      )}
 
-    const safeResume = {
-        name: resume.name || "",
-        role: resume.role || "",
-        email: resume.email || "",
-        phone: resume.phone || "",
-        address: resume.address || "",
-        linkedin: resume.linkedin || "",
-        summary: resume.summary || "",
-        skills: Array.isArray(resume.skills) ? resume.skills : [],
-        education: Array.isArray(resume.education) ? resume.education : [],
-        experience: Array.isArray(resume.experience) ? resume.experience : [],
-        projects: Array.isArray(resume.projects) ? resume.projects : [],
-        certifications: Array.isArray(resume.certifications) ? resume.certifications : [],
-        references: resume.references || "",
-    };
+      {/* RIGHT PANEL - A4 RESUME PREVIEW */}
+      {showPreview && (
+      <div className="overflow-y-auto bg-gray-100 rounded-xl p-6 h-full">
+        <div
+          id="resume-preview-content"
+          data-resume-preview
+          className="mx-auto bg-white shadow-lg"
+          style={{
+            width: "210mm",
+            minHeight: "297mm",
+            padding: "15mm 20mm",
+            fontFamily: "Arial, sans-serif",
+          }}
+        >
+          {/* HEADER */}
+          <div className="text-center border-b-2 border-black pb-3">
+            <h1 className="text-4xl font-bold uppercase tracking-wide">
+              {resume.personal.name || "YOUR NAME"}
+            </h1>
+            <p className="text-sm mt-2">
+              {[
+                resume.personal.location,
+                resume.personal.phone,
+                resume.personal.email,
+              ]
+                .filter(Boolean)
+                .join(" • ")}
+            </p>
+            {resume.personal.linkedin && (
+              <p className="text-sm">{resume.personal.linkedin}</p>
+            )}
+          </div>
 
-    if (showPreview) {
-        return (
-            <div className="h-full overflow-y-auto bg-white rounded-2xl shadow-lg p-8">
-                <ResumePreview resume={safeResume} template="Simple" />
+          {/* PROFESSIONAL SUMMARY */}
+          {resume.summary && (
+            <div className="mt-5">
+              <SectionTitle>PROFESSIONAL SUMMARY</SectionTitle>
+              <p className="text-sm leading-relaxed">{resume.summary}</p>
             </div>
-        );
-    }
+          )}
 
-    // Same fields as DoubleColumn for now, but in a separate file for customization
-    return (
-        <div className="h-full overflow-y-auto pr-2">
-            <div className="space-y-6 pb-6">
-                <Section title="Personal Information">
-                    <div className="grid grid-cols-2 gap-4">
-                        <Input name="name" placeholder="Full Name" value={resume.name} onChange={handleChange} />
-                        <Input name="role" placeholder="Job Title / Role" value={resume.role} onChange={handleChange} />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                        <Input name="email" placeholder="Email" value={resume.email} onChange={handleChange} />
-                        <Input name="phone" placeholder="Phone" value={resume.phone} onChange={handleChange} />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                        <Input name="address" placeholder="Address" value={resume.address} onChange={handleChange} />
-                        <Input name="linkedin" placeholder="LinkedIn Profile" value={resume.linkedin} onChange={handleChange} />
-                    </div>
-                </Section>
-
-                <Section title="Professional Summary">
-                    <div>
-                        <Textarea
-                            name="summary"
-                            rows="4"
-                            placeholder="Brief summary highlighting your strengths..."
-                            value={resume.summary}
-                            onChange={handleChange}
-                        />
-                        <WordCounter text={resume.summary} minWords={30} label="minimum for professional CV" />
-                    </div>
-                </Section>
-
-                <Section title="Skills">
-                    <div className="grid grid-cols-3 gap-3">
-                        {safeResume.skills.map((skill, i) => (
-                            <Input
-                                key={i}
-                                value={skill}
-                                placeholder={`Skill ${i + 1}`}
-                                onChange={(e) => {
-                                    const skills = [...safeResume.skills];
-                                    skills[i] = e.target.value;
-                                    setResume({ ...resume, skills });
-                                }}
-                            />
+          {/* WORK EXPERIENCE */}
+          {resume.experience.length > 0 && (
+            <div className="mt-5">
+              <SectionTitle>WORK EXPERIENCE</SectionTitle>
+              {resume.experience.map((ex, i) => (
+                <div key={i} className="mb-4">
+                  <div className="flex justify-between items-baseline">
+                    <p className="font-bold text-sm">
+                      {ex.role} - {ex.company}
+                      {ex.location && ` - ${ex.location}`}
+                    </p>
+                    <p className="text-sm italic">{ex.duration}</p>
+                  </div>
+                  {ex.description && (
+                    <ul className="list-disc ml-5 mt-1 text-sm space-y-1">
+                      {ex.description
+                        .split("\n")
+                        .filter((line) => line.trim())
+                        .map((line, idx) => (
+                          <li key={idx} className="leading-relaxed">
+                            {line.trim()}
+                          </li>
                         ))}
-                    </div>
-                    <AddButton label="Add Skill" onClick={() => addItem("skills", "")} />
-                </Section>
-
-                <Section title="Education">
-                    {safeResume.education.map((edu, i) => (
-                        <div key={i} className="space-y-3">
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                                <Input placeholder="Degree" value={edu.degree} onChange={(e) =>
-                                    handleArrayChange("education", i, "degree", e.target.value)
-                                } />
-                                <Input placeholder="Institute" value={edu.institute} onChange={(e) =>
-                                    handleArrayChange("education", i, "institute", e.target.value)
-                                } />
-                                <Input placeholder="Year" value={edu.year} onChange={(e) =>
-                                    handleArrayChange("education", i, "year", e.target.value)
-                                } />
-                            </div>
-                            <div>
-                                <Textarea placeholder="Description (e.g., GPA, relevant coursework, achievements)" rows="2" value={edu.description} onChange={(e) =>
-                                    handleArrayChange("education", i, "description", e.target.value)
-                                } />
-                                {edu.degree && <WordCounter text={edu.description} minWords={20} label="Education description" />}
-                            </div>
-                        </div>
-                    ))}
-                    <AddButton label="Add Education" onClick={() =>
-                        addItem("education", { degree: "", institute: "", year: "", description: "" })
-                    } />
-                </Section>
-
-                <Section title="Experience">
-                    {safeResume.experience.map((exp, i) => (
-                        <div key={i} className="space-y-2">
-                            <Input placeholder="Role" value={exp.role} onChange={(e) =>
-                                handleArrayChange("experience", i, "role", e.target.value)
-                            } />
-                            <Input placeholder="Company" value={exp.company} onChange={(e) =>
-                                handleArrayChange("experience", i, "company", e.target.value)
-                            } />
-                            <Input placeholder="Duration" value={exp.duration} onChange={(e) =>
-                                handleArrayChange("experience", i, "duration", e.target.value)
-                            } />
-                            <div>
-                                <Textarea placeholder="What did you achieve?" rows="3" value={exp.description}
-                                    onChange={(e) =>
-                                        handleArrayChange("experience", i, "description", e.target.value)
-                                    }
-                                />
-                                {exp.role && <WordCounter text={exp.description} minWords={30} label="Experience description" />}
-                            </div>
-                        </div>
-                    ))}
-                    <AddButton label="Add Experience" onClick={() =>
-                        addItem("experience", { role: "", company: "", duration: "", description: "" })
-                    } />
-                </Section>
-
-                <Section title="Projects">
-                    {safeResume.projects.map((proj, i) => (
-                        <div key={i} className="space-y-2">
-                            <Input placeholder="Project Title" value={proj.title} onChange={(e) =>
-                                handleArrayChange("projects", i, "title", e.target.value)
-                            } />
-                            <div>
-                                <Textarea placeholder="Project Description" rows="3" value={proj.description}
-                                    onChange={(e) =>
-                                        handleArrayChange("projects", i, "description", e.target.value)
-                                    }
-                                />
-                                {proj.title && <WordCounter text={proj.description} minWords={25} label="Project description" />}
-                            </div>
-                        </div>
-                    ))}
-                    <AddButton label="Add Project" onClick={() =>
-                        addItem("projects", { title: "", description: "" })
-                    } />
-                </Section>
-
-                <Section title="Certifications">
-                    <div className="grid grid-cols-2 gap-3">
-                        {safeResume.certifications.map((c, i) => (
-                            <Input
-                                key={i}
-                                placeholder={`Certification ${i + 1}`}
-                                value={c}
-                                onChange={(e) => {
-                                    const certs = [...safeResume.certifications];
-                                    certs[i] = e.target.value;
-                                    setResume({ ...resume, certifications: certs });
-                                }}
-                            />
-                        ))}
-                    </div>
-                    <AddButton label="Add Certification" onClick={() =>
-                        addItem("certifications", "")
-                    } />
-                </Section>
-
-                <Section title="References (Optional)">
-                    <Textarea
-                        name="references"
-                        rows="2"
-                        placeholder="Available upon request"
-                        onChange={handleChange}
-                    />
-                </Section>
+                    </ul>
+                  )}
+                </div>
+              ))}
             </div>
+          )}
+
+          {/* PROJECTS */}
+          {resume.projects.length > 0 && (
+            <div className="mt-5">
+              <SectionTitle>PROJECTS</SectionTitle>
+              {resume.projects.map((proj, i) => (
+                <div key={i} className="mb-4">
+                  <div className="flex justify-between items-baseline">
+                    <p className="font-bold text-sm">{proj.name}</p>
+                    <p className="text-sm italic">{proj.duration}</p>
+                  </div>
+                  {proj.technologies && (
+                    <p className="text-sm italic">
+                      Technologies: {proj.technologies}
+                    </p>
+                  )}
+                  {proj.description && (
+                    <ul className="list-disc ml-5 mt-1 text-sm space-y-1">
+                      {proj.description
+                        .split("\n")
+                        .filter((line) => line.trim())
+                        .map((line, idx) => (
+                          <li key={idx} className="leading-relaxed">
+                            {line.trim()}
+                          </li>
+                        ))}
+                    </ul>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* EDUCATION */}
+          {resume.education.length > 0 && (
+            <div className="mt-5">
+              <SectionTitle>EDUCATION</SectionTitle>
+              {resume.education.map((ed, i) => (
+                <div key={i} className="mb-2">
+                  <div className="flex justify-between items-baseline">
+                    <p className="font-bold text-sm">{ed.degree}</p>
+                    <p className="text-sm italic">{ed.year}</p>
+                  </div>
+                  <p className="text-sm">{ed.institute}</p>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* CERTIFICATIONS */}
+          {resume.certifications.length > 0 && (
+            <div className="mt-5">
+              <SectionTitle>CERTIFICATIONS</SectionTitle>
+              {resume.certifications.map((cert, i) => (
+                <div key={i} className="mb-2">
+                  <div className="flex justify-between items-baseline">
+                    <p className="font-bold text-sm">{cert.name}</p>
+                    <p className="text-sm italic">{cert.date}</p>
+                  </div>
+                  <p className="text-sm">{cert.issuer}</p>
+                  {cert.credentialId && (
+                    <p className="text-sm text-gray-600">
+                      Credential ID: {cert.credentialId}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Skills */}
+          {resume.Skills.length > 0 && (
+            <div className="mt-5">
+              <SectionTitle>Skills</SectionTitle>
+              {resume.Skills.map((info, i) => (
+                <p key={i} className="text-sm mb-1">
+                  • {info}
+                </p>
+              ))}
+            </div>
+          )}
         </div>
-    );
+      </div>
+      )}
+
+      <style>{`
+        .input {
+          width: 100%;
+          padding: 8px 12px;
+          border: 1px solid #d1d5db;
+          border-radius: 4px;
+          margin-bottom: 8px;
+          font-size: 14px;
+        }
+        
+        .input:focus {
+          outline: none;
+          border-color: #3b82f6;
+          box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
+        .btn {
+          background-color: #3b82f6;
+          color: white;
+          padding: 8px 16px;
+          border-radius: 4px;
+          font-size: 14px;
+          cursor: pointer;
+          border: none;
+        }
+        
+        .btn:hover {
+          background-color: #2563eb;
+        }
+        
+        /* PDF Print Styles - Prevent awkward page breaks */
+        @media print {
+          #resume-preview-content > div {
+            page-break-inside: avoid;
+            break-inside: avoid;
+          }
+          
+          #resume-preview-content {
+            page-break-after: auto;
+          }
+        }
+        
+        /* Additional styles to prevent breaks in resume sections */
+        [data-resume-preview] > div {
+          page-break-inside: avoid;
+          break-inside: avoid;
+        }
+      `}</style>
+    </div>
+  );
 };
+
+const Section = ({ title, children }) => (
+  <div className="mb-6">
+    <h2 className="font-bold text-lg mb-3 text-gray-800">{title}</h2>
+    {children}
+  </div>
+);
+
+const SectionTitle = ({ children }) => (
+  <h2 className="text-sm font-bold uppercase border-b-2 border-black pb-1 mb-3">
+    {children}
+  </h2>
+);
+
+const Input = (props) => <input {...props} className="input" />;
+
+const Box = ({ children }) => (
+  <div className="border border-gray-300 p-4 mb-3 rounded bg-white shadow-sm">
+    {children}
+  </div>
+);
+
+const AddButton = ({ children, ...props }) => (
+  <button {...props} className="btn w-full">
+    {children}
+  </button>
+);
 
 export default SimpleBuilder;
