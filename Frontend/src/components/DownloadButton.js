@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
+import { Download } from "lucide-react";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 
@@ -89,7 +90,7 @@ const validateResume = (resume) => {
   return errors;
 };
 
-const DownloadButton = () => {
+const DownloadButton = ({ className }) => {
   const [isValidating, setIsValidating] = useState(false);
 
   // Get resume data from the form (parent component passes through context or localStorage)
@@ -249,12 +250,18 @@ const DownloadButton = () => {
       data-download-btn
       onClick={downloadResume}
       disabled={isValidating}
-      className={`flex items-center justify-center gap-2 px-6 py-3 text-white rounded-lg font-semibold transition shadow-md ${isValidating
+      className={className || `flex items-center justify-center gap-2 px-4 py-1 text-white rounded-lg font-semibold transition shadow-md ${isValidating
         ? "bg-gray-400 cursor-not-allowed"
         : "bg-blue-600 hover:bg-blue-700"
         }`}
     >
-      {isValidating ? "Validating..." : "📥 Download PDF"}
+      {isValidating ? (
+        "Validating..."
+      ) : (
+        <>
+          <Download className="w-5 h-5" /> Download
+        </>
+      )}
     </button>
   );
 };
