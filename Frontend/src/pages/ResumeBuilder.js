@@ -109,7 +109,11 @@ const ResumeBuilder = () => {
             <Eye className="w-5 h-5" />
             {showPreview ? "Edit" : "Preview"}
           </button>
-          <DownloadButton className="flex items-center gap-2 px-8 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-all shadow-sm" />
+          <DownloadButton
+            showPreview={showPreview}
+            setShowPreview={setShowPreview}
+            className="flex items-center gap-2 px-8 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-all shadow-sm"
+          />
         </div>
       </main>
     </div>
