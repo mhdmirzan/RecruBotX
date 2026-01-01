@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Check, LogOut, LayoutDashboard, Cog, ArrowRight } from "lucide-react";
-import { useNavigate, NavLink } from "react-router-dom";
-import { getCurrentUser, logoutUser } from "../utils/userDatabase";
+import { ArrowRight, Check } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { getCurrentUser } from "../utils/userDatabase";
+import CandidateSidebar from "../components/CandidateSidebar";
+
 
 import template1 from "./Double column.jpg";
 import template2 from "./simple.jpg";
@@ -28,10 +30,7 @@ export default function TemplateSelect() {
     }
   }, [navigate]);
 
-  const handleLogout = () => {
-    logoutUser();
-    navigate("/signin/candidate");
-  };
+
 
   const handleContinue = () => {
     if (!selected) {
@@ -56,44 +55,7 @@ export default function TemplateSelect() {
   return (
     <div className="h-screen w-screen flex bg-gray-50 fixed inset-0 overflow-hidden">
       {/* Sidebar */}
-      <aside className="w-72 h-screen bg-white shadow-xl flex flex-col p-6 border-r border-gray-200">
-        <div className="mb-10 text-center">
-          <h1 className="text-3xl font-bold text-blue-600">RecruBotX</h1>
-        </div>
-
-        <nav className="flex flex-col space-y-4 text-gray-700">
-          <NavLink
-            to="/candidate/dashboard"
-            className={({ isActive }) =>
-              `px-4 py-3 rounded-xl flex items-center gap-2 transition ${
-                isActive ? "bg-blue-50 text-blue-600" : "hover:bg-gray-100"
-              }`
-            }
-          >
-            <LayoutDashboard className="w-5 h-5" /> Dashboard
-          </NavLink>
-
-          <NavLink
-            to="/candidate/settings"
-            className={({ isActive }) =>
-              `px-4 py-3 rounded-xl flex items-center gap-2 transition ${
-                isActive ? "bg-blue-50 text-blue-600" : "hover:bg-gray-100"
-              }`
-            }
-          >
-            <Cog className="w-5 h-5" /> Settings
-          </NavLink>
-        </nav>
-
-        <div className="mt-auto">
-          <button
-            onClick={handleLogout}
-            className="w-full mt-6 bg-red-500 hover:bg-red-600 text-white py-3 rounded-xl flex items-center justify-center gap-2 transition"
-          >
-            <LogOut className="w-5 h-5" /> Logout
-          </button>
-        </div>
-      </aside>
+      <CandidateSidebar />
 
       {/* Main */}
       <main className="flex-1 px-10 py-8 overflow-hidden">
@@ -124,7 +86,7 @@ export default function TemplateSelect() {
 
         {/* Card */}
         <div className="bg-white rounded-2xl shadow-md p-8 h-[calc(100%-90px)] flex flex-col">
-          
+
           {/* ✅ REDUCED TEMPLATE HEIGHT */}
           <div className="grid grid-cols-3 gap-10 mb-6">
             {templates.map((tpl) => {
@@ -137,11 +99,10 @@ export default function TemplateSelect() {
                   className="cursor-pointer relative"
                 >
                   <div
-                    className={`h-[360px] border-2 rounded-lg p-2 transition ${
-                      isActive
-                        ? "border-blue-600 ring-4 ring-blue-600 shadow-lg"
-                        : "border-gray-200 hover:border-blue-300"
-                    }`}
+                    className={`h-[360px] border-2 rounded-lg p-2 transition ${isActive
+                      ? "border-blue-600 ring-4 ring-blue-600 shadow-lg"
+                      : "border-gray-200 hover:border-blue-300"
+                      }`}
                   >
                     <img
                       src={tpl.image}
@@ -170,10 +131,9 @@ export default function TemplateSelect() {
               onClick={handleContinue}
               disabled={!selected}
               className={`flex items-center gap-2 px-8 py-3 rounded-lg font-semibold transition shadow
-                ${
-                  selected
-                    ? "bg-blue-600 text-white hover:bg-blue-700"
-                    : "bg-gray-400 text-white cursor-not-allowed"
+                ${selected
+                  ? "bg-blue-600 text-white hover:bg-blue-700"
+                  : "bg-gray-400 text-white cursor-not-allowed"
                 }`}
             >
               Continue

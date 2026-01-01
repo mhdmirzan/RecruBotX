@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Plus } from "lucide-react";
 
 const ElegantBuilder = ({ showPreview }) => {
   const [resume, setResume] = useState({
@@ -168,7 +169,7 @@ const ElegantBuilder = ({ showPreview }) => {
                 })
               }
             >
-              + Add Experience
+              Add Experience
             </AddButton>
           </Section>
 
@@ -257,7 +258,7 @@ const ElegantBuilder = ({ showPreview }) => {
                 })
               }
             >
-              + Add Education
+              Add Education
             </AddButton>
           </Section>
 
@@ -301,7 +302,7 @@ const ElegantBuilder = ({ showPreview }) => {
                 addItem("projects", { title: "", description: "" })
               }
             >
-              + Add Project
+              Add Project
             </AddButton>
           </Section>
 
@@ -333,7 +334,7 @@ const ElegantBuilder = ({ showPreview }) => {
             <AddButton
               onClick={() => addItem("languages", { language: "", level: "" })}
             >
-              + Add Language
+              Add Language
             </AddButton>
           </Section>
 
@@ -365,7 +366,7 @@ const ElegantBuilder = ({ showPreview }) => {
             <AddButton
               onClick={() => addItem("certifications", { name: "", Publisher: "" })}
             >
-              + Add Certification
+              Add Certification
             </AddButton>
           </Section>
 
@@ -413,7 +414,7 @@ const ElegantBuilder = ({ showPreview }) => {
                 addItem("references", { name: "", position: "", email: "", phone: "" })
               }
             >
-              + Add Reference
+              Add Reference
             </AddButton>
           </Section>
         </div>
@@ -438,13 +439,13 @@ const ElegantBuilder = ({ showPreview }) => {
                 <div className="mb-6">
                   <div className="w-40 h-40 mx-auto rounded-full bg-white flex items-center justify-center overflow-hidden border-4 border-white shadow-lg">
                     {resume.profilePhoto ? (
-                      <img 
+                      <img
                         src={resume.profilePhoto}
                         alt="Profile"
                         className="w-full h-full object-cover"
                       />
                     ) : (
-                      <img 
+                      <img
                         src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Ccircle cx='100' cy='100' r='100' fill='%23f0f0f0'/%3E%3Cpath d='M100 110c-16.5 0-30-13.5-30-30s13.5-30 30-30 30 13.5 30 30-13.5 30-30 30zm0 10c33 0 60 16.5 60 37v13H40v-13c0-20.5 27-37 60-37z' fill='%23999'/%3E%3C/svg%3E"
                         alt="Profile"
                         className="w-full h-full object-cover"
@@ -757,8 +758,11 @@ const Box = ({ children }) => (
 );
 
 const AddButton = ({ children, ...props }) => (
-  <button {...props} className="btn">
-    {children}
+  <button
+    {...props}
+    className="flex items-center gap-2 text-sm font-semibold text-teal-700 hover:text-teal-800 transition-colors py-2"
+  >
+    <Plus className="w-4 h-4" /> {children}
   </button>
 );
 

@@ -1,4 +1,4 @@
-import React from "react";
+import { Plus } from "lucide-react";
 
 export const Section = ({ title, children }) => (
   <div className="bg-white rounded-2xl shadow-sm border p-6 space-y-4">
@@ -24,9 +24,9 @@ export const Textarea = (props) => (
 export const AddButton = ({ onClick, label }) => (
   <button
     onClick={onClick}
-    className="text-sm font-medium text-blue-600 hover:underline"
+    className="flex items-center gap-2 text-sm font-bold text-blue-600 hover:text-blue-700 transition-colors py-2"
   >
-    + {label}
+    <Plus className="w-4 h-4" /> {label}
   </button>
 );
 
@@ -34,11 +34,10 @@ export const AddButton = ({ onClick, label }) => (
 export const WordCounter = ({ text, minWords, label }) => {
   const wordCount = (text || "").trim().split(/\s+/).filter(Boolean).length;
   const isMet = wordCount >= minWords;
-  
+
   return (
-    <div className={`text-xs mt-1 px-3 py-1 rounded-lg inline-block ${
-      isMet ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"
-    }`}>
+    <div className={`text-xs mt-1 px-3 py-1 rounded-lg inline-block ${isMet ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"
+      }`}>
       {wordCount}/{minWords} words {label && `(${label})`} {isMet ? "✓" : ""}
     </div>
   );
