@@ -30,15 +30,27 @@ export const AddButton = ({ onClick, label }) => (
   </button>
 );
 
-// Word counter component with minimum requirement indicator
-export const WordCounter = ({ text, minWords, label }) => {
+// Word counter component with min/max requirements
+export const WordCounter = ({ text, minWords, maxWords, label }) => {
   const wordCount = (text || "").trim().split(/\s+/).filter(Boolean).length;
-  const isMet = wordCount >= minWords;
+  const isMinMet = !minWords || wordCount >= minWords;
+  const isMaxMet = !maxWords || wordCount <= maxWords;
+  const isPerfect = isMinMet && isMaxMet;
 
   return (
-    <div className={`text-xs mt-1 px-3 py-1 rounded-lg inline-block ${isMet ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"
+    <div className={`text-[10px] mt-1 px-2 py-0.5 rounded-md inline-flex items-center gap-1 font-medium ${isPerfect ? "bg-green-100 text-green-700" :
+        !isMinMet ? "bg-yellow-100 text-yellow-700" :
+          "bg-red-100 text-red-700"
       }`}>
-      {wordCount}/{minWords} words {label && `(${label})`} {isMet ? "✓" : ""}
+      <span>{wordCount} words</span>
+      {minWords && maxWords ? (
+        <span>(Goal: {minWords}-{maxWords})</span>
+      ) : minWords ? (
+        <span>(Min: {minWords})</span>
+      ) : maxWords ? (
+        <span>(Max: {maxWords})</span>
+      ) : null}
+      {isPerfect ? "✓" : ""}
     </div>
   );
 };

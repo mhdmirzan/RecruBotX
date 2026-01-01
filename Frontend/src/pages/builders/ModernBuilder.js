@@ -127,7 +127,7 @@ const ModernBuilder = ({ user, handleLogout, showPreview, setShowPreview }) => {
                             value={resume.summary}
                             onChange={handleChange}
                         />
-                        <WordCounter text={resume.summary} minWords={30} label="minimum for professional CV" />
+                        <WordCounter text={resume.summary} minWords={20} maxWords={40} />
                     </div>
                 </Section>
 
@@ -167,7 +167,7 @@ const ModernBuilder = ({ user, handleLogout, showPreview, setShowPreview }) => {
                                 <Textarea placeholder="Description (e.g., GPA, relevant coursework, achievements)" rows="2" value={edu.description} onChange={(e) =>
                                     handleArrayChange("education", i, "description", e.target.value)
                                 } />
-                                {edu.degree && <WordCounter text={edu.description} minWords={20} label="Education description" />}
+                                {edu.degree && <WordCounter text={edu.description} minWords={20} maxWords={40} />}
                             </div>
                         </div>
                     ))}
@@ -194,7 +194,7 @@ const ModernBuilder = ({ user, handleLogout, showPreview, setShowPreview }) => {
                                         handleArrayChange("experience", i, "description", e.target.value)
                                     }
                                 />
-                                {exp.role && <WordCounter text={exp.description} minWords={30} label="Experience description" />}
+                                {exp.role && <WordCounter text={exp.description} minWords={20} maxWords={40} />}
                             </div>
                         </div>
                     ))}

@@ -128,6 +128,7 @@ const DoubleColumnBuilder = ({ user, showPreview }) => {
                                         updateItem("experience", i, "description", e.target.value)
                                     }
                                 />
+                                <WordCounter text={ex.description} minWords={20} maxWords={40} />
                                 <button
                                     onClick={() => removeItem("experience", i)}
                                     className="text-red-600 text-sm mt-2 hover:text-red-700"
@@ -229,6 +230,7 @@ const DoubleColumnBuilder = ({ user, showPreview }) => {
                                         updateItem("projects", i, "description", e.target.value)
                                     }
                                 />
+                                <WordCounter text={item.description} minWords={20} maxWords={40} />
                                 <button
                                     onClick={() => removeItem("projects", i)}
                                     className="text-red-600 text-sm mt-2 hover:text-red-700"
@@ -722,5 +724,31 @@ const AddButton = ({ children, ...props }) => (
         <Plus className="w-4 h-4" /> {children}
     </button>
 );
+
+const WordCounter = ({ text, minWords, maxWords }) => {
+    const wordCount = (text || "").trim().split(/\s+/).filter(Boolean).length;
+    const isMinMet = !minWords || wordCount >= minWords;
+    const isMaxMet = !maxWords || wordCount <= maxWords;
+    const isPerfect = isMinMet && isMaxMet;
+
+    if (wordCount === 0) return null;
+
+    return (
+        <div className={`text-[10px] mt-1 px-2 py-0.5 rounded-md inline-flex items-center gap-1 font-medium ${isPerfect ? "bg-green-100 text-green-700" :
+            !isMinMet ? "bg-yellow-100 text-yellow-700" :
+                "bg-red-100 text-red-700"
+            }`}>
+            <span>{wordCount} words</span>
+            {minWords && maxWords ? (
+                <span>(Goal: {minWords}-{maxWords})</span>
+            ) : minWords ? (
+                <span>(Min: {minWords})</span>
+            ) : maxWords ? (
+                <span>(Max: {maxWords})</span>
+            ) : null}
+            {isPerfect ? "✓" : ""}
+        </div>
+    );
+};
 
 export default DoubleColumnBuilder;

@@ -2,27 +2,56 @@ import React, { useState } from "react";
 import { Download } from "lucide-react";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
-
-// Validation constants for minimum word counts
-const WORD_COUNT_REQUIREMENTS = {
-  summary: 30,           // Professional summary minimum
-  educationDesc: 20,     // Education description minimum
-  experienceDesc: 30,    // Experience description minimum
-  projectDesc: 25,       // Project description minimum
+// Validation constants for word counts
+const LIMITS = {
+  summary: { min: 20, max: 40 },
+  experience: { min: 20, max: 40 },
+  education: { min: 20, max: 40 },
+  projects: { min: 20, max: 40 },
 };
 
 // Helper function to count words
 const countWords = (text) => {
   if (!text) return 0;
-  return text.trim().split(/\s+/).length;
+  return text.trim().split(/\s+/).filter(Boolean).length;
 };
-// Helper function to validate minimal resume content
+
+// Helper function to validate resume content with limits
 const validateResume = (resume) => {
   const errors = [];
 
-  // Minimal validation: just check if name is present
   if (!resume.name || resume.name.trim() === "") {
     errors.push("Name is required");
+  }
+
+  // Check Summary
+  if (resume.summary || resume.profile) {
+    const text = resume.summary || resume.profile;
+    const count = countWords(text);
+    if (count < LIMITS.summary.min) errors.push(`Summary: Too short (${count}/${LIMITS.summary.min} words min)`);
+    if (count > LIMITS.summary.max) errors.push(`Summary: Too long (${count}/${LIMITS.summary.max} words max)`);
+  }
+
+  // Check Experience
+  if (Array.isArray(resume.experience)) {
+    resume.experience.forEach((exp, i) => {
+      if (exp.description) {
+        const count = countWords(exp.description);
+        if (count < LIMITS.experience.min) errors.push(`Experience #${i + 1}: Too short (${count}/${LIMITS.experience.min} words min)`);
+        if (count > LIMITS.experience.max) errors.push(`Experience #${i + 1}: Too long (${count}/${LIMITS.experience.max} words max)`);
+      }
+    });
+  }
+
+  // Check Education
+  if (Array.isArray(resume.education)) {
+    resume.education.forEach((edu, i) => {
+      if (edu.description) {
+        const count = countWords(edu.description);
+        if (count < LIMITS.education.min) errors.push(`Education #${i + 1}: Too short (${count}/${LIMITS.education.min} words min)`);
+        if (count > LIMITS.education.max) errors.push(`Education #${i + 1}: Too long (${count}/${LIMITS.education.max} words max)`);
+      }
+    });
   }
 
   return errors;
