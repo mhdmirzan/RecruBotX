@@ -16,81 +16,19 @@ const countWords = (text) => {
   if (!text) return 0;
   return text.trim().split(/\s+/).length;
 };
-
-// Helper function to validate resume content
+// Helper function to validate minimal resume content
 const validateResume = (resume) => {
   const errors = [];
 
-  // Check professional summary
-  if (resume.summary) {
-    const summaryWords = countWords(resume.summary);
-    if (summaryWords < WORD_COUNT_REQUIREMENTS.summary) {
-      errors.push(
-        `Professional Summary: ${summaryWords} words (minimum ${WORD_COUNT_REQUIREMENTS.summary} required)`
-      );
-    }
-  } else {
-    errors.push("Professional Summary: Required field is empty");
-  }
-
-  // Check education descriptions
-  if (Array.isArray(resume.education) && resume.education.length > 0) {
-    resume.education.forEach((edu, idx) => {
-      if (edu.degree || edu.institute) {
-        if (!edu.description) {
-          errors.push(`Education #${idx + 1}: Description is required`);
-        } else {
-          const descWords = countWords(edu.description);
-          if (descWords < WORD_COUNT_REQUIREMENTS.educationDesc) {
-            errors.push(
-              `Education #${idx + 1} Description: ${descWords} words (minimum ${WORD_COUNT_REQUIREMENTS.educationDesc} required)`
-            );
-          }
-        }
-      }
-    });
-  }
-
-  // Check experience descriptions
-  if (Array.isArray(resume.experience) && resume.experience.length > 0) {
-    resume.experience.forEach((exp, idx) => {
-      if (exp.role || exp.company) {
-        if (!exp.description) {
-          errors.push(`Experience #${idx + 1}: Description is required`);
-        } else {
-          const descWords = countWords(exp.description);
-          if (descWords < WORD_COUNT_REQUIREMENTS.experienceDesc) {
-            errors.push(
-              `Experience #${idx + 1} Description: ${descWords} words (minimum ${WORD_COUNT_REQUIREMENTS.experienceDesc} required)`
-            );
-          }
-        }
-      }
-    });
-  }
-
-  // Check project descriptions
-  if (Array.isArray(resume.projects) && resume.projects.length > 0) {
-    resume.projects.forEach((proj, idx) => {
-      if (proj.title) {
-        if (!proj.description) {
-          errors.push(`Project #${idx + 1}: Description is required`);
-        } else {
-          const descWords = countWords(proj.description);
-          if (descWords < WORD_COUNT_REQUIREMENTS.projectDesc) {
-            errors.push(
-              `Project #${idx + 1} Description: ${descWords} words (minimum ${WORD_COUNT_REQUIREMENTS.projectDesc} required)`
-            );
-          }
-        }
-      }
-    });
+  // Minimal validation: just check if name is present
+  if (!resume.name || resume.name.trim() === "") {
+    errors.push("Name is required");
   }
 
   return errors;
 };
 
-const DownloadButton = ({ className }) => {
+const DownloadButton = ({ className, showPreview, setShowPreview }) => {
   const [isValidating, setIsValidating] = useState(false);
 
   // Get resume data from the form (parent component passes through context or localStorage)
@@ -130,10 +68,17 @@ const DownloadButton = ({ className }) => {
       }
 
       // Get the resume preview element
-      const resumeElement = document.getElementById("resume-preview-content");
+      let resumeElement = document.getElementById("resume-preview-content");
 
       if (!resumeElement) {
-        alert("Please click Preview button first, then click Download PDF.");
+        // If not in preview mode, try to switch and then download
+        if (setShowPreview) {
+          setShowPreview(true);
+          // Wait for DOM to update
+          setTimeout(() => downloadResume(), 500);
+          return;
+        }
+        alert("Please click Preview button first to generate the download view.");
         setIsValidating(false);
         return;
       }
@@ -250,7 +195,7 @@ const DownloadButton = ({ className }) => {
       data-download-btn
       onClick={downloadResume}
       disabled={isValidating}
-      className={className || `flex items-center justify-center gap-2 px-4 py-1 text-white rounded-lg font-semibold transition shadow-md ${isValidating
+      className={className || `flex items-center justify-center gap-2 px-6 py-3 text-white rounded-lg font-semibold transition shadow-md ${isValidating
         ? "bg-gray-400 cursor-not-allowed"
         : "bg-blue-600 hover:bg-blue-700"
         }`}

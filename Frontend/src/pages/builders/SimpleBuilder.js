@@ -20,14 +20,14 @@ const SimpleBuilder = ({ user, handleLogout, showPreview, setShowPreview }) => {
     Skills: [],
   });
 
-  // Save resume data to state whenever it changes
+  // Save resume data to sessionStorage whenever it changes
   useEffect(() => {
     const resumeData = {
-      name: resume.personal.name,
-      ...resume
+      ...resume,
+      name: resume.personal.name || user?.firstName + " " + user?.lastName
     };
-    // Store in component state instead of sessionStorage
-  }, [resume]);
+    sessionStorage.setItem("currentResume", JSON.stringify(resumeData));
+  }, [resume, user]);
 
   const updatePersonal = (k, v) =>
     setResume({ ...resume, personal: { ...resume.personal, [k]: v } });

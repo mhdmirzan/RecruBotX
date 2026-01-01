@@ -32,8 +32,12 @@ const ModernBuilder = ({ user, handleLogout, showPreview, setShowPreview }) => {
     }, []);
 
     useEffect(() => {
-        sessionStorage.setItem("currentResume", JSON.stringify(resume));
-    }, [resume]);
+        const resumeData = {
+            ...resume,
+            name: resume.name || user?.firstName + " " + user?.lastName
+        };
+        sessionStorage.setItem("currentResume", JSON.stringify(resumeData));
+    }, [resume, user]);
 
     const handleChange = (e) =>
         setResume({ ...resume, [e.target.name]: e.target.value });

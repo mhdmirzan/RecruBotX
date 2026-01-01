@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Plus } from "lucide-react";
 
-const DoubleColumnBuilder = ({ showPreview }) => {
+const DoubleColumnBuilder = ({ user, showPreview }) => {
     const [resume, setResume] = useState({
         personal: {
             name: "",
@@ -21,6 +21,15 @@ const DoubleColumnBuilder = ({ showPreview }) => {
         skills: [],
         projects: [],
     });
+
+    // Save resume data to sessionStorage whenever it changes
+    useEffect(() => {
+        const resumeData = {
+            ...resume,
+            name: resume.personal.name || user?.firstName + " " + user?.lastName
+        };
+        sessionStorage.setItem("currentResume", JSON.stringify(resumeData));
+    }, [resume, user]);
 
     const updatePersonal = (k, v) =>
         setResume({ ...resume, personal: { ...resume.personal, [k]: v } });
@@ -428,7 +437,7 @@ const DoubleColumnBuilder = ({ showPreview }) => {
             {showPreview && (
                 <div className="flex-1 overflow-y-auto bg-gray-200 rounded-xl p-6">
                     <div
-                        id="resume-preview"
+                        id="resume-preview-content"
                         className="mx-auto bg-white shadow-lg"
                         style={{
                             width: "210mm",
