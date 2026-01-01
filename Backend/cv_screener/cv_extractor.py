@@ -100,13 +100,31 @@ JSON Output:
     
     try:
         print(f"[DEBUG] Sending {len(cv_text)} characters to Gemini for extraction...")
-        response = client.models.generate_content(
-            model="gemini-1.5-flash",
-            contents=prompt,
-            config=types.GenerateContentConfig(
-                temperature=0.1,
+        
+        # Primary model
+        target_model = "gemini-1.5-flash"
+        
+        try:
+            response = client.models.generate_content(
+                model=target_model,
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    temperature=0.1,
+                )
             )
-        )
+        except Exception as e:
+            if "404" in str(e):
+                print(f"[WARNING] 404 for {target_model}. Trying fallback...")
+                # Try fallback (Gemini 2.0 Flash)
+                response = client.models.generate_content(
+                    model="gemini-2.0-flash-exp",
+                    contents=prompt,
+                    config=types.GenerateContentConfig(
+                        temperature=0.1,
+                    )
+                )
+            else:
+                raise e
         
         # Extract JSON from response
         response_text = response.text.strip()

@@ -27,17 +27,23 @@ class GeminiCVScreener:
     AI-Powered CV Screening System
     """
     
-    # Primary model name
-    MODEL_NAME = "gemini-1.5-flash"
+    # Primary model name - using 2.5 flash for stability
+    MODEL_NAME = "gemini-2.5-flash"
     
     def __init__(self, api_key: Optional[str] = None):
         """Initialize the CV screener."""
-        self.api_key = api_key or os.getenv("GEMINI_API_KEY")
+        self.api_key = api_key or os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
         
         if not self.api_key:
+            print("[ERROR] GEMINI_API_KEY not found in environment variables!")
             raise ValueError("GEMINI_API_KEY not found.")
         
-        self.client = genai.Client(api_key=self.api_key)
+        try:
+            self.client = genai.Client(api_key=self.api_key)
+            print("[DEBUG] Gemini Client initialized successfully")
+        except Exception as e:
+            print(f"[ERROR] Failed to initialize Gemini Client: {e}")
+            self.client = None
         
         # Configure generation settings
         self.generation_config = types.GenerateContentConfig(
@@ -48,18 +54,18 @@ class GeminiCVScreener:
         )
 
         # Debug: List available models to help resolve 404 errors
-        try:
-            print("[DEBUG] Listing available Gemini models:")
-            # Note: client.models.list() might fail if key is restricted
-            models = self.client.models.list()
-            for m in models:
-                print(f"  - {m.name}")
-        except Exception as e:
-            print(f"[DEBUG] Could not list models: {e}")
+        if self.client:
+            try:
+                print("[DEBUG] Listing available Gemini models:")
+                models = self.client.models.list()
+                for m in models:
+                    print(f"  - {m.name}")
+            except Exception as e:
+                print(f"[DEBUG] Could not list models (this is normal for limited API keys): {e}")
         
         self.screening_prompt = """
-You are an elite HR recruiter. Analyze the CV against the Job Description.
-Return ONLY valid JSON.
+You are an elite HR recruiter and career strategist. Analyze the provided CV against the Job Description.
+Return ONLY a valid JSON object.
 
 ## JOB DESCRIPTION:
 {job_description}
@@ -74,47 +80,54 @@ Return ONLY valid JSON.
     "skills_match": 0-100,
     "experience_match": 0-100,
     "education_match": 0-100,
-    "strengths": ["list"],
-    "weaknesses": ["list"],
-    "recommendation": "String",
-    "summary": "2-3 sentences"
+    "strengths": ["list of 3-5 specific strengths"],
+    "weaknesses": ["list of 3-5 specific areas for improvement"],
+    "recommendation": "Strongly Recommend / Recommend / Consider / Not Recommended",
+    "summary": "2-3 sentences executive summary"
 }}
 """
 
     def _process_response(self, response: Any, file_name: str) -> Dict[str, Any]:
         """Parse and clean the AI response."""
-        result_text = (response.text or "").strip()
-        
-        # Clean up markdown blocks
-        if result_text.startswith("```"):
-            result_text = re.sub(r'^```(?:json)?\s*\n?', '', result_text)
-            result_text = re.sub(r'\n?```\s*$', '', result_text)
-        
         try:
-            result = json.loads(result_text)
-        except json.JSONDecodeError:
-            json_match = re.search(r'\{[\s\S]*\}', result_text)
-            if json_match:
-                result = json.loads(json_match.group())
-            else:
-                raise ValueError(f"Could not parse JSON: {result_text[:100]}")
-        
-        # Defaults
-        result["file_name"] = file_name
-        result.setdefault("candidate_name", "Unknown")
-        result.setdefault("overall_score", 0)
-        result.setdefault("skills_match", 0)
-        result.setdefault("experience_match", 0)
-        result.setdefault("education_match", 0)
-        result.setdefault("strengths", [])
-        result.setdefault("weaknesses", [])
-        result.setdefault("recommendation", "Not Evaluated")
-        result.setdefault("summary", "No summary generated")
-        
-        return result
+            result_text = (response.text or "").strip()
+            
+            # Clean up markdown blocks
+            if result_text.startswith("```"):
+                result_text = re.sub(r'^```(?:json)?\s*\n?', '', result_text)
+                result_text = re.sub(r'\n?```\s*$', '', result_text)
+            
+            try:
+                result = json.loads(result_text)
+            except json.JSONDecodeError:
+                json_match = re.search(r'\{[\s\S]*\}', result_text)
+                if json_match:
+                    result = json.loads(json_match.group())
+                else:
+                    raise ValueError(f"Could not parse JSON: {result_text[:100]}")
+            
+            # Defaults and normalization
+            result["file_name"] = file_name
+            result.setdefault("candidate_name", "Unknown")
+            result.setdefault("overall_score", 0)
+            result.setdefault("skills_match", 0)
+            result.setdefault("experience_match", 0)
+            result.setdefault("education_match", 0)
+            result.setdefault("strengths", [])
+            result.setdefault("weaknesses", [])
+            result.setdefault("recommendation", "Not Evaluated")
+            result.setdefault("summary", "No summary generated")
+            
+            return result
+        except Exception as e:
+            print(f"[ERROR] Failed to process Gemini response: {e}")
+            raise e
 
     async def screen_cv(self, job_description: str, cv_content: str, file_name: str) -> Dict[str, Any]:
         """Screen a CV using Gemini."""
+        if not self.client:
+            return self._error_response(file_name, "Gemini Client not initialized. Check API Key.")
+
         prompt = self.screening_prompt.format(
             job_description=job_description,
             cv_content=cv_content
@@ -124,6 +137,7 @@ Return ONLY valid JSON.
         try:
             # Try primary model
             try:
+                print(f"[DEBUG] Attempting analysis with {self.MODEL_NAME}...")
                 response = await loop.run_in_executor(
                     None,
                     lambda: self.client.models.generate_content(
@@ -134,11 +148,14 @@ Return ONLY valid JSON.
                 )
                 return self._process_response(response, file_name)
             except Exception as e:
-                if "404" in str(e):
-                    print(f"[WARNING] 404 for {self.MODEL_NAME}. Trying fallbacks...")
-                    for fallback in ["gemini-1.5-flash", "gemini-1.5-flash-8b", "gemini-1.5-pro"]:
+                error_str = str(e)
+                if "404" in error_str:
+                    print(f"[WARNING] 404 for {self.MODEL_NAME}. Trying fallback models (Gemini 2.0 and others)...")
+                    # Try fallbacks including 2.0 (user requested 2.5, which is likely 2.0)
+                    for fallback in ["gemini-1.5-flash", "gemini-2.0-flash-exp", "gemini-1.5-flash-8b", "gemini-1.5-pro"]:
                         if fallback == self.MODEL_NAME: continue
                         try:
+                            print(f"[DEBUG] Trying fallback: {fallback}")
                             response = await loop.run_in_executor(
                                 None,
                                 lambda: self.client.models.generate_content(
@@ -152,16 +169,29 @@ Return ONLY valid JSON.
                             continue
                 raise e
         except Exception as e:
-            print(f"Error in screen_cv: {e}")
-            return {
-                "candidate_name": "Unknown",
-                "file_name": file_name,
-                "overall_score": 0,
-                "strengths": [],
-                "weaknesses": [f"Error: {str(e)}"],
-                "recommendation": "Error",
-                "summary": f"Failed to analyze: {str(e)}"
-            }
+            error_msg = str(e)
+            print(f"[ERROR] screen_cv failed: {error_msg}")
+            
+            # Detect DNS error (Windows Errno 11001)
+            if "11001" in error_msg or "getaddrinfo failed" in error_msg:
+                return self._error_response(file_name, "Network Error: Cannot reach AI servers. Please check your internet/DNS settings.")
+            
+            return self._error_response(file_name, f"AI Analysis failed: {error_msg}")
+
+    def _error_response(self, file_name: str, message: str) -> Dict[str, Any]:
+        """Generate a consistent error response structure."""
+        return {
+            "candidate_name": "Error During Analysis",
+            "file_name": file_name,
+            "overall_score": 0,
+            "skills_match": 0,
+            "experience_match": 0,
+            "education_match": 0,
+            "strengths": [],
+            "weaknesses": [message],
+            "recommendation": "Technical Error",
+            "summary": message
+        }
 
     async def compare_candidates(self, job_description: str, candidates: List[Dict[str, Any]]) -> Dict[str, Any]:
         """Compare multiple candidates."""

@@ -31,6 +31,10 @@ class DatabaseManager:
     async def connect(self):
         """Connect to MongoDB Atlas database."""
         mongodb_url = os.getenv("MONGODB_URL", "mongodb://localhost:27017")
+        
+        if "localhost" in mongodb_url or "127.0.0.1" in mongodb_url:
+            print("ℹ Using local MongoDB URL. If you intended to use Atlas, check your .env file.")
+            print("  Required env var: MONGODB_URL=mongodb+srv://...")
 
         # Prefer explicit env var, otherwise try to infer DB name from URI.
         db_name = os.getenv("MONGODB_DB_NAME")
@@ -44,17 +48,16 @@ class DatabaseManager:
         
         try:
             # MongoDB Atlas optimized settings
-            # Using SRV connection with automatic retry and proper timeouts
             client_options = {
-                "serverSelectionTimeoutMS": 10000,  # 10 seconds for Atlas
-                "connectTimeoutMS": 10000,
+                "serverSelectionTimeoutMS": 5000,  # 5 seconds is enough for fail-fast
+                "connectTimeoutMS": 5000,
                 "socketTimeoutMS": 45000,
-                "maxPoolSize": 50,  # Atlas connection pooling
+                "maxPoolSize": 50,
                 "minPoolSize": 10,
                 "maxIdleTimeMS": 45000,
             }
             
-            # Add retryWrites for Atlas (recommended for production)
+            # Add retryWrites for Atlas
             if "mongodb+srv://" in mongodb_url or "retryWrites" not in mongodb_url:
                 client_options["retryWrites"] = True
             
@@ -69,26 +72,20 @@ class DatabaseManager:
             await self._create_indexes()
             
         except Exception as e:
-            print(f"✗ Failed to connect to MongoDB Atlas: {e}")
-            error_msg = str(e).upper()
-            if "mongodb+srv://" in mongodb_url:
-                if "DNS" in error_msg or "RESOLUTION" in error_msg:
-                    print(
-                        "\n🔴 DNS RESOLUTION ERROR:\n"
-                        "Atlas SRV connection requires working DNS resolver.\n\n"
-                        "Quick fixes:\n"
-                        "1. Copy the 'Standard connection string' from Atlas (not SRV)\n"
-                        "2. Change your DNS to 8.8.8.8 (Google) or 1.1.1.1 (Cloudflare)\n"
-                        "3. Check if VPN/firewall is blocking DNS queries\n"
-                    )
-                elif "AUTHENTICATION" in error_msg or "AUTH" in error_msg:
-                    print(
-                        "\n🔴 AUTHENTICATION ERROR:\n"
-                        "Check your MongoDB Atlas credentials:\n"
-                        "1. Username and password are correct\n"
-                        "2. Database user has read/write permissions\n"
-                        "3. IP whitelist includes your current IP (or use 0.0.0.0/0 for testing)\n"
-                    )
+            error_msg = str(e)
+            print(f"✗ Failed to connect to MongoDB: {mongodb_url.split('@')[-1]}")
+            print(f"  Error: {error_msg}")
+            
+            if "[Errno 11001]" in error_msg or "getaddrinfo failed" in error_msg or "DNS" in error_msg:
+                print("\n🔴 DNS RESOLUTION ERROR DETECTED")
+                print("Your computer cannot resolve the MongoDB Atlas address.")
+                print("FIX: See MONGODB_DNS_FIX.md in the project root.")
+                print("Quick Fix: Change your Windows DNS to 8.8.8.8 (Google DNS).\n")
+            elif "timed out" in error_msg.lower():
+                print("\n🔴 CONNECTION TIMEOUT")
+                print("Could not reach the database. Check if your IP is whitelisted in MongoDB Atlas.")
+                print("Or if you are using localhost, ensure MongoDB is actually running locally.\n")
+            
             raise
     
     async def disconnect(self):
