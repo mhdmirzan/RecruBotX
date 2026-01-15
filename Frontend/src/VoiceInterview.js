@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Mic, MicOff, Send, CheckCircle, XCircle, Volume2, Loader,
-  Sparkles, Play, RotateCcw, Clock, Target, Award, TrendingUp, Upload, FileText
+  Sparkles, Play, Clock, Target, Upload, FileText
 } from "lucide-react";
 import { getCurrentUser } from "./utils/userDatabase";
 import CandidateSidebar from "./components/CandidateSidebar";
@@ -17,7 +17,7 @@ const VoiceInterview = () => {
   // Setup state
   const [interviewField, setInterviewField] = useState("");
   const [positionLevel, setPositionLevel] = useState("");
-  const [numQuestions, setNumQuestions] = useState(5);
+  const [numQuestions] = useState(5);
   const [availableFields, setAvailableFields] = useState([]);
   const [availableLevels, setAvailableLevels] = useState([]);
 
@@ -446,7 +446,7 @@ const VoiceInterview = () => {
         clearInterval(animationRef.current);
       }
     };
-  }, [isSpeaking]);
+  }, [isSpeaking, isRecording]);
 
   // Cleanup on unmount
   useEffect(() => {

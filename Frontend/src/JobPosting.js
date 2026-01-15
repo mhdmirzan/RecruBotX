@@ -113,6 +113,7 @@ const JobPosting = () => {
         }
     };
 
+    // eslint-disable-next-line no-unused-vars
     const removeFile = (index) => {
         setFormData(prev => ({
             ...prev,
@@ -297,7 +298,7 @@ const JobPosting = () => {
                 editorRef.current.innerHTML = formData.jobDescription;
             }
         }
-    }, [showJDModal]);
+    }, [showJDModal, formData.jobDescription]);
 
     // Handle key press to ensure proper line breaks and list handling
     const handleKeyDown = (e) => {

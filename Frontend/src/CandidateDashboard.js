@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { LogOut, FileText, Mic, Search, Sparkles, LayoutDashboard, Cog, Briefcase, Calendar, MapPin, CheckCircle, Clock, Send, ArrowRight, ChevronRight, Zap, DollarSign, Home, X } from "lucide-react";
+import { LogOut, FileText, Mic, Search, LayoutDashboard, Cog, Briefcase, Calendar, MapPin, CheckCircle, Clock, Send, ArrowRight, ChevronRight, Zap, DollarSign, Home, X } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { getCurrentUser, logoutUser } from "./utils/userDatabase";
 import API_BASE_URL from "./apiConfig";
@@ -98,13 +98,6 @@ const CandidateDashboard = () => {
     }
   }, [navigate]);
 
-  // ✅ Dynamic Date
-  const today = new Date().toLocaleDateString("en-US", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
 
   // ✅ Logout Handler
   const handleLogout = () => {

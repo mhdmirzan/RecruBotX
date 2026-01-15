@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Download, Eye } from "lucide-react";
+import { Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { getCurrentUser } from "../utils/userDatabase";
 import CandidateSidebar from "../components/CandidateSidebar";

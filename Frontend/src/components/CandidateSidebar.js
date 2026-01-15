@@ -5,6 +5,7 @@ import { logoutUser, getCurrentUser } from "../utils/userDatabase";
 
 const CandidateSidebar = () => {
     const navigate = useNavigate();
+    // eslint-disable-next-line no-unused-vars
     const user = getCurrentUser();
 
     const handleLogout = () => {
