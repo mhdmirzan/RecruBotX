@@ -48,7 +48,7 @@ const RecruiterSettings = () => {
                 profileImage: user.profileImage || null
             });
         } else {
-            navigate("/signin/recruiter");
+            navigate("/recruiter/signin");
         }
     }, [navigate]);
 
@@ -108,7 +108,7 @@ const RecruiterSettings = () => {
 
     const handleLogout = () => {
         localStorage.removeItem("recruiterUser");
-        navigate("/signin/recruiter");
+        navigate("/recruiter/signin");
     };
 
     const getInitials = () => {

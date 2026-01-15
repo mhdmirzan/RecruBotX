@@ -19,7 +19,7 @@ const ResumeBuilder = () => {
   useEffect(() => {
     const currentUser = getCurrentUser();
     if (!currentUser) {
-      navigate("/signin/candidate");
+      navigate("/candidate/signin");
     } else {
       setUser(currentUser);
     }

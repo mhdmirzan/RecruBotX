@@ -2,30 +2,35 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
+    User,
     Mail,
     Lock,
     Eye,
     EyeOff,
     ArrowRight,
     CheckCircle,
-    Briefcase
+    Play,
+    Users
 } from "lucide-react";
 import image1 from "./assets/images/general/image1.jpg";
+import { registerUser } from "./utils/userDatabase";
 
-import { loginUser } from "./utils/userDatabase";
-
-const RecruiterSigninPage = () => {
+const CandidateSignupPage = () => {
     const navigate = useNavigate();
 
     const [formData, setFormData] = useState({
+        firstName: "",
+        lastName: "",
         email: "",
         password: "",
-        rememberMe: false,
+        confirmPassword: "",
+        agreeToTerms: false,
     });
 
     const [showPassword, setShowPassword] = useState(false);
-    const [error, setError] = useState("");
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState("");
 
     const fadeInUp = {
         initial: { opacity: 0, y: 20 },
@@ -45,41 +50,50 @@ const RecruiterSigninPage = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError("");
+
+        if (formData.password !== formData.confirmPassword) {
+            setError("Passwords don't match");
+            return;
+        }
+        if (!formData.agreeToTerms) {
+            setError("Please agree to the terms and conditions.");
+            return;
+        }
+
         setIsLoading(true);
 
-        // Call shared login logic
-        const result = await loginUser(formData.email, formData.password);
+        const result = await registerUser({
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+            email: formData.email,
+            password: formData.password,
+        });
 
         setIsLoading(false);
 
         if (result.success) {
-            // Store specifically for the recruiter logic
-            localStorage.setItem("recruiterUser", JSON.stringify({
-                ...result.user,
-                // Add fallback company name if user doesn't have one in DB yet
-                companyName: result.user.companyName || "RecruBotX Corp"
-            }));
-            alert(`Welcome back, ${result.user.firstName}!`);
-            navigate("/recruiter/dashboard");
+            localStorage.setItem("candidateUser", JSON.stringify(result.user));
+            alert(`Account created successfully! Welcome, ${result.user.firstName}!`);
+            navigate("/candidate/dashboard");
         } else {
             setError(result.message);
         }
     };
 
     const benefits = [
-        "AI-powered candidate screening",
-        "Automated interview scheduling",
-        "Detailed candidate evaluation reports",
-        "Ranking candidates by performance",
-        "Seamless hiring pipeline management",
-        "Data-driven decision making",
+        "Unlimited AI interview practice sessions",
+        "24/7 availability - practice anytime",
+        "Instant feedback and performance analytics",
+        "Industry-specific interview questions",
+        "No time limits or scheduling conflicts",
+        "Build confidence before real interviews",
     ];
 
     return (
         <div className="min-h-screen bg-gray-50">
             <div className="grid grid-cols-1 lg:grid-cols-2 min-h-screen">
 
-                {/* Left Side - Login Form */}
+                {/* Left Side - Signup Form */}
                 <div className="flex items-center justify-center p-6 lg:p-12">
                     <motion.div
                         className="w-full max-w-md bg-white shadow-lg rounded-2xl p-8"
@@ -87,13 +101,13 @@ const RecruiterSigninPage = () => {
                     >
                         <div className="text-center mb-8">
                             <div className="w-16 h-16 bg-gradient-to-r from-[#0a2a5e] to-[#1a4a8e] rounded-full flex items-center justify-center mx-auto mb-4">
-                                <Briefcase className="w-8 h-8 text-white" />
+                                <Users className="w-8 h-8 text-white" />
                             </div>
                             <h1 className="text-2xl font-bold text-gray-800 mb-2">
-                                Recruiter Portal
+                                Join as Candidate
                             </h1>
                             <p className="text-gray-500">
-                                Sign in to manage your hiring pipeline
+                                Start practicing interviews with AI and land your dream job
                             </p>
                         </div>
 
@@ -104,6 +118,29 @@ const RecruiterSigninPage = () => {
                         )}
 
                         <form onSubmit={handleSubmit} className="space-y-6">
+                            {/* Name Fields */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div className="relative">
+                                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                    <input
+                                        name="firstName"
+                                        value={formData.firstName}
+                                        onChange={handleInputChange}
+                                        placeholder="First Name"
+                                        className="w-full border rounded-lg px-10 py-2 focus:ring focus:ring-[#0a2a5e]/20 focus:border-[#0a2a5e]"
+                                        required
+                                    />
+                                </div>
+                                <input
+                                    name="lastName"
+                                    value={formData.lastName}
+                                    onChange={handleInputChange}
+                                    placeholder="Last Name"
+                                    className="w-full border rounded-lg px-4 py-2 focus:ring focus:ring-[#0a2a5e]/20 focus:border-[#0a2a5e]"
+                                    required
+                                />
+                            </div>
+
                             {/* Email */}
                             <div className="relative">
                                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -112,7 +149,7 @@ const RecruiterSigninPage = () => {
                                     name="email"
                                     value={formData.email}
                                     onChange={handleInputChange}
-                                    placeholder="Work Email Address"
+                                    placeholder="Email Address"
                                     className="w-full border rounded-lg px-10 py-2 focus:ring focus:ring-[#0a2a5e]/20 focus:border-[#0a2a5e]"
                                     required
                                 />
@@ -139,23 +176,46 @@ const RecruiterSigninPage = () => {
                                 </button>
                             </div>
 
-                            {/* Remember Me & Forgot Password */}
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center space-x-2">
-                                    <input
-                                        type="checkbox"
-                                        name="rememberMe"
-                                        checked={formData.rememberMe}
-                                        onChange={handleInputChange}
-                                        className="h-4 w-4"
-                                    />
-                                    <label className="text-sm text-gray-600">
-                                        Remember me
-                                    </label>
-                                </div>
-                                <Link to="/forgot-password" className="text-sm text-[#0a2a5e] hover:underline">
-                                    Forgot Password?
-                                </Link>
+                            {/* Confirm Password */}
+                            <div className="relative">
+                                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                <input
+                                    type={showConfirmPassword ? "text" : "password"}
+                                    name="confirmPassword"
+                                    value={formData.confirmPassword}
+                                    onChange={handleInputChange}
+                                    placeholder="Confirm Password"
+                                    className="w-full border rounded-lg px-10 py-2 pr-10 focus:ring focus:ring-[#0a2a5e]/20 focus:border-[#0a2a5e]"
+                                    required
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                                >
+                                    {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                </button>
+                            </div>
+
+                            {/* Terms */}
+                            <div className="flex items-center space-x-2">
+                                <input
+                                    type="checkbox"
+                                    name="agreeToTerms"
+                                    checked={formData.agreeToTerms}
+                                    onChange={handleInputChange}
+                                    className="h-4 w-4 accent-[#0a2a5e]"
+                                />
+                                <label className="text-sm text-gray-600">
+                                    I agree to the{" "}
+                                    <Link to="/terms" className="text-[#0a2a5e] hover:underline">
+                                        Terms of Service
+                                    </Link>{" "}
+                                    and{" "}
+                                    <Link to="/privacy" className="text-[#0a2a5e] hover:underline">
+                                        Privacy Policy
+                                    </Link>
+                                </label>
                             </div>
 
                             {/* Submit */}
@@ -164,22 +224,22 @@ const RecruiterSigninPage = () => {
                                 disabled={isLoading}
                                 className="w-full bg-[#0a2a5e] text-white py-2 rounded-lg font-medium hover:bg-[#0a1f44] flex items-center justify-center disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
                             >
-                                {isLoading ? "Signing In..." : "Sign In"}
+                                {isLoading ? "Creating Account..." : "Create Account"}
                                 {!isLoading && <ArrowRight className="ml-2 w-4 h-4" />}
                             </button>
                         </form>
 
                         <p className="text-center text-sm text-gray-500 mt-6">
-                            Need a recruiter account?{" "}
-                            <Link to="/recruiter/signup" className="text-[#0a2a5e] hover:underline font-medium">
-                                Sign up here
+                            Already have an account?{" "}
+                            <Link to="/candidate/signin" className="text-[#0a2a5e] hover:underline font-medium">
+                                Sign in here
                             </Link>
                         </p>
                     </motion.div>
                 </div>
 
                 {/* Right Side - Benefits */}
-                <div className="hidden lg:flex bg-gradient-to-br from-blue-50 to-indigo-100 items-center justify-center p-6 lg:p-12 h-full">
+                <div className="hidden lg:flex bg-gradient-to-br from-blue-50 to-indigo-100 items-center justify-center p-6 lg:p-12">
                     <motion.div
                         className="w-full max-w-lg text-center"
                         initial={{ opacity: 0, x: 50 }}
@@ -190,15 +250,15 @@ const RecruiterSigninPage = () => {
                         <div className="mb-6 rounded-2xl shadow-md w-full h-64 overflow-hidden">
                             <img
                                 src={image1}
-                                alt="Recruiter Dashboard"
+                                alt="Interview Practice"
                                 className="w-full h-full object-cover"
                             />
                         </div>
                         <h2 className="text-2xl font-bold text-gray-800 mb-4">
-                            Streamline Your Hiring
+                            Why Choose RecruBotX?
                         </h2>
                         <p className="text-gray-600 mb-6">
-                            RecruBotX helps you find the best talent faster with AI-driven insights
+                            Join thousands of candidates who have improved their interview skills
                         </p>
 
                         <div className="space-y-3 mb-8">
@@ -215,6 +275,14 @@ const RecruiterSigninPage = () => {
                                 </motion.div>
                             ))}
                         </div>
+
+                        <Link
+                            to="/demo"
+                            className="inline-flex items-center px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100"
+                        >
+                            <Play className="mr-2 w-4 h-4" />
+                            Watch Demo
+                        </Link>
                     </motion.div>
                 </div>
             </div>
@@ -222,4 +290,4 @@ const RecruiterSigninPage = () => {
     );
 };
 
-export default RecruiterSigninPage;
+export default CandidateSignupPage;

@@ -29,7 +29,7 @@ const Evaluation = () => {
             fetchJobPostings(user.id);
             fetchEvaluations(user.id);
         } else {
-            navigate("/signin/recruiter");
+            navigate("/recruiter/signin");
         }
     }, [navigate]);
 
@@ -114,7 +114,7 @@ const Evaluation = () => {
 
     const handleLogout = () => {
         localStorage.removeItem("recruiterUser");
-        navigate("/recruiter");
+        navigate("/recruiter/signin");
     };
 
     const getCurrentDate = () => {

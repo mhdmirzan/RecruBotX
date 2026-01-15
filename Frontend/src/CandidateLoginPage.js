@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { 
-  Mail, 
-  Lock, 
-  Eye, 
+import {
+  Mail,
+  Lock,
+  Eye,
   EyeOff,
   ArrowRight,
   CheckCircle,
@@ -48,7 +48,7 @@ const CandidateLoginPage = () => {
 
     // Login user
     const result = await loginUser(formData.email, formData.password);
-    
+
     setIsLoading(false);
 
     if (result.success) {
@@ -69,17 +69,17 @@ const CandidateLoginPage = () => {
   ];
 
   return (
-    <div className="h-screen bg-gray-50 flex overflow-hidden">
-      <div className="grid grid-cols-1 lg:grid-cols-2 w-full h-full">
-        
+    <div className="min-h-screen bg-gray-50">
+      <div className="grid grid-cols-1 lg:grid-cols-2 min-h-screen">
+
         {/* Left Side - Login Form */}
-        <div className="flex items-center justify-center p-6 lg:p-12 h-full">
-          <motion.div 
+        <div className="flex items-center justify-center p-6 lg:p-12">
+          <motion.div
             className="w-full max-w-md bg-white shadow-lg rounded-2xl p-8"
             {...fadeInUp}
           >
             <div className="text-center mb-8">
-              <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4">
+              <div className="w-16 h-16 bg-gradient-to-r from-[#0a2a5e] to-[#1a4a8e] rounded-full flex items-center justify-center mx-auto mb-4">
                 <Users className="w-8 h-8 text-white" />
               </div>
               <h1 className="text-2xl font-bold text-gray-800 mb-2">
@@ -106,7 +106,7 @@ const CandidateLoginPage = () => {
                   value={formData.email}
                   onChange={handleInputChange}
                   placeholder="Email Address"
-                  className="w-full border rounded-lg px-10 py-2 focus:ring focus:ring-blue-200"
+                  className="w-full border rounded-lg px-10 py-2 focus:ring focus:ring-[#0a2a5e]/20 focus:border-[#0a2a5e]"
                   required
                 />
               </div>
@@ -120,7 +120,7 @@ const CandidateLoginPage = () => {
                   value={formData.password}
                   onChange={handleInputChange}
                   placeholder="Password"
-                  className="w-full border rounded-lg px-10 py-2 pr-10 focus:ring focus:ring-blue-200"
+                  className="w-full border rounded-lg px-10 py-2 pr-10 focus:ring focus:ring-[#0a2a5e]/20 focus:border-[#0a2a5e]"
                   required
                 />
                 <button
@@ -146,7 +146,7 @@ const CandidateLoginPage = () => {
                     Remember me
                   </label>
                 </div>
-                <Link to="/forgot-password" className="text-sm text-blue-600 hover:underline">
+                <Link to="/forgot-password" className="text-sm text-[#0a2a5e] hover:underline">
                   Forgot Password?
                 </Link>
               </div>
@@ -155,7 +155,7 @@ const CandidateLoginPage = () => {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full bg-blue-600 text-white py-2 rounded-lg font-medium hover:bg-blue-700 flex items-center justify-center disabled:bg-gray-400 disabled:cursor-not-allowed"
+                className="w-full bg-[#0a2a5e] text-white py-2 rounded-lg font-medium hover:bg-[#0a1f44] flex items-center justify-center disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
               >
                 {isLoading ? "Signing In..." : "Sign In"}
                 {!isLoading && <ArrowRight className="ml-2 w-4 h-4" />}
@@ -171,7 +171,7 @@ const CandidateLoginPage = () => {
 
             <p className="text-center text-sm text-gray-500 mt-6">
               Don't have an account?{" "}
-              <Link to="/candidate" className="text-blue-600 hover:underline font-medium">
+              <Link to="/candidate/signup" className="text-[#0a2a5e] hover:underline font-medium">
                 Sign up here
               </Link>
             </p>
@@ -180,7 +180,7 @@ const CandidateLoginPage = () => {
 
         {/* Right Side - Benefits */}
         <div className="hidden lg:flex bg-gradient-to-br from-blue-50 to-indigo-100 items-center justify-center p-6 lg:p-12 h-full">
-          <motion.div 
+          <motion.div
             className="w-full max-w-lg text-center"
             initial={{ opacity: 0, x: 50 }}
             animate={{ opacity: 1, x: 0 }}
@@ -188,9 +188,9 @@ const CandidateLoginPage = () => {
           >
             {/* Hero Image */}
             <div className="mb-6 rounded-2xl shadow-md w-full h-64 overflow-hidden">
-              <img 
-                src={image1} 
-                alt="Interview Practice" 
+              <img
+                src={image1}
+                alt="Interview Practice"
                 className="w-full h-full object-cover"
               />
             </div>
@@ -203,7 +203,7 @@ const CandidateLoginPage = () => {
 
             <div className="space-y-3 mb-8">
               {benefits.map((benefit, index) => (
-                <motion.div 
+                <motion.div
                   key={index}
                   className="flex items-start space-x-3 text-left"
                   initial={{ opacity: 0, x: 20 }}

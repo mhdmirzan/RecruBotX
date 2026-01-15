@@ -9,7 +9,7 @@ const CandidateSidebar = () => {
 
     const handleLogout = () => {
         logoutUser();
-        navigate("/signin/candidate");
+        navigate("/candidate/signin");
     };
 
     const handleStartInterview = () => {

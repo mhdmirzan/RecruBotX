@@ -92,7 +92,7 @@ const CandidateDashboard = () => {
     const currentUser = getCurrentUser();
     if (!currentUser) {
       // Redirect to login if not authenticated
-      navigate("/signin/candidate");
+      navigate("/candidate/signin");
     } else {
       setUser(currentUser);
     }
@@ -109,7 +109,7 @@ const CandidateDashboard = () => {
   // ✅ Logout Handler
   const handleLogout = () => {
     logoutUser();
-    navigate("/signin/candidate");
+    navigate("/candidate/signin");
   };
 
   // ✅ Start Interview Handler

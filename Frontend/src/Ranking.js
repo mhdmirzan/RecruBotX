@@ -33,7 +33,7 @@ const Ranking = () => {
             fetchJobPostings(user.id);
             fetchRankings(user.id);
         } else {
-            navigate("/signin/recruiter");
+            navigate("/recruiter/signin");
         }
     }, [navigate]);
 
@@ -69,7 +69,7 @@ const Ranking = () => {
 
     const handleLogout = () => {
         localStorage.removeItem("recruiterUser");
-        navigate("/signin/recruiter");
+        navigate("/recruiter/signin");
     };
 
     const getProcessedRankings = () => {

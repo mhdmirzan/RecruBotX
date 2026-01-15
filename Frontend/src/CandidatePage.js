@@ -1,36 +1,30 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { 
-  User, 
-  Mail, 
-  Lock, 
-  Eye, 
+import {
+  Mail,
+  Lock,
+  Eye,
   EyeOff,
   ArrowRight,
   CheckCircle,
-  Play,
   Users
 } from "lucide-react";
+import { loginUser } from "./utils/userDatabase";
 import image1 from "./assets/images/general/image1.jpg";
-import { registerUser } from "./utils/userDatabase";
 
-const CandidateSignupPage = () => {
-  const navigate = useNavigate(); // ✅ for redirect after signup
+const CandidatePage = () => {
+  const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
     email: "",
     password: "",
-    confirmPassword: "",
-    agreeToTerms: false,
+    rememberMe: false,
   });
 
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const fadeInUp = {
     initial: { opacity: 0, y: 20 },
@@ -44,37 +38,21 @@ const CandidateSignupPage = () => {
       ...formData,
       [name]: type === "checkbox" ? checked : value,
     });
-    setError(""); // Clear error on input change
+    setError("");
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-
-    if (formData.password !== formData.confirmPassword) {
-      setError("Passwords don't match");
-      return;
-    }
-    if (!formData.agreeToTerms) {
-      setError("Please agree to the terms and conditions.");
-      return;
-    }
-
     setIsLoading(true);
 
-    // Register user in MongoDB database
-    const result = await registerUser({
-      firstName: formData.firstName,
-      lastName: formData.lastName,
-      email: formData.email,
-      password: formData.password,
-    });
+    const result = await loginUser(formData.email, formData.password);
 
     setIsLoading(false);
 
     if (result.success) {
-      alert(`Account created successfully! Welcome, ${result.user.firstName}!`);
-      // Redirect to Candidate Dashboard
+      localStorage.setItem("candidateUser", JSON.stringify(result.user));
+      alert(`Welcome back, ${result.user.firstName}!`);
       navigate("/candidate/dashboard");
     } else {
       setError(result.message);
@@ -91,24 +69,24 @@ const CandidateSignupPage = () => {
   ];
 
   return (
-    <div className="h-screen bg-gray-50 flex overflow-hidden">
-      <div className="grid grid-cols-1 lg:grid-cols-2 w-full h-full">
-        
-        {/* Left Side - Signup Form */}
+    <div className="min-h-screen bg-gray-50">
+      <div className="grid grid-cols-1 lg:grid-cols-2 min-h-screen">
+
+        {/* Left Side - Login Form */}
         <div className="flex items-center justify-center p-6 lg:p-12 h-full">
-          <motion.div 
+          <motion.div
             className="w-full max-w-md bg-white shadow-lg rounded-2xl p-8"
             {...fadeInUp}
           >
             <div className="text-center mb-8">
-              <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4">
+              <div className="w-16 h-16 bg-gradient-to-r from-[#0a2a5e] to-[#1a4a8e] rounded-full flex items-center justify-center mx-auto mb-4">
                 <Users className="w-8 h-8 text-white" />
               </div>
               <h1 className="text-2xl font-bold text-gray-800 mb-2">
-                Join as Candidate
+                Candidate Portal
               </h1>
               <p className="text-gray-500">
-                Start practicing interviews with AI and land your dream job
+                Sign in to continue your interview practice journey
               </p>
             </div>
 
@@ -119,29 +97,6 @@ const CandidateSignupPage = () => {
             )}
 
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Name Fields */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                  <input
-                    name="firstName"
-                    value={formData.firstName}
-                    onChange={handleInputChange}
-                    placeholder="First Name"
-                    className="w-full border rounded-lg px-10 py-2 focus:ring focus:ring-blue-200"
-                    required
-                  />
-                </div>
-                <input
-                  name="lastName"
-                  value={formData.lastName}
-                  onChange={handleInputChange}
-                  placeholder="Last Name"
-                  className="w-full border rounded-lg px-4 py-2 focus:ring focus:ring-blue-200"
-                  required
-                />
-              </div>
-
               {/* Email */}
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -151,7 +106,7 @@ const CandidateSignupPage = () => {
                   value={formData.email}
                   onChange={handleInputChange}
                   placeholder="Email Address"
-                  className="w-full border rounded-lg px-10 py-2 focus:ring focus:ring-blue-200"
+                  className="w-full border rounded-lg px-10 py-2 focus:ring focus:ring-[#0a2a5e]/20 focus:border-[#0a2a5e]"
                   required
                 />
               </div>
@@ -165,7 +120,7 @@ const CandidateSignupPage = () => {
                   value={formData.password}
                   onChange={handleInputChange}
                   placeholder="Password"
-                  className="w-full border rounded-lg px-10 py-2 pr-10 focus:ring focus:ring-blue-200"
+                  className="w-full border rounded-lg px-10 py-2 pr-10 focus:ring focus:ring-[#0a2a5e]/20 focus:border-[#0a2a5e]"
                   required
                 />
                 <button
@@ -177,71 +132,48 @@ const CandidateSignupPage = () => {
                 </button>
               </div>
 
-              {/* Confirm Password */}
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input
-                  type={showConfirmPassword ? "text" : "password"}
-                  name="confirmPassword"
-                  value={formData.confirmPassword}
-                  onChange={handleInputChange}
-                  placeholder="Confirm Password"
-                  className="w-full border rounded-lg px-10 py-2 pr-10 focus:ring focus:ring-blue-200"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                >
-                  {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
-              </div>
-
-              {/* Terms */}
-              <div className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  name="agreeToTerms"
-                  checked={formData.agreeToTerms}
-                  onChange={handleInputChange}
-                  className="h-4 w-4"
-                />
-                <label className="text-sm text-gray-600">
-                  I agree to the{" "}
-                  <Link to="/terms" className="text-blue-600 hover:underline">
-                    Terms of Service
-                  </Link>{" "}
-                  and{" "}
-                  <Link to="/privacy" className="text-blue-600 hover:underline">
-                    Privacy Policy
-                  </Link>
-                </label>
+              {/* Remember Me & Forgot Password */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    name="rememberMe"
+                    checked={formData.rememberMe}
+                    onChange={handleInputChange}
+                    className="h-4 w-4 accent-[#0a2a5e]"
+                  />
+                  <label className="text-sm text-gray-600">
+                    Remember me
+                  </label>
+                </div>
+                <Link to="/forgot-password" className="text-sm text-[#0a2a5e] hover:underline">
+                  Forgot Password?
+                </Link>
               </div>
 
               {/* Submit */}
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full bg-blue-600 text-white py-2 rounded-lg font-medium hover:bg-blue-700 flex items-center justify-center disabled:bg-gray-400 disabled:cursor-not-allowed"
+                className="w-full bg-[#0a2a5e] text-white py-2 rounded-lg font-medium hover:bg-[#0a1f44] flex items-center justify-center disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
               >
-                {isLoading ? "Creating Account..." : "Create Account"}
+                {isLoading ? "Signing In..." : "Sign In"}
                 {!isLoading && <ArrowRight className="ml-2 w-4 h-4" />}
               </button>
             </form>
 
             <p className="text-center text-sm text-gray-500 mt-6">
-              Already have an account?{" "}
-              <Link to="/signin/candidate" className="text-blue-600 hover:underline font-medium">
-                Sign in here
+              Need a candidate account?{" "}
+              <Link to="/candidate/signup" className="text-[#0a2a5e] hover:underline font-medium">
+                Sign up here
               </Link>
             </p>
           </motion.div>
         </div>
 
         {/* Right Side - Benefits */}
-        <div className="hidden lg:flex bg-gradient-to-br from-blue-50 to-indigo-100 items-center justify-center p-6 lg:p-12 lg:sticky lg:top-0 lg:h-screen">
-          <motion.div 
+        <div className="hidden lg:flex bg-gradient-to-br from-blue-50 to-indigo-100 items-center justify-center p-6 lg:p-12 h-full">
+          <motion.div
             className="w-full max-w-lg text-center"
             initial={{ opacity: 0, x: 50 }}
             animate={{ opacity: 1, x: 0 }}
@@ -249,14 +181,14 @@ const CandidateSignupPage = () => {
           >
             {/* Hero Image */}
             <div className="mb-6 rounded-2xl shadow-md w-full h-64 overflow-hidden">
-              <img 
-                src={image1} 
-                alt="Interview Practice" 
+              <img
+                src={image1}
+                alt="Interview Practice"
                 className="w-full h-full object-cover"
               />
             </div>
             <h2 className="text-2xl font-bold text-gray-800 mb-4">
-              Why Choose RecruBotX?
+              Ace Your Next Interview
             </h2>
             <p className="text-gray-600 mb-6">
               Join thousands of candidates who have improved their interview skills
@@ -264,7 +196,7 @@ const CandidateSignupPage = () => {
 
             <div className="space-y-3 mb-8">
               {benefits.map((benefit, index) => (
-                <motion.div 
+                <motion.div
                   key={index}
                   className="flex items-start space-x-3 text-left"
                   initial={{ opacity: 0, x: 20 }}
@@ -276,14 +208,6 @@ const CandidateSignupPage = () => {
                 </motion.div>
               ))}
             </div>
-
-            <Link
-              to="/demo"
-              className="inline-flex items-center px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100"
-            >
-              <Play className="mr-2 w-4 h-4" />
-              Watch Demo
-            </Link>
           </motion.div>
         </div>
       </div>
@@ -291,4 +215,4 @@ const CandidateSignupPage = () => {
   );
 };
 
-export default CandidateSignupPage;
+export default CandidatePage;

@@ -30,7 +30,7 @@ const CandidateReport = () => {
             setRecruiterData(JSON.parse(storedUser));
             fetchReport(rankingId);
         } else {
-            navigate("/signin/recruiter");
+            navigate("/recruiter/signin");
         }
     }, [rankingId, navigate]);
 
@@ -50,7 +50,7 @@ const CandidateReport = () => {
 
     const handleLogout = () => {
         localStorage.removeItem("recruiterUser");
-        navigate("/signin/recruiter");
+        navigate("/recruiter/signin");
     };
 
     if (!recruiterData) return null;

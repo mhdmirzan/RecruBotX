@@ -8,6 +8,11 @@ import Contact from "./components/Contact";
 import Footer from "./components/Footer";
 import PricingPage from "./components/PricingPage";
 import HowItWorksPage from "./components/HowItWorksPage";
+import AboutPage from "./components/AboutPage";
+import FAQPage from "./components/FAQPage";
+import PrivacyPolicyPage from "./components/PrivacyPolicyPage";
+import TermsOfServicePage from "./components/TermsOfServicePage";
+import ScrollToTop from "./components/ScrollToTop";
 
 // Home
 import Hero from "./components/home/Hero";
@@ -21,7 +26,7 @@ import Reviews from "./components/home/Reviews";
 
 // Candidate
 import CandidatePage from "./CandidatePage";
-import CandidateLoginPage from "./CandidateLoginPage";
+import CandidateSignupPage from "./CandidateSignupPage";
 import CandidateDashboard from "./CandidateDashboard";
 import CandidateSettings from "./CandidateSettings";
 import CandidateApplication from "./CandidateApplication";
@@ -51,6 +56,7 @@ initializeDummyUsers();
 function App() {
   return (
     <Router>
+      <ScrollToTop />
       <Navbar />
 
       <Routes>
@@ -74,11 +80,15 @@ function App() {
         <Route path="/contact" element={<><Contact /><Footer /></>} />
         <Route path="/how-it-works" element={<><HowItWorksPage /><Footer /></>} />
         <Route path="/pricing" element={<><PricingPage /><Footer /></>} />
+        <Route path="/about" element={<><AboutPage /><Footer /></>} />
+        <Route path="/faq" element={<><FAQPage /><Footer /></>} />
+        <Route path="/privacy" element={<><PrivacyPolicyPage /><Footer /></>} />
+        <Route path="/terms" element={<><TermsOfServicePage /><Footer /></>} />
         <Route path="/signup" element={<Signup />} />
 
         {/* ===== CANDIDATE ===== */}
-        <Route path="/candidate" element={<CandidatePage />} />
-        <Route path="/signin/candidate" element={<CandidateLoginPage />} />
+        <Route path="/candidate/signin" element={<><CandidatePage /><Footer /></>} />
+        <Route path="/candidate/signup" element={<><CandidateSignupPage /><Footer /></>} />
         <Route path="/candidate/dashboard" element={<CandidateDashboard />} />
         <Route path="/candidate/settings" element={<CandidateSettings />} />
         <Route path="/candidate/interview" element={<VoiceInterview />} />
@@ -95,21 +105,14 @@ function App() {
         />
 
         {/* ===== RECRUITER (HR) ===== */}
-        <Route
-          path="/signup/recruiter"
-          element={<RecruiterSignupPage />}
-        />
-
-        <Route path="/signin/recruiter" element={<RecruiterSigninPage />} />
+        <Route path="/recruiter/signin" element={<><RecruiterSigninPage /><Footer /></>} />
+        <Route path="/recruiter/signup" element={<><RecruiterSignupPage /><Footer /></>} />
         <Route path="/recruiter/dashboard" element={<RecruiterDashboard />} />
         <Route path="/recruiter/job-posting" element={<JobPosting />} />
         <Route path="/recruiter/evaluation" element={<Evaluation />} />
         <Route path="/recruiter/ranking" element={<Ranking />} />
         <Route path="/recruiter/report/:rankingId" element={<CandidateReport />} />
         <Route path="/recruiter/settings" element={<RecruiterSettings />} />
-
-        {/* Redirect /recruiter to dashboard or signin */}
-        <Route path="/recruiter" element={<RecruiterSigninPage />} />
       </Routes>
     </Router>
   );
