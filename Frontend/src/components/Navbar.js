@@ -1,10 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Menu, X, ChevronRight } from "lucide-react";
 
 const Navbar = () => {
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isScrolling, setIsScrolling] = useState(false);
+  const [isLargeScreen, setIsLargeScreen] = useState(false);
 
   // Hide navbar on dashboard and portal pages
   const hideNavbarPaths = [
@@ -15,6 +17,43 @@ const Navbar = () => {
     "/template/",
     "/resume-builder"
   ];
+
+  // Detect screen size
+  useEffect(() => {
+    const checkScreenSize = () => {
+      setIsLargeScreen(window.innerWidth >= 1024); // lg breakpoint
+    };
+
+    checkScreenSize();
+    window.addEventListener("resize", checkScreenSize);
+    return () => window.removeEventListener("resize", checkScreenSize);
+  }, []);
+
+  // Detect scroll position (only for large screens)
+  // Navbar is hidden whenever user is not at the top of the page
+  useEffect(() => {
+    const handleScroll = () => {
+      if (!isLargeScreen) {
+        setIsScrolling(false);
+        return;
+      }
+
+      // Hide navbar if not at top position
+      if (window.scrollY > 50) {
+        setIsScrolling(true);
+      } else {
+        setIsScrolling(false);
+      }
+    };
+
+    // Check initial position
+    handleScroll();
+
+    window.addEventListener("scroll", handleScroll);
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, [isLargeScreen]);
 
   if (hideNavbarPaths.some(path => location.pathname.includes(path))) {
     return null;
@@ -29,7 +68,12 @@ const Navbar = () => {
   ];
 
   return (
-    <nav className="bg-white shadow-md sticky top-0 z-50">
+    <nav
+      className={`bg-white/95 backdrop-blur-sm border-b border-gray-100 sticky top-0 z-50 transition-all duration-300 ${isScrolling && isLargeScreen
+        ? "opacity-0 pointer-events-none -translate-y-2"
+        : "opacity-100 translate-y-0"
+        }`}
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex justify-between items-center">
         {/* Logo */}
         <Link to="/" className="text-xl sm:text-2xl font-bold text-[#0a2a5e]">
