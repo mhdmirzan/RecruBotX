@@ -6,21 +6,21 @@ const Footer = () => {
   return (
     <footer className="bg-[#0a2a5e] text-white">
       <div className="max-w-7xl mx-auto px-6 py-16">
-        {/* Main Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+        {/* Main Grid - Rebalanced for even spacing */}
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-12">
 
-          {/* Left: Logo & Tagline */}
-          <div className="space-y-6">
+          {/* Left: Logo & Tagline - Takes 4 columns */}
+          <div className="md:col-span-4 space-y-6">
             <Link to="/" className="flex items-center space-x-2">
               <div className="w-10 h-10 bg-gradient-to-r from-primary-accent to-blue-500 rounded-lg flex items-center justify-center">
                 <Bot className="w-5 h-5 text-white" />
               </div>
               <span className="text-xl font-bold">RecruBotX</span>
             </Link>
-            <p className="text-sm max-w-sm leading-relaxed">
+            <p className="text-sm max-w-sm leading-relaxed text-blue-200/80">
               AI-powered interview automation for smarter hiring. Transform your recruitment process with intelligent conversations.
             </p>
-            <div className="flex space-x-4">
+            <div className="flex space-x-3">
               <a
                 href="https://twitter.com/recrubotx"
                 className="w-9 h-9 flex items-center justify-center rounded-lg bg-white/10 hover:bg-primary-accent transition"
@@ -45,49 +45,52 @@ const Footer = () => {
             </div>
           </div>
 
-          {/* Center: Quick Links */}
-          <div className="space-y-6">
+          {/* Center: Quick Links - Takes 5 columns */}
+          <div className="md:col-span-5 space-y-6">
             <h3 className="font-semibold text-lg">Quick Links</h3>
-            <div className="grid grid-cols-2 gap-y-3 gap-x-6">
-              <Link to="/" className="text-sm hover:text-primary-accent transition">Home</Link>
-              <Link to="/how-it-works" className="text-sm hover:text-primary-accent transition">How it Works</Link>
-              <Link to="/candidate" className="text-sm hover:text-primary-accent transition">Candidates</Link>
-              <Link to="/recruiter" className="text-sm hover:text-primary-accent transition">Recruiters</Link>
-              <Link to="/pricing" className="text-sm hover:text-primary-accent transition">Pricing</Link>
-              <Link to="/about" className="text-sm hover:text-primary-accent transition">About</Link>
-              <Link to="/contact" className="text-sm hover:text-primary-accent transition">Contact</Link>
-              <Link to="/faq" className="text-sm hover:text-primary-accent transition">FAQ</Link>
+            <div className="grid grid-cols-2 gap-y-3 gap-x-8">
+              <Link to="/" className="text-sm text-blue-200/80 hover:text-white transition">Home</Link>
+              <Link to="/how-it-works" className="text-sm text-blue-200/80 hover:text-white transition">How it Works</Link>
+              <Link to="/candidate" className="text-sm text-blue-200/80 hover:text-white transition">Candidates</Link>
+              <Link to="/recruiter" className="text-sm text-blue-200/80 hover:text-white transition">Recruiters</Link>
+              <Link to="/pricing" className="text-sm text-blue-200/80 hover:text-white transition">Pricing</Link>
+              <Link to="/about" className="text-sm text-blue-200/80 hover:text-white transition">About</Link>
+              <Link to="/contact" className="text-sm text-blue-200/80 hover:text-white transition">Contact</Link>
+              <Link to="/faq" className="text-sm text-blue-200/80 hover:text-white transition">FAQ</Link>
             </div>
           </div>
 
-          {/* Right: Contact Info */}
-          <div className="space-y-6">
+          {/* Right: Contact Info - Takes 3 columns */}
+          <div className="md:col-span-3 space-y-6">
             <h3 className="font-semibold text-lg">Contact</h3>
             <div className="space-y-4">
               <div className="flex items-center space-x-3">
-                <Mail className="w-4 h-4 text-primary-accent" />
+                <Mail className="w-4 h-4 text-blue-400" />
                 <a
-                  href="mailto:support@recrubotx.com"
-                  className="text-sm hover:text-primary-accent transition"
+                  href="mailto:recrubotx@uettaxila.edu.pk"
+                  className="text-sm text-blue-200/80 hover:text-white transition"
                 >
-                  support@recrubotx.com
+                  recrubotx@uettaxila.edu.pk
                 </a>
               </div>
-              <div className="flex items-center space-x-3">
-                <MapPin className="w-4 h-4 text-primary-accent" />
-                <span className="text-sm">San Francisco, CA</span>
+              <div className="flex items-start space-x-3">
+                <MapPin className="w-4 h-4 text-blue-400 mt-0.5" />
+                <span className="text-sm text-blue-200/80">
+                  UET Taxila, Rawalpindi<br />
+                  Punjab, Pakistan
+                </span>
               </div>
             </div>
-            <div className="pt-6 space-y-2">
+            <div className="pt-4 space-y-2">
               <Link
                 to="/privacy"
-                className="block text-sm hover:text-primary-accent transition"
+                className="block text-sm text-blue-200/80 hover:text-white transition"
               >
                 Privacy Policy
               </Link>
               <Link
                 to="/terms"
-                className="block text-sm hover:text-primary-accent transition"
+                className="block text-sm text-blue-200/80 hover:text-white transition"
               >
                 Terms of Service
               </Link>
