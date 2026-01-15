@@ -345,15 +345,15 @@ const AboutPage = () => {
                             </div>
 
                             <div className="flex justify-center gap-4 mt-8">
-                                <a href="#" className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center hover:bg-white/30 transition-colors">
+                                <button type="button" className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center hover:bg-white/30 transition-colors">
                                     <Twitter className="w-5 h-5" />
-                                </a>
-                                <a href="#" className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center hover:bg-white/30 transition-colors">
+                                </button>
+                                <button type="button" className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center hover:bg-white/30 transition-colors">
                                     <Linkedin className="w-5 h-5" />
-                                </a>
-                                <a href="#" className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center hover:bg-white/30 transition-colors">
+                                </button>
+                                <button type="button" className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center hover:bg-white/30 transition-colors">
                                     <Github className="w-5 h-5" />
-                                </a>
+                                </button>
                             </div>
                         </div>
                     </motion.div>
