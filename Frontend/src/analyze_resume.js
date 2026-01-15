@@ -44,7 +44,7 @@ const AnalyzeResume = () => {
   useEffect(() => {
     const currentUser = getCurrentUser();
     if (!currentUser) {
-      navigate("/signin/candidate");
+      navigate("/candidate/signin");
     } else {
       setUser(currentUser);
     }

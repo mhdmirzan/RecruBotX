@@ -37,7 +37,7 @@ const RecruiterDashboard = () => {
       setRecruiterData(user);
       fetchJobPostings(user.id);
     } else {
-      navigate("/signin/recruiter");
+      navigate("/recruiter/signin");
     }
   }, [navigate]);
 
@@ -75,7 +75,7 @@ const RecruiterDashboard = () => {
 
   const handleLogout = () => {
     localStorage.removeItem("recruiterUser");
-    navigate("/signin/recruiter");
+    navigate("/recruiter/signin");
   };
 
   const handleDeleteJob = async (jobId) => {

@@ -179,7 +179,7 @@ const HowItWorksPage = () => {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
-              to="/signup/recruiter"
+              to="/recruiter/signup"
               className="flex items-center justify-center bg-white text-[#0a2a5e] hover:bg-gray-100 font-semibold py-3 px-6 rounded-lg transition"
             >
               Start Free Trial

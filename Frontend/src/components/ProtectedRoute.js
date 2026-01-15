@@ -7,7 +7,7 @@ import { isLoggedIn, getCurrentUser } from "../utils/userDatabase";
 const ProtectedRoute = ({ children }) => {
   if (!isLoggedIn()) {
     // Redirect to login if not authenticated
-    return <Navigate to="/signin/candidate" replace />;
+    return <Navigate to="/candidate/signin" replace />;
   }
 
   return children;

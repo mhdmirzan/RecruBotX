@@ -72,13 +72,13 @@ const JobPosting = () => {
         if (storedUser) {
             setRecruiterData(JSON.parse(storedUser));
         } else {
-            navigate("/signin/recruiter");
+            navigate("/recruiter/signin");
         }
     }, [navigate]);
 
     const handleLogout = () => {
         localStorage.removeItem("recruiterUser");
-        navigate("/recruiter");
+        navigate("/recruiter/signin");
     };
 
     const handleInputChange = (e) => {

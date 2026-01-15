@@ -11,7 +11,7 @@ import {
   CheckCircle,
   Briefcase
 } from "lucide-react";
-import recruiterHero from "./assets/images/general/image1.jpg"; // you can change image later
+import recruiterHero from "./assets/images/general/image1.jpg";
 
 import { registerUser } from "./utils/userDatabase";
 
@@ -63,19 +63,17 @@ const RecruiterSignupPage = () => {
 
     setIsLoading(true);
 
-    // Call shared registration logic
     const result = await registerUser({
       firstName: formData.firstName,
       lastName: formData.lastName,
       email: formData.email,
       password: formData.password,
-      companyName: formData.companyName // Passed but backend might ignore it for now
+      companyName: formData.companyName
     });
 
     setIsLoading(false);
 
     if (result.success) {
-      // For recruiter, we also store in a specific key to maintain current dashboard logic
       localStorage.setItem("recruiterUser", JSON.stringify({
         ...result.user,
         companyName: formData.companyName
@@ -107,7 +105,7 @@ const RecruiterSignupPage = () => {
             {...fadeInUp}
           >
             <div className="text-center mb-8">
-              <div className="w-16 h-16 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
+              <div className="w-16 h-16 bg-gradient-to-r from-[#0a2a5e] to-[#1a4a8e] rounded-full flex items-center justify-center mx-auto mb-4">
                 <Briefcase className="w-8 h-8 text-white" />
               </div>
               <h1 className="text-2xl font-bold text-gray-800 mb-2">
@@ -124,7 +122,7 @@ const RecruiterSignupPage = () => {
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-5">
 
               {/* Name */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -135,7 +133,7 @@ const RecruiterSignupPage = () => {
                     value={formData.firstName}
                     onChange={handleInputChange}
                     placeholder="First Name"
-                    className="w-full border rounded-lg px-10 py-2 focus:ring focus:ring-indigo-200"
+                    className="w-full border rounded-lg px-10 py-2 focus:ring focus:ring-[#0a2a5e]/20 focus:border-[#0a2a5e]"
                     required
                   />
                 </div>
@@ -144,7 +142,7 @@ const RecruiterSignupPage = () => {
                   value={formData.lastName}
                   onChange={handleInputChange}
                   placeholder="Last Name"
-                  className="w-full border rounded-lg px-4 py-2 focus:ring focus:ring-indigo-200"
+                  className="w-full border rounded-lg px-4 py-2 focus:ring focus:ring-[#0a2a5e]/20 focus:border-[#0a2a5e]"
                   required
                 />
               </div>
@@ -157,7 +155,7 @@ const RecruiterSignupPage = () => {
                   value={formData.companyName}
                   onChange={handleInputChange}
                   placeholder="Company Name"
-                  className="w-full border rounded-lg px-10 py-2 focus:ring focus:ring-indigo-200"
+                  className="w-full border rounded-lg px-10 py-2 focus:ring focus:ring-[#0a2a5e]/20 focus:border-[#0a2a5e]"
                   required
                 />
               </div>
@@ -171,7 +169,7 @@ const RecruiterSignupPage = () => {
                   value={formData.email}
                   onChange={handleInputChange}
                   placeholder="Work Email"
-                  className="w-full border rounded-lg px-10 py-2 focus:ring focus:ring-indigo-200"
+                  className="w-full border rounded-lg px-10 py-2 focus:ring focus:ring-[#0a2a5e]/20 focus:border-[#0a2a5e]"
                   required
                 />
               </div>
@@ -185,13 +183,13 @@ const RecruiterSignupPage = () => {
                   value={formData.password}
                   onChange={handleInputChange}
                   placeholder="Password"
-                  className="w-full border rounded-lg px-10 py-2 pr-10 focus:ring focus:ring-indigo-200"
+                  className="w-full border rounded-lg px-10 py-2 pr-10 focus:ring focus:ring-[#0a2a5e]/20 focus:border-[#0a2a5e]"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                 >
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
@@ -206,13 +204,13 @@ const RecruiterSignupPage = () => {
                   value={formData.confirmPassword}
                   onChange={handleInputChange}
                   placeholder="Confirm Password"
-                  className="w-full border rounded-lg px-10 py-2 pr-10 focus:ring focus:ring-indigo-200"
+                  className="w-full border rounded-lg px-10 py-2 pr-10 focus:ring focus:ring-[#0a2a5e]/20 focus:border-[#0a2a5e]"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                 >
                   {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
@@ -225,15 +223,15 @@ const RecruiterSignupPage = () => {
                   name="agreeToTerms"
                   checked={formData.agreeToTerms}
                   onChange={handleInputChange}
-                  className="h-4 w-4"
+                  className="h-4 w-4 accent-[#0a2a5e]"
                 />
                 <label className="text-sm text-gray-600">
                   I agree to the{" "}
-                  <Link to="/terms" className="text-indigo-600 hover:underline">
+                  <Link to="/terms" className="text-[#0a2a5e] hover:underline">
                     Terms
                   </Link>{" "}
                   &{" "}
-                  <Link to="/privacy" className="text-indigo-600 hover:underline">
+                  <Link to="/privacy" className="text-[#0a2a5e] hover:underline">
                     Privacy Policy
                   </Link>
                 </label>
@@ -243,9 +241,9 @@ const RecruiterSignupPage = () => {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full bg-indigo-600 text-white py-2 rounded-lg font-medium hover:bg-indigo-700 flex items-center justify-center disabled:bg-gray-400 disabled:cursor-not-allowed"
+                className="w-full bg-[#0a2a5e] text-white py-2 rounded-lg font-medium hover:bg-[#0a1f44] flex items-center justify-center disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
               >
-                {isLoading ? "Creating Account..." : "Create Recruiter Account"}
+                {isLoading ? "Creating Account..." : "Create Account"}
                 {!isLoading && <ArrowRight className="ml-2 w-4 h-4" />}
               </button>
             </form>
@@ -253,8 +251,8 @@ const RecruiterSignupPage = () => {
             <p className="text-center text-sm text-gray-500 mt-6">
               Already have an account?{" "}
               <Link
-                to="/signin/recruiter"
-                className="text-indigo-600 hover:underline font-medium"
+                to="/recruiter/signin"
+                className="text-[#0a2a5e] hover:underline font-medium"
               >
                 Sign in here
               </Link>
@@ -263,7 +261,7 @@ const RecruiterSignupPage = () => {
         </div>
 
         {/* Right Side - Benefits */}
-        <div className="bg-gradient-to-br from-indigo-50 to-purple-100 flex items-center justify-center p-6 lg:p-12">
+        <div className="hidden lg:flex bg-gradient-to-br from-blue-50 to-indigo-100 items-center justify-center p-6 lg:p-12">
           <motion.div
             className="w-full max-w-lg text-center"
             initial={{ opacity: 0, x: 50 }}
@@ -294,8 +292,6 @@ const RecruiterSignupPage = () => {
                 </motion.div>
               ))}
             </div>
-
-
           </motion.div>
         </div>
       </div>

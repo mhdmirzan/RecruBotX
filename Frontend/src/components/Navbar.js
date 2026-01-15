@@ -10,10 +10,17 @@ const Navbar = () => {
 
   // Hide navbar on dashboard and portal pages
   const hideNavbarPaths = [
-    "/candidate/",
-    "/recruiter/",
-    "/signin/",
-    "/signup/recruiter",
+    "/candidate/dashboard",
+    "/candidate/settings",
+    "/candidate/interview",
+    "/candidate/analyze-resume",
+    "/candidate/resume",
+    "/recruiter/dashboard",
+    "/recruiter/job-posting",
+    "/recruiter/evaluation",
+    "/recruiter/ranking",
+    "/recruiter/settings",
+    "/recruiter/report",
     "/template/",
     "/resume-builder"
   ];
@@ -63,8 +70,10 @@ const Navbar = () => {
     { to: "/", label: "Home" },
     { to: "/how-it-works", label: "How it Works" },
     { to: "/pricing", label: "Pricing" },
-    { to: "/candidate", label: "Candidates" },
-    { to: "/recruiter", label: "Recruiters" },
+    { to: "/candidate/signin", label: "Candidates" },
+    { to: "/recruiter/signin", label: "Recruiters" },
+    { to: "/about", label: "About Us" },
+    { to: "/contact", label: "Contact Us" },
   ];
 
   return (
@@ -80,8 +89,8 @@ const Navbar = () => {
           RecruBotX
         </Link>
 
-        {/* Desktop Menu Links */}
-        <div className="space-x-6 hidden md:flex items-center">
+        {/* Desktop Menu Links - Right aligned with increased gap */}
+        <div className="gap-8 hidden md:flex items-center ml-auto">
           {navLinks.map((link) => {
             const isActive = location.pathname === link.to ||
               (link.to !== "/" && location.pathname.startsWith(link.to));
@@ -108,21 +117,7 @@ const Navbar = () => {
           })}
         </div>
 
-        {/* Desktop Buttons: Contact + Sign Up */}
-        <div className="hidden sm:flex space-x-3">
-          <Link
-            to="/contact"
-            className="border border-[#0a2a5e] text-[#0a2a5e] px-4 py-2 rounded-lg hover:bg-[#0a2a5e] hover:text-white transition-colors font-medium text-sm"
-          >
-            Contact
-          </Link>
-          <Link
-            to="/signup"
-            className="bg-[#0a2a5e] text-white px-4 py-2 rounded-lg hover:bg-[#0a1f44] transition-colors font-medium text-sm"
-          >
-            Sign Up
-          </Link>
-        </div>
+
 
         {/* Mobile Menu Button */}
         <button
@@ -153,24 +148,6 @@ const Navbar = () => {
                 <ChevronRight className="w-4 h-4 text-gray-400" />
               </Link>
             ))}
-
-            {/* Mobile CTA Buttons */}
-            <div className="pt-4 mt-4 border-t border-gray-100 flex items-center justify-center gap-3">
-              <Link
-                to="/contact"
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="text-center border border-[#0a2a5e] text-[#0a2a5e] px-5 py-2.5 rounded-lg hover:bg-[#0a2a5e] hover:text-white transition-colors font-medium text-sm"
-              >
-                Contact Us
-              </Link>
-              <Link
-                to="/signup"
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="text-center bg-[#0a2a5e] text-white px-5 py-2.5 rounded-lg hover:bg-[#0a1f44] transition-colors font-medium text-sm"
-              >
-                Sign Up
-              </Link>
-            </div>
           </div>
         </div>
       )}

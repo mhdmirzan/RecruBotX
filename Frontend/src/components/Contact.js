@@ -30,7 +30,7 @@ const Contact = () => {
             <h3 className="text-lg md:text-xl font-semibold text-gray-800 mb-4 md:mb-6">
               Contact Information
             </h3>
-            <div className="space-y-4">
+            <div className="space-y-6">
               <div className="flex items-center space-x-3">
                 <div className="w-10 h-10 bg-[#0a2a5e] rounded-lg flex items-center justify-center flex-shrink-0">
                   <Mail className="w-5 h-5 text-white" />

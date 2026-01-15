@@ -152,9 +152,8 @@ const PricingPage = () => {
             {plans.map((plan) => (
               <motion.div key={plan.name} variants={fadeInUp}>
                 <Card
-                  className={`h-full relative flex flex-col ${
-                    plan.popular ? "ring-2 ring-blue-500 shadow-xl" : ""
-                  }`}
+                  className={`h-full relative flex flex-col ${plan.popular ? "ring-2 ring-blue-500 shadow-xl" : ""
+                    }`}
                 >
                   {plan.popular && (
                     <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
@@ -165,9 +164,8 @@ const PricingPage = () => {
                   )}
                   <CardHeader className="text-center">
                     <div
-                      className={`w-14 h-14 mx-auto mb-6 rounded-lg flex items-center justify-center ${
-                        plan.popular ? "bg-blue-500" : "bg-blue-400"
-                      }`}
+                      className={`w-14 h-14 mx-auto mb-6 rounded-lg flex items-center justify-center ${plan.popular ? "bg-blue-500" : "bg-blue-400"
+                        }`}
                     >
                       <plan.icon className="w-7 h-7 text-white" />
                     </div>
@@ -208,18 +206,17 @@ const PricingPage = () => {
                     </div>
                     <div className="pt-8">
                       <Button
-                        className={`w-full py-3 text-lg ${
-                          plan.popular
+                        className={`w-full py-3 text-lg ${plan.popular
                             ? "bg-blue-500 text-white hover:bg-blue-600"
                             : "bg-gray-100 text-gray-800 hover:bg-gray-200"
-                        }`}
+                          }`}
                         asChild
                       >
                         <Link
                           to={
                             plan.name === "Enterprise"
                               ? "/contact"
-                              : "/signup/recruiter"
+                              : "/recruiter/signup"
                           }
                         >
                           {plan.cta}
