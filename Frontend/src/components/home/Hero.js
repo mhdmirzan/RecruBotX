@@ -53,19 +53,19 @@ const Hero = () => {
           <div className="flex flex-wrap gap-4 mb-10">
             <Link
               to="/candidate"
-              className="group inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-3.5 rounded-xl font-medium shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 hover:-translate-y-0.5 transition-all duration-300"
+              className="group inline-flex items-center justify-center gap-2 min-w-[180px] bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-3.5 rounded-xl font-medium shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 hover:-translate-y-0.5 transition-all duration-300"
             >
               <User className="w-5 h-5" />
-              Candidate Login
+              Candidate
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
             </Link>
 
             <Link
               to="/signup"
-              className="group inline-flex items-center gap-2 bg-white text-gray-800 px-6 py-3.5 rounded-xl font-medium border border-gray-200 shadow-md hover:shadow-lg hover:border-blue-200 hover:bg-blue-50 hover:-translate-y-0.5 transition-all duration-300"
+              className="group inline-flex items-center justify-center gap-2 min-w-[180px] bg-white text-gray-800 px-6 py-3.5 rounded-xl font-medium border border-gray-200 shadow-md hover:shadow-lg hover:border-blue-200 hover:bg-blue-50 hover:-translate-y-0.5 transition-all duration-300"
             >
               <Briefcase className="w-5 h-5 text-blue-600" />
-              HR Login
+              Recruiter
               <ArrowRight className="w-4 h-4 text-blue-600 group-hover:translate-x-1 transition-transform duration-300" />
             </Link>
           </div>
