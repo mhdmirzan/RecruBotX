@@ -1,8 +1,10 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { Menu, X, ChevronRight } from "lucide-react";
 
 const Navbar = () => {
   const location = useLocation();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Hide navbar on dashboard and portal pages
   const hideNavbarPaths = [
@@ -18,50 +20,116 @@ const Navbar = () => {
     return null;
   }
 
+  const navLinks = [
+    { to: "/", label: "Home" },
+    { to: "/how-it-works", label: "How it Works" },
+    { to: "/pricing", label: "Pricing" },
+    { to: "/candidate", label: "Candidates" },
+    { to: "/recruiter", label: "Recruiters" },
+  ];
+
   return (
-    <nav className="bg-white shadow-md">
-      <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+    <nav className="bg-white shadow-md sticky top-0 z-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex justify-between items-center">
         {/* Logo */}
-        <Link to="/" className="text-2xl font-bold text-blue-600">
+        <Link to="/" className="text-xl sm:text-2xl font-bold text-[#0a2a5e]">
           RecruBotX
         </Link>
 
-        {/* Menu Links */}
+        {/* Desktop Menu Links */}
         <div className="space-x-6 hidden md:flex items-center">
-          <Link to="/how-it-works" className="hover:text-blue-600">
-            How it Works
-          </Link>
+          {navLinks.map((link) => {
+            const isActive = location.pathname === link.to ||
+              (link.to !== "/" && location.pathname.startsWith(link.to));
 
-          <Link to="/pricing" className="hover:text-blue-600">
-            Pricing
-          </Link>
-
-          {/* Candidates Route */}
-          <Link to="/candidate" className="hover:text-blue-600">
-            Candidates
-          </Link>
-
-          <Link to="/recruiter" className="hover:text-blue-600">
-            Recruiters
-          </Link>
+            return (
+              <Link
+                key={link.to}
+                to={link.to}
+                className={`relative py-2 font-medium transition-colors
+                  ${isActive
+                    ? "text-[#0a2a5e]"
+                    : "text-gray-600 hover:text-[#0a2a5e]"
+                  }
+                  after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-0.5 after:transition-all after:duration-300
+                  ${isActive
+                    ? "after:w-full after:bg-[#0a2a5e]"
+                    : "after:w-0 hover:after:w-full after:bg-blue-300"
+                  }
+                `}
+              >
+                {link.label}
+              </Link>
+            );
+          })}
         </div>
 
-        {/* Buttons: Contact + Sign Up */}
-        <div className="space-x-4 flex">
+        {/* Desktop Buttons: Contact + Sign Up */}
+        <div className="hidden sm:flex space-x-3">
           <Link
             to="/contact"
-            className="border border-blue-600 text-blue-600 px-4 py-2 rounded-lg hover:bg-blue-600 hover:text-white"
+            className="border border-[#0a2a5e] text-[#0a2a5e] px-4 py-2 rounded-lg hover:bg-[#0a2a5e] hover:text-white transition-colors font-medium text-sm"
           >
             Contact
           </Link>
           <Link
             to="/signup"
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+            className="bg-[#0a2a5e] text-white px-4 py-2 rounded-lg hover:bg-[#0a1f44] transition-colors font-medium text-sm"
           >
             Sign Up
           </Link>
         </div>
+
+        {/* Mobile Menu Button */}
+        <button
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
+          aria-label="Toggle menu"
+        >
+          {isMobileMenuOpen ? (
+            <X className="w-6 h-6 text-gray-700" />
+          ) : (
+            <Menu className="w-6 h-6 text-gray-700" />
+          )}
+        </button>
       </div>
+
+      {/* Mobile Menu */}
+      {isMobileMenuOpen && (
+        <div className="md:hidden bg-white border-t border-gray-100 shadow-lg">
+          <div className="px-4 py-4 space-y-1">
+            {navLinks.map((link) => (
+              <Link
+                key={link.to}
+                to={link.to}
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="flex items-center justify-between py-3 px-3 rounded-lg text-gray-700 hover:bg-gray-50 hover:text-[#0a2a5e] transition-colors"
+              >
+                <span className="font-medium">{link.label}</span>
+                <ChevronRight className="w-4 h-4 text-gray-400" />
+              </Link>
+            ))}
+
+            {/* Mobile CTA Buttons */}
+            <div className="pt-4 mt-4 border-t border-gray-100 flex items-center justify-center gap-3">
+              <Link
+                to="/contact"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="text-center border border-[#0a2a5e] text-[#0a2a5e] px-5 py-2.5 rounded-lg hover:bg-[#0a2a5e] hover:text-white transition-colors font-medium text-sm"
+              >
+                Contact Us
+              </Link>
+              <Link
+                to="/signup"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="text-center bg-[#0a2a5e] text-white px-5 py-2.5 rounded-lg hover:bg-[#0a1f44] transition-colors font-medium text-sm"
+              >
+                Sign Up
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
     </nav>
   );
 };
