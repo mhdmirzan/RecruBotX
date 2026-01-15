@@ -16,14 +16,6 @@ const AnalyzeResume = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // ✅ Dynamic Date
-  const today = new Date().toLocaleDateString("en-US", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
-
   // Custom animation styles for border and badge pulse
   const animationStyles = `
     @keyframes borderPulseGreen {

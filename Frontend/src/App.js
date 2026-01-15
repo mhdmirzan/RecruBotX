@@ -24,7 +24,6 @@ import CandidatePage from "./CandidatePage";
 import CandidateLoginPage from "./CandidateLoginPage";
 import CandidateDashboard from "./CandidateDashboard";
 import CandidateSettings from "./CandidateSettings";
-import CandidateApplication from "./CandidateApplication";
 import AnalyzeResume from "./analyze_resume";
 import VoiceInterview from "./VoiceInterview";
 

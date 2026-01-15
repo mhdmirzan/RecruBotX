@@ -154,6 +154,7 @@ const DownloadButton = ({ className, showPreview, setShowPreview }) => {
         compress: true,
       });
 
+      // eslint-disable-next-line no-unused-vars
       const imgData = canvas.toDataURL("image/png");
 
       // Calculate exact number of pages needed
