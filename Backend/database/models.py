@@ -172,3 +172,27 @@ class InterviewCVModel(BaseModel):
         json_encoders={ObjectId: str},
         populate_by_name=True,
     )
+
+
+class JobCVFileModel(BaseModel):
+    """
+    Individual CV file storage model (Reference Pattern).
+    
+    Each CV is stored as a separate document to bypass MongoDB's 16MB document limit.
+    The job_postings collection only stores references (IDs) to these documents,
+    enabling unlimited CV uploads per job posting.
+    """
+    
+    id: Optional[PyObjectId] = Field(alias="_id", default=None)
+    job_posting_id: str  # Reference to the parent job posting
+    file_name: str  # Original filename (e.g., "resume.pdf")
+    file_content: str  # Base64 encoded file content
+    file_size: int  # File size in bytes
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    
+    model_config = ConfigDict(
+        arbitrary_types_allowed=True,
+        json_encoders={ObjectId: str},
+        populate_by_name=True,
+    )
+

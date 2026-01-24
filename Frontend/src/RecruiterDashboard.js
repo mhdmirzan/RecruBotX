@@ -51,12 +51,12 @@ const RecruiterDashboard = () => {
       const sortedJobs = data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
       setJobPostings(sortedJobs.slice(0, 6));
 
-      // Update stats
+      // Update stats - now using cvFilesCount from backend (Reference Pattern)
       setDashboardStats({
         activeJobs: data.length,
-        totalCandidates: data.reduce((sum, job) => sum + (job.cvFiles?.length || 0), 0),
-        aiInterviews: data.filter(job => job.cvFiles?.length > 0).length,
-        cvsScreened: data.reduce((sum, job) => sum + (job.cvFiles?.length || 0), 0)
+        totalCandidates: data.reduce((sum, job) => sum + (job.cvFilesCount || 0), 0),
+        aiInterviews: data.filter(job => (job.cvFilesCount || 0) > 0).length,
+        cvsScreened: data.reduce((sum, job) => sum + (job.cvFilesCount || 0), 0)
       });
     } catch (error) {
       console.error("Error fetching job postings:", error);
@@ -322,7 +322,7 @@ const RecruiterDashboard = () => {
                           {job.interviewField}
                         </h4>
                         <p className="text-sm text-gray-500">
-                          {job.positionLevel} • {job.cvFiles?.length || 0} Candidates
+                          {job.positionLevel} • {job.cvFilesCount || 0} Candidates
                         </p>
                       </div>
                     </div>
@@ -415,7 +415,7 @@ const RecruiterDashboard = () => {
                 </div>
                 <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
                   <p className="text-sm text-gray-600 mb-1 font-medium">Total CVs Uploaded</p>
-                  <p className="font-bold text-gray-800 text-lg">{selectedJob.cvFiles?.length || 0}</p>
+                  <p className="font-bold text-gray-800 text-lg">{selectedJob.cvFilesCount || 0}</p>
                 </div>
                 <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
                   <p className="text-sm text-gray-600 mb-1 font-medium">Created Date</p>

@@ -19,7 +19,7 @@ async def create_job_posting(
     status: str,
     location: str,
     salary_range: str,
-    cv_files: Optional[List[str]] = None,
+    cv_file_ids: Optional[List[str]] = None,
     job_description: Optional[str] = None
 ) -> str:
     """Create a new job posting."""
@@ -33,7 +33,7 @@ async def create_job_posting(
         "status": status,
         "location": location,
         "salary_range": salary_range,
-        "cv_files": cv_files if cv_files else [],
+        "cv_file_ids": cv_file_ids if cv_file_ids else [],
         "job_description": job_description,
         "created_at": datetime.utcnow(),
         "updated_at": datetime.utcnow(),
@@ -104,6 +104,80 @@ async def delete_job_posting(
     # Delete associated evaluation reports
     await db.evaluation_reports.delete_many({"job_posting_id": job_id})
     
+    # Delete associated CV files from job_cv_files collection
+    await db.job_cv_files.delete_many({"job_posting_id": job_id})
+    
     # Delete the job posting itself
     result = await db.job_postings.delete_one({"_id": ObjectId(job_id)})
     return result.deleted_count > 0
+
+
+# ==================== Job CV Files (Reference Pattern) ====================
+
+async def create_job_cv_file(
+    db: AsyncIOMotorDatabase,
+    job_posting_id: str,
+    file_name: str,
+    file_content: str,
+    file_size: int
+) -> str:
+    """
+    Store a single CV file in the job_cv_files collection.
+    Each CV is stored as a separate document to avoid the 16MB limit.
+    """
+    cv_file = {
+        "job_posting_id": job_posting_id,
+        "file_name": file_name,
+        "file_content": file_content,
+        "file_size": file_size,
+        "created_at": datetime.utcnow()
+    }
+    result = await db.job_cv_files.insert_one(cv_file)
+    return str(result.inserted_id)
+
+
+async def get_job_cv_file_by_id(
+    db: AsyncIOMotorDatabase,
+    cv_file_id: str
+) -> Optional[Dict[str, Any]]:
+    """Get a single CV file by its ID."""
+    cv_file = await db.job_cv_files.find_one({"_id": ObjectId(cv_file_id)})
+    if cv_file:
+        cv_file["_id"] = str(cv_file["_id"])
+    return cv_file
+
+
+async def get_cv_files_by_job_posting(
+    db: AsyncIOMotorDatabase,
+    job_posting_id: str
+) -> List[Dict[str, Any]]:
+    """Get all CV files associated with a job posting."""
+    cv_files = []
+    cursor = db.job_cv_files.find({"job_posting_id": job_posting_id})
+    async for cv_file in cursor:
+        cv_file["_id"] = str(cv_file["_id"])
+        cv_files.append(cv_file)
+    return cv_files
+
+
+async def get_cv_files_by_ids(
+    db: AsyncIOMotorDatabase,
+    cv_file_ids: List[str]
+) -> List[Dict[str, Any]]:
+    """Get multiple CV files by their IDs."""
+    cv_files = []
+    object_ids = [ObjectId(cid) for cid in cv_file_ids]
+    cursor = db.job_cv_files.find({"_id": {"$in": object_ids}})
+    async for cv_file in cursor:
+        cv_file["_id"] = str(cv_file["_id"])
+        cv_files.append(cv_file)
+    return cv_files
+
+
+async def count_cv_files_for_job(
+    db: AsyncIOMotorDatabase,
+    job_posting_id: str
+) -> int:
+    """Count the number of CV files for a job posting."""
+    return await db.job_cv_files.count_documents({"job_posting_id": job_posting_id})
+

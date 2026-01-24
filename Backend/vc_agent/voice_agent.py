@@ -19,10 +19,11 @@ import numpy as np
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from deepgram import DeepgramClient
-from deepgram.extensions.types.sockets import (
-    ListenV1ControlMessage,
-    ListenV1ResultsEvent,
-)
+# Note: deepgram-sdk v5+ has a different API structure
+# The old extensions.types.sockets module no longer exists
+# Voice features may need refactoring for full v5 compatibility
+ListenV1ControlMessage = None
+ListenV1ResultsEvent = None
 
 # Load environment variables from .env file
 load_dotenv()

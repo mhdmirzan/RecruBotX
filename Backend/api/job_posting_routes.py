@@ -12,7 +12,10 @@ from database.job_posting_crud import (
     get_job_postings_by_recruiter,
     get_all_job_postings,
     update_job_posting,
-    delete_job_posting
+    delete_job_posting,
+    create_job_cv_file,
+    get_cv_files_by_ids,
+    count_cv_files_for_job
 )
 
 router = APIRouter(prefix="/jobs", tags=["Job Postings"])
@@ -50,7 +53,13 @@ async def create_job(
     job_data: JobPostingRequest,
     db=Depends(get_database)
 ):
-    """Create a new job posting and process CVs for ranking."""
+    """
+    Create a new job posting and process CVs for ranking.
+    
+    Uses Reference Pattern: CVs are stored individually in job_cv_files collection,
+    and only the IDs are stored in the job posting document.
+    This removes the 16MB document limit and allows unlimited CV uploads.
+    """
     if db is None:
         raise HTTPException(
             status_code=503,
@@ -61,7 +70,33 @@ async def create_job(
     from services.cv_ranking_service import CVRankingService
     from database.ranking_crud import create_candidate_ranking, create_evaluation_report
     
-    # Create new job posting
+    # Step 1: Store each CV file individually in job_cv_files collection
+    # This is the Reference Pattern - each CV is its own document
+    cv_file_ids = []
+    
+    if job_data.cvFiles and len(job_data.cvFiles) > 0:
+        print(f"[INFO] Processing {len(job_data.cvFiles)} CV files using Reference Pattern...")
+        
+        for idx, cv_base64 in enumerate(job_data.cvFiles):
+            try:
+                # Calculate approximate file size from base64
+                file_size = int(len(cv_base64) * 0.75)
+                
+                # Store in separate collection (bypasses 16MB limit)
+                cv_file_id = await create_job_cv_file(
+                    db=db,
+                    job_posting_id="pending",
+                    file_name=f"CV_{idx + 1}.pdf",
+                    file_content=cv_base64,
+                    file_size=file_size
+                )
+                cv_file_ids.append(cv_file_id)
+                
+            except Exception as e:
+                print(f"[ERROR] Failed to store CV {idx + 1}: {str(e)}")
+                continue
+    
+    # Step 2: Create job posting with only the CV file IDs
     job_id = await create_job_posting(
         db,
         job_data.recruiterId,
@@ -73,20 +108,26 @@ async def create_job(
         job_data.status,
         job_data.location,
         job_data.salaryRange,
-        job_data.cvFiles,
+        cv_file_ids,
         job_data.jobDescription
     )
     
-    # Process CVs if provided
+    # Step 3: Update stored CV files with the job_posting_id
+    if cv_file_ids:
+        from bson import ObjectId
+        await db.job_cv_files.update_many(
+            {"_id": {"$in": [ObjectId(cid) for cid in cv_file_ids]}},
+            {"$set": {"job_posting_id": job_id}}
+        )
+    
+    # Step 4: Process CVs for ranking
     rankings_created = []
     evaluations_created = []
     
     if job_data.cvFiles and len(job_data.cvFiles) > 0:
         try:
-            # Initialize CV ranking service
             ranking_service = CVRankingService()
             
-            # Screen and rank CVs
             ranked_candidates = await ranking_service.screen_and_rank_cvs(
                 cv_files=job_data.cvFiles,
                 job_description=job_data.jobDescription or f"Position: {job_data.interviewField} - {job_data.positionLevel}",
@@ -96,9 +137,7 @@ async def create_job(
                 top_n=job_data.topNCvs
             )
             
-            # Save rankings and create evaluation reports
             for candidate in ranked_candidates:
-                # Create ranking entry
                 ranking_id = await create_candidate_ranking(
                     db=db,
                     job_posting_id=job_id,
@@ -116,7 +155,6 @@ async def create_job(
                 )
                 rankings_created.append(ranking_id)
                 
-                # Create evaluation report
                 evaluation_id = await create_evaluation_report(
                     db=db,
                     job_posting_id=job_id,
@@ -133,9 +171,7 @@ async def create_job(
                 
         except Exception as e:
             print(f"Error processing CVs: {str(e)}")
-            # Continue even if CV processing fails
     
-    # Get created job
     job = await get_job_posting_by_id(db, job_id)
     
     return {
@@ -148,7 +184,8 @@ async def create_job(
             "positionLevel": job["position_level"],
             "numberOfQuestions": job["number_of_questions"],
             "topNCvs": job["top_n_cvs"],
-            "cvFiles": job.get("cv_files", []),
+            "cvFileIds": job.get("cv_file_ids", []),
+            "cvFilesCount": len(job.get("cv_file_ids", [])),
             "jobDescription": job.get("job_description"),
             "createdAt": job["created_at"].isoformat(),
             "isActive": job["is_active"]
@@ -177,7 +214,8 @@ async def get_recruiter_jobs(
             "status": job.get("status", "Full-time"),
             "location": job.get("location", "Not specified"),
             "salaryRange": job.get("salary_range", "Not specified"),
-            "cvFiles": job.get("cv_files", []),
+            "cvFileIds": job.get("cv_file_ids", []),
+            "cvFilesCount": len(job.get("cv_file_ids", [])),
             "jobDescription": job.get("job_description"),
             "createdAt": job["created_at"].isoformat(),
             "isActive": job["is_active"]
@@ -204,7 +242,8 @@ async def get_all_jobs(
             "status": job.get("status", "Full-time"),
             "location": job.get("location", "Not specified"),
             "salaryRange": job.get("salary_range", "Not specified"),
-            "cvFiles": job.get("cv_files", []),
+            "cvFileIds": job.get("cv_file_ids", []),
+            "cvFilesCount": len(job.get("cv_file_ids", [])),
             "jobDescription": job.get("job_description"),
             "createdAt": job["created_at"].isoformat(),
             "isActive": job["is_active"]
@@ -231,7 +270,8 @@ async def get_job(
         "positionLevel": job["position_level"],
         "numberOfQuestions": job["number_of_questions"],
         "topNCvs": job["top_n_cvs"],
-        "cvFiles": job.get("cv_files", []),
+        "cvFileIds": job.get("cv_file_ids", []),
+        "cvFilesCount": len(job.get("cv_file_ids", [])),
         "jobDescription": job.get("job_description"),
         "createdAt": job["created_at"].isoformat(),
         "isActive": job["is_active"]
@@ -281,7 +321,8 @@ async def update_job(
             "positionLevel": updated_job["position_level"],
             "numberOfQuestions": updated_job["number_of_questions"],
             "topNCvs": updated_job["top_n_cvs"],
-            "cvFiles": updated_job.get("cv_files", []),
+            "cvFileIds": updated_job.get("cv_file_ids", []),
+            "cvFilesCount": len(updated_job.get("cv_file_ids", [])),
             "jobDescription": updated_job.get("job_description"),
             "createdAt": updated_job["created_at"].isoformat(),
             "isActive": updated_job["is_active"]
