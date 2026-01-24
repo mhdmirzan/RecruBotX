@@ -157,7 +157,7 @@ const CandidateDashboard = () => {
   // Get status badge color
   const getStatusColor = (status) => {
     switch (status) {
-      case "Full-time": return "bg-blue-100 text-blue-700";
+      case "Full-time": return "bg-[#0a2a5e]/10 text-[#0a2a5e]";
       case "Part-time": return "bg-green-100 text-green-700";
       case "Contract": return "bg-yellow-100 text-yellow-700";
       case "Active": return "bg-green-100 text-green-700";
@@ -169,7 +169,7 @@ const CandidateDashboard = () => {
   // Get activity icon color
   const getActivityIconColor = (type) => {
     switch (type) {
-      case "application": return "bg-blue-100 text-blue-600";
+      case "application": return "bg-[#0a2a5e]/10 text-[#0a2a5e]";
       case "interview": return "bg-green-100 text-green-600";
       case "update": return "bg-purple-100 text-purple-600";
       default: return "bg-gray-100 text-gray-600";
@@ -209,14 +209,14 @@ const CandidateDashboard = () => {
 
         {/* Logo */}
         <div className="mb-8 text-center flex-shrink-0">
-          <h1 className="text-3xl font-bold text-blue-600">RecruBotX</h1>
+          <h1 className="text-3xl font-bold text-[#0a2a5e]">RecruBotX</h1>
         </div>
 
         <nav className="flex flex-col space-y-4 text-gray-700 flex-shrink-0">
           <NavLink
             to="/candidate/dashboard"
             className={({ isActive }) =>
-              `font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 ${isActive ? "bg-blue-50 text-blue-600" : "text-gray-700 hover:bg-gray-50 hover:text-blue-600"}`
+              `font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 ${isActive ? "bg-[#0a2a5e]/10 text-[#0a2a5e]" : "text-gray-700 hover:bg-[#0a2a5e]/5 hover:text-[#0a2a5e]"}`
             }
           >
             <LayoutDashboard className="w-5 h-5" /> Dashboard
@@ -224,21 +224,21 @@ const CandidateDashboard = () => {
 
           <button
             onClick={handleStartInterview}
-            className="font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 text-gray-700 hover:bg-gray-50 hover:text-blue-600 text-left"
+            className="font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 text-gray-700 hover:bg-[#0a2a5e]/5 hover:text-[#0a2a5e] text-left"
           >
             <Mic className="w-5 h-5" /> Start Interview
           </button>
 
           <button
             onClick={handleCreateResume}
-            className="font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 text-gray-700 hover:bg-gray-50 hover:text-blue-600 text-left"
+            className="font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 text-gray-700 hover:bg-[#0a2a5e]/5 hover:text-[#0a2a5e] text-left"
           >
             <FileText className="w-5 h-5" /> Create Resume
           </button>
 
           <button
             onClick={handleCVScreening}
-            className="font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 text-gray-700 hover:bg-gray-50 hover:text-blue-600 text-left"
+            className="font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 text-gray-700 hover:bg-[#0a2a5e]/5 hover:text-[#0a2a5e] text-left"
           >
             <Search className="w-5 h-5" /> CV Screening
           </button>
@@ -246,7 +246,7 @@ const CandidateDashboard = () => {
           <NavLink
             to="/candidate/settings"
             className={({ isActive }) =>
-              `font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 ${isActive ? "bg-blue-50 text-blue-600" : "text-gray-700 hover:bg-gray-50 hover:text-blue-600"}`
+              `font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 ${isActive ? "bg-[#0a2a5e]/10 text-[#0a2a5e]" : "text-gray-700 hover:bg-[#0a2a5e]/5 hover:text-[#0a2a5e]"}`
             }
           >
             <Cog className="w-5 h-5" /> Settings
@@ -267,7 +267,7 @@ const CandidateDashboard = () => {
       {/* Main Content - Non-scrollable */}
       <main className="flex-1 h-screen flex flex-col overflow-hidden py-8 px-8">
         {/* Welcome Banner with User Profile */}
-        <div className="bg-gradient-to-r from-blue-900 to-indigo-900 text-white rounded-2xl p-6 shadow-lg mb-6 flex-shrink-0">
+        <div className="bg-gradient-to-r from-[#0a2a5e] to-[#0d3b82] text-white rounded-2xl p-6 shadow-lg mb-6 flex-shrink-0">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
 
@@ -288,7 +288,7 @@ const CandidateDashboard = () => {
                 </h3>
                 <p className="text-sm text-blue-200">{user.email}</p>
               </div>
-              <div className="w-14 h-14 bg-white rounded-full flex items-center justify-center text-blue-900 font-bold text-xl shadow-lg overflow-hidden">
+              <div className="w-14 h-14 bg-white rounded-full flex items-center justify-center text-[#0a2a5e] font-bold text-xl shadow-lg overflow-hidden">
                 {user.profileImage ? (
                   <img src={user.profileImage} alt="Profile" className="w-full h-full object-cover" />
                 ) : (
@@ -316,7 +316,7 @@ const CandidateDashboard = () => {
                   <select
                     value={interviewField}
                     onChange={(e) => setInterviewField(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-700"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0a2a5e] focus:border-[#0a2a5e] bg-white text-gray-700"
                   >
                     <option value="all">All Fields</option>
                     <option value="software-engineering">Software Engineering</option>
@@ -372,7 +372,7 @@ const CandidateDashboard = () => {
               <div className="flex-1 overflow-y-auto space-y-3">
                 {isLoadingJobs ? (
                   <div className="text-center py-12">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#0a2a5e] mx-auto mb-4"></div>
                     <p className="text-gray-500">Loading your applications...</p>
                   </div>
                 ) : getFilteredAndSortedJobs().length === 0 ? (
@@ -390,7 +390,7 @@ const CandidateDashboard = () => {
                       <div className="flex justify-between items-start mb-3">
                         <div className="flex-1">
                           <h4 className="font-bold text-gray-800 text-lg">{job.company}</h4>
-                          <p className="text-blue-600 font-medium">{job.position}</p>
+                          <p className="text-[#0a2a5e] font-medium">{job.position}</p>
                         </div>
                         <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(job.status)}`}>
                           {job.status}
@@ -400,11 +400,11 @@ const CandidateDashboard = () => {
                       <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-100">
                         <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm text-gray-600 flex-1">
                           <div className="flex items-center gap-1">
-                            <MapPin className="w-4 h-4 text-blue-500" />
+                            <MapPin className="w-4 h-4 text-[#0a2a5e]" />
                             <span>{job.location}</span>
                           </div>
                           <div className="flex items-center gap-1">
-                            <Home className="w-4 h-4 text-blue-500" />
+                            <Home className="w-4 h-4 text-[#0a2a5e]" />
                             <span>{job.workModel}</span>
                           </div>
                           <div className="flex items-center gap-1 text-green-600 font-medium">
@@ -412,7 +412,7 @@ const CandidateDashboard = () => {
                             <span>{job.salaryRange}</span>
                           </div>
                           <div className="flex items-center gap-1">
-                            <Calendar className="w-4 h-4 text-blue-500" />
+                            <Calendar className="w-4 h-4 text-[#0a2a5e]" />
                             <span>{job.appliedDate.toLocaleDateString()}</span>
                           </div>
                         </div>
@@ -422,7 +422,7 @@ const CandidateDashboard = () => {
                             setSelectedJob(job);
                             setShowJobModal(true);
                           }}
-                          className="flex items-center gap-0.5 text-blue-500 hover:text-blue-600 transition-all group whitespace-nowrap text-[13px] font-semibold"
+                          className="flex items-center gap-0.5 text-[#0a2a5e] hover:text-[#0a2a5e] transition-all group whitespace-nowrap text-[13px] font-semibold"
                         >
                           More
                           <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-0.4 transition-transform translate-y-[2px]" />
@@ -438,9 +438,9 @@ const CandidateDashboard = () => {
           {/* RIGHT SECTION (40% - 2 columns) */}
           <div className="col-span-2 flex flex-col gap-6 overflow-hidden">
             {/* CV Screening Info Card */}
-            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl shadow-lg p-6 flex-shrink-0 border border-blue-100">
+            <div className="bg-gradient-to-br from-[#0a2a5e]/5 to-[#0d3b82]/5 rounded-2xl shadow-lg p-6 flex-shrink-0 border border-[#0a2a5e]/10">
               <div className="flex items-start gap-3 mb-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                <div className="w-12 h-12 bg-gradient-to-br from-[#0a2a5e] to-[#2b4c8c] rounded-xl flex items-center justify-center flex-shrink-0">
                   <Zap className="w-6 h-6 text-white" />
                 </div>
                 <div className="flex-1">
@@ -453,7 +453,7 @@ const CandidateDashboard = () => {
 
               <button
                 onClick={handleCVScreening}
-                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-3 rounded-xl font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 group"
+                className="w-full bg-gradient-to-r from-[#0a2a5e] to-[#0d3b82] text-white px-6 py-3 rounded-xl font-semibold hover:from-[#061a3d] hover:to-[#0a2a5e] transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 group"
               >
                 <span>Go to CV Screening</span>
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
@@ -503,7 +503,7 @@ const CandidateDashboard = () => {
           {/* Modal Content */}
           <div className="relative bg-white w-full max-w-4xl max-h-[90vh] rounded-3xl overflow-hidden shadow-2xl flex flex-col animate-in fade-in zoom-in duration-300">
             {/* Header */}
-            <div className="bg-gradient-to-r from-blue-900 to-indigo-900 p-8 text-white relative">
+            <div className="bg-gradient-to-r from-[#0a2a5e] to-[#0d3b82] p-8 text-white relative">
               <button
                 onClick={() => setShowJobModal(false)}
                 className="absolute top-6 right-6 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
@@ -529,28 +529,28 @@ const CandidateDashboard = () => {
                 <div className="flex flex-col gap-1">
                   <span className="text-xs text-gray-500 font-semibold uppercase tracking-wider">Location</span>
                   <div className="flex items-center gap-2 text-gray-800 font-medium">
-                    <MapPin className="w-5 h-5 text-blue-600" />
+                    <MapPin className="w-5 h-5 text-[#0a2a5e]" />
                     {selectedJob.location}
                   </div>
                 </div>
                 <div className="flex flex-col gap-1">
                   <span className="text-xs text-gray-500 font-semibold uppercase tracking-wider">Salary</span>
                   <div className="flex items-center gap-2 text-gray-800 font-medium">
-                    <DollarSign className="w-5 h-5 text-blue-600" />
+                    <DollarSign className="w-5 h-5 text-[#0a2a5e]" />
                     {selectedJob.salaryRange}
                   </div>
                 </div>
                 <div className="flex flex-col gap-1">
                   <span className="text-xs text-gray-500 font-semibold uppercase tracking-wider">Model</span>
                   <div className="flex items-center gap-2 text-gray-800 font-medium">
-                    <Home className="w-5 h-5 text-blue-600" />
+                    <Home className="w-5 h-5 text-[#0a2a5e]" />
                     {selectedJob.workModel}
                   </div>
                 </div>
                 <div className="flex flex-col gap-1">
                   <span className="text-xs text-gray-500 font-semibold uppercase tracking-wider">Posted</span>
                   <div className="flex items-center gap-2 text-gray-800 font-medium">
-                    <Calendar className="w-5 h-5 text-blue-600" />
+                    <Calendar className="w-5 h-5 text-[#0a2a5e]" />
                     {selectedJob.appliedDate.toLocaleDateString()}
                   </div>
                 </div>
@@ -559,7 +559,7 @@ const CandidateDashboard = () => {
               {/* Job Description Section */}
               <div className="space-y-4">
                 <h3 className="flex items-center gap-2 text-xl font-bold text-gray-800 border-b pb-2">
-                  <FileText className="w-6 h-6 text-blue-600" />
+                  <FileText className="w-6 h-6 text-[#0a2a5e]" />
                   Job Description
                 </h3>
                 <div
@@ -576,7 +576,7 @@ const CandidateDashboard = () => {
                   setShowJobModal(false);
                   navigate("/candidate/interview");
                 }}
-                className="group relative flex items-center gap-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-10 py-3 rounded-2xl font-bold text-lg hover:from-blue-700 hover:to-indigo-700 transition-all shadow-xl hover:shadow-2xl hover:-translate-y-1 active:translate-y-0"
+                className="group relative flex items-center gap-3 bg-gradient-to-r from-[#0a2a5e] to-[#0d3b82] text-white px-10 py-3 rounded-2xl font-bold text-lg hover:from-[#061a3d] hover:to-[#0a2a5e] transition-all shadow-xl hover:shadow-2xl hover:-translate-y-1 active:translate-y-0"
               >
                 <span>Apply</span>
                 <Send className="w-5 h-5 group-hover:translate-x-[0.3px] group-hover:-translate-y-[0.3px] transition-transform" />

@@ -356,7 +356,7 @@ const AnalyzeResume = () => {
     return (
       <div className="h-screen flex items-center justify-center bg-gray-100">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#0a2a5e] mx-auto mb-4"></div>
           <p className="text-gray-600">Loading...</p>
         </div>
       </div>
@@ -373,7 +373,7 @@ const AnalyzeResume = () => {
         {/* Top Header */}
         <div className="mb-6 flex-shrink-0 flex justify-between items-center">
           <div>
-            <h2 className="text-3xl font-bold text-gray-800">CV Screening</h2>
+            <h2 className="text-3xl font-bold text-[#0a2a5e]">CV Screening</h2>
             <p className="text-gray-500 text-md mt-1 py-4">Upload your resume and paste the job description to analyze compatibility.</p>
           </div>
 
@@ -386,7 +386,7 @@ const AnalyzeResume = () => {
                 </h3>
                 <p className="text-sm text-gray-500">{user.email}</p>
               </div>
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg overflow-hidden">
+              <div className="w-12 h-12 bg-gradient-to-br from-[#0a2a5e] to-[#2b4c8c] rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg overflow-hidden">
                 {user.profileImage ? (
                   <img src={user.profileImage} alt="Profile" className="w-full h-full object-cover" />
                 ) : (
@@ -405,8 +405,8 @@ const AnalyzeResume = () => {
               {/* Upload Section */}
               <div>
                 <h3 className="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2"><Upload className="w-5 h-5" /> Upload Your CV</h3>
-                <div className="border-2 border-dashed border-blue-300 rounded-xl p-8 flex flex-col items-center justify-center hover:bg-blue-50 transition h-64">
-                  <Upload className="w-12 h-12 text-blue-600 mb-3" />
+                <div className="border-2 border-dashed border-[#0a2a5e]/30 rounded-xl p-8 flex flex-col items-center justify-center hover:bg-[#0a2a5e]/5 transition h-64">
+                  <Upload className="w-12 h-12 text-[#0a2a5e] mb-3" />
                   <input
                     id="fileUpload"
                     type="file"
@@ -416,7 +416,7 @@ const AnalyzeResume = () => {
                   />
                   <label
                     htmlFor="fileUpload"
-                    className="cursor-pointer text-blue-600 font-medium hover:underline text-center"
+                    className="cursor-pointer text-[#0a2a5e] font-medium hover:underline text-center"
                   >
                     {file ? (
                       <div className="flex items-center gap-2">
@@ -436,7 +436,7 @@ const AnalyzeResume = () => {
                 <textarea
                   value={jobDesc}
                   onChange={(e) => setJobDesc(e.target.value)}
-                  className="w-full p-4 rounded-lg border-2 border-gray-300 focus:border-blue-500 focus:outline-none h-64 resize-none"
+                  className="w-full p-4 rounded-lg border-2 border-gray-300 focus:border-[#0a2a5e] focus:outline-none h-64 resize-none"
                   placeholder="Paste the job description here to analyze compatibility with your CV..."
                 />
               </div>
@@ -447,7 +447,7 @@ const AnalyzeResume = () => {
               <button
                 onClick={handleAnalyze}
                 disabled={loading}
-                className="w-1/4 bg-blue-600 text-white py-4 rounded-lg font-semibold hover:bg-blue-700 transition flex items-center justify-center gap-2 shadow-lg disabled:bg-gray-400 disabled:cursor-not-allowed"
+                className="w-1/4 bg-gradient-to-r from-[#0a2a5e] to-[#0d3b82] text-white py-4 rounded-lg font-semibold hover:from-[#061a3d] hover:to-[#0a2a5e] transition flex items-center justify-center gap-2 shadow-lg disabled:bg-gray-400 disabled:cursor-not-allowed"
               >
                 {loading ? (
                   <>
@@ -474,7 +474,7 @@ const AnalyzeResume = () => {
             {analysis && typeof analysis === 'object' && (
               <div className="mt-8 space-y-6">
                 {/* Header */}
-                <div className="bg-[#1e4a8e] text-white rounded-2xl p-6 shadow-xl">
+                <div className="bg-[#0a2a5e] text-white rounded-2xl p-6 shadow-xl">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <Sparkles className="w-8 h-8 text-yellow-300" />
@@ -506,29 +506,29 @@ const AnalyzeResume = () => {
 
                 {/* Match Scores - Bullet Format (Only show when JD is provided) */}
                 {analysis.hasJobDescription && (
-                  <div className="bg-white p-6 rounded-xl border-l-4 border-blue-500 shadow-lg">
+                  <div className="bg-white p-6 rounded-xl border-l-4 border-[#0a2a5e] shadow-lg">
                     <h3 className="text-lg font-bold text-[#0a2a5e] mb-4 flex items-center gap-2">
-                      <span className="w-8 h-8 bg-white rounded-full flex items-center justify-center text-[#0a2a5e] border-2 border-blue-200">
+                      <span className="w-8 h-8 bg-white rounded-full flex items-center justify-center text-[#0a2a5e] border-2 border-[#0a2a5e]/30">
                         <Target className="w-5 h-5" />
                       </span>
                       Compatibility Analysis
                     </h3>
                     <ul className="space-y-3">
                       <li className="flex items-start gap-3 text-gray-700">
-                        <span className="w-6 h-6 rounded-full flex items-center justify-center text-blue-600 font-bold text-xs flex-shrink-0 mt-0.5">✓</span>
-                        <span className="leading-relaxed"><span className="font-semibold text-blue-900">Overall Match:</span> {analysis.overall_score || 0}%</span>
+                        <span className="w-6 h-6 rounded-full flex items-center justify-center text-[#0a2a5e] font-bold text-xs flex-shrink-0 mt-0.5">✓</span>
+                        <span className="leading-relaxed"><span className="font-semibold text-[#0a2a5e]">Overall Match:</span> {analysis.overall_score || 0}%</span>
                       </li>
                       <li className="flex items-start gap-3 text-gray-700">
-                        <span className="w-6 h-6 rounded-full flex items-center justify-center text-blue-600 font-bold text-xs flex-shrink-0 mt-0.5">✓</span>
-                        <span className="leading-relaxed"><span className="font-semibold text-blue-900">Skills Match:</span> {analysis.skills_match || 0}%</span>
+                        <span className="w-6 h-6 rounded-full flex items-center justify-center text-[#0a2a5e] font-bold text-xs flex-shrink-0 mt-0.5">✓</span>
+                        <span className="leading-relaxed"><span className="font-semibold text-[#0a2a5e]">Skills Match:</span> {analysis.skills_match || 0}%</span>
                       </li>
                       <li className="flex items-start gap-3 text-gray-700">
-                        <span className="w-6 h-6 rounded-full flex items-center justify-center text-blue-600 font-bold text-xs flex-shrink-0 mt-0.5">✓</span>
-                        <span className="leading-relaxed"><span className="font-semibold text-blue-900">Experience Match:</span> {analysis.experience_match || 0}%</span>
+                        <span className="w-6 h-6 rounded-full flex items-center justify-center text-[#0a2a5e] font-bold text-xs flex-shrink-0 mt-0.5">✓</span>
+                        <span className="leading-relaxed"><span className="font-semibold text-[#0a2a5e]">Experience Match:</span> {analysis.experience_match || 0}%</span>
                       </li>
                       <li className="flex items-start gap-3 text-gray-700">
-                        <span className="w-6 h-6 rounded-full flex items-center justify-center text-blue-600 font-bold text-xs flex-shrink-0 mt-0.5">✓</span>
-                        <span className="leading-relaxed"><span className="font-semibold text-blue-900">Education Match:</span> {analysis.education_match || 0}%</span>
+                        <span className="w-6 h-6 rounded-full flex items-center justify-center text-[#0a2a5e] font-bold text-xs flex-shrink-0 mt-0.5">✓</span>
+                        <span className="leading-relaxed"><span className="font-semibold text-[#0a2a5e]">Education Match:</span> {analysis.education_match || 0}%</span>
                       </li>
                     </ul>
                   </div>
@@ -536,9 +536,9 @@ const AnalyzeResume = () => {
 
                 {/* Professional Summary - Blue Theme */}
                 {analysis.professional_summary && (
-                  <div className="bg-white from-blue-50 to-blue-100 p-6 rounded-xl border-l-4 border-blue-500 shadow-lg">
+                  <div className="bg-white from-[#0a2a5e]/5 to-[#0a2a5e]/10 p-6 rounded-xl border-l-4 border-[#0a2a5e] shadow-lg">
                     <h3 className="text-lg font-bold text-[#0a2a5e] mb-3 flex items-center gap-2">
-                      <span className="w-8 h-8 bg-white rounded-full flex items-center justify-center text-[#0a2a5e] border-2 border-blue-200">
+                      <span className="w-8 h-8 bg-white rounded-full flex items-center justify-center text-[#0a2a5e] border-2 border-[#0a2a5e]/30">
                         <User className="w-5 h-5" />
                       </span>
                       Professional Summary
@@ -546,7 +546,7 @@ const AnalyzeResume = () => {
                     <ul className="space-y-3">
                       {analysis.professional_summary.split(/[.!]\s+/).filter(s => s.trim()).map((point, index) => (
                         <li key={index} className="flex items-start gap-3 text-gray-700">
-                          <span className="w-6 h-6 rounded-full flex items-center justify-center text-blue-600 font-bold text-xs flex-shrink-0 mt-0.5">✓</span>
+                          <span className="w-6 h-6 rounded-full flex items-center justify-center text-[#0a2a5e] font-bold text-xs flex-shrink-0 mt-0.5">✓</span>
                           <span className="leading-relaxed">{point.trim()}{point.trim().match(/[.!]$/) ? '' : '.'}</span>
                         </li>
                       ))}
@@ -556,9 +556,9 @@ const AnalyzeResume = () => {
 
                 {/* Strengths */}
                 {analysis.strengths && analysis.strengths.length > 0 && (
-                  <div className="bg-white p-6 rounded-xl border-l-4 border-blue-500 shadow-lg hover:shadow-xl transition">
+                  <div className="bg-white p-6 rounded-xl border-l-4 border-[#0a2a5e] shadow-lg hover:shadow-xl transition">
                     <h3 className="text-lg font-bold text-[#0a2a5e] mb-4 flex items-center gap-2">
-                      <span className="w-8 h-8 bg-white rounded-full flex items-center justify-center text-[#0a2a5e] border-2 border-blue-200">
+                      <span className="w-8 h-8 bg-white rounded-full flex items-center justify-center text-[#0a2a5e] border-2 border-[#0a2a5e]/30">
                         <Award className="w-5 h-5" />
                       </span>
                       Key Strengths
@@ -566,7 +566,7 @@ const AnalyzeResume = () => {
                     <ul className="space-y-3">
                       {analysis.strengths.map((strength, index) => (
                         <li key={index} className="flex items-start gap-3 text-gray-700">
-                          <span className="w-6 h-6 rounded-full flex items-center justify-center text-blue-600 font-bold text-xs flex-shrink-0 mt-0.5">✓</span>
+                          <span className="w-6 h-6 rounded-full flex items-center justify-center text-[#0a2a5e] font-bold text-xs flex-shrink-0 mt-0.5">✓</span>
                           <span className="leading-relaxed">{strength}</span>
                         </li>
                       ))}
@@ -577,9 +577,9 @@ const AnalyzeResume = () => {
 
                 {/* Areas for Improvement */}
                 {analysis.weaknesses && analysis.weaknesses.length > 0 && (
-                  <div className="bg-white p-6 rounded-xl border-l-4 border-blue-500 shadow-lg hover:shadow-xl transition">
+                  <div className="bg-white p-6 rounded-xl border-l-4 border-[#0a2a5e] shadow-lg hover:shadow-xl transition">
                     <h3 className="text-lg font-bold text-[#0a2a5e] mb-4 flex items-center gap-2">
-                      <span className="w-8 h-8 bg-white rounded-full flex items-center justify-center text-[#0a2a5e] border-2 border-blue-200">
+                      <span className="w-8 h-8 bg-white rounded-full flex items-center justify-center text-[#0a2a5e] border-2 border-[#0a2a5e]/30">
                         <TrendingUp className="w-5 h-5" />
                       </span>
                       Areas for Development
@@ -587,7 +587,7 @@ const AnalyzeResume = () => {
                     <ul className="space-y-3">
                       {analysis.weaknesses.map((weakness, index) => (
                         <li key={index} className="flex items-start gap-3 text-gray-700">
-                          <span className="w-6 h-6 rounded-full flex items-center justify-center text-blue-600 font-bold text-xs flex-shrink-0 mt-0.5">✓</span>
+                          <span className="w-6 h-6 rounded-full flex items-center justify-center text-[#0a2a5e] font-bold text-xs flex-shrink-0 mt-0.5">✓</span>
                           <span className="leading-relaxed">{weakness}</span>
                         </li>
                       ))}
@@ -597,9 +597,9 @@ const AnalyzeResume = () => {
 
                 {/* Next Steps - Blue Theme */}
                 {analysis.next_steps && (
-                  <div className="bg-white p-6 rounded-xl border-l-4 border-blue-500 shadow-lg hover:shadow-xl transition">
+                  <div className="bg-white p-6 rounded-xl border-l-4 border-[#0a2a5e] shadow-lg hover:shadow-xl transition">
                     <h3 className="text-lg font-bold text-[#0a2a5e] mb-4 flex items-center gap-2">
-                      <span className="w-8 h-8 bg-white rounded-full flex items-center justify-center text-[#0a2a5e] border-2 border-blue-200">
+                      <span className="w-8 h-8 bg-white rounded-full flex items-center justify-center text-[#0a2a5e] border-2 border-[#0a2a5e]/30">
                         <ArrowRight className="w-5 h-5" />
                       </span>
                       Recommended Next Steps
@@ -607,7 +607,7 @@ const AnalyzeResume = () => {
                     <ul className="space-y-3">
                       {analysis.next_steps.split(/[.!]\s+/).filter(s => s.trim()).map((step, index) => (
                         <li key={index} className="flex items-start gap-3 text-gray-700">
-                          <span className="w-6 h-6 rounded-full flex items-center justify-center text-blue-600 font-bold text-xs flex-shrink-0 mt-0.5">✓</span>
+                          <span className="w-6 h-6 rounded-full flex items-center justify-center text-[#0a2a5e] font-bold text-xs flex-shrink-0 mt-0.5">✓</span>
                           <span className="leading-relaxed">{step.trim()}{step.trim().match(/[.!]$/) ? '' : '.'}</span>
                         </li>
                       ))}
@@ -619,7 +619,7 @@ const AnalyzeResume = () => {
                 <div className="mt-8 flex justify-center">
                   <button
                     onClick={downloadReport}
-                    className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-8 py-4 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-3 transform hover:scale-105"
+                    className="bg-gradient-to-r from-[#0a2a5e] to-[#0d3b82] hover:from-[#061a3d] hover:to-[#0a2a5e] text-white px-8 py-4 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-3 transform hover:scale-105"
                   >
                     <Download className="w-5 h-5" />
                     Download Report

@@ -54,11 +54,13 @@ async def create_job(
     db=Depends(get_database)
 ):
     """
-    Create a new job posting and process CVs for ranking.
+    Create a new job posting.
+    
+    NOTE: This endpoint ONLY creates a job posting. 
+    To screen CVs and create rankings, use the CV Screening page (/api/screen-cvs-batch).
     
     Uses Reference Pattern: CVs are stored individually in job_cv_files collection,
     and only the IDs are stored in the job posting document.
-    This removes the 16MB document limit and allows unlimited CV uploads.
     """
     if db is None:
         raise HTTPException(
@@ -66,16 +68,11 @@ async def create_job(
             detail="Database connection unavailable. MongoDB is not connected."
         )
     
-    # Import ranking services
-    from services.cv_ranking_service import CVRankingService
-    from database.ranking_crud import create_candidate_ranking, create_evaluation_report
-    
-    # Step 1: Store each CV file individually in job_cv_files collection
-    # This is the Reference Pattern - each CV is its own document
+    # Step 1: Store each CV file individually in job_cv_files collection (if any)
     cv_file_ids = []
     
     if job_data.cvFiles and len(job_data.cvFiles) > 0:
-        print(f"[INFO] Processing {len(job_data.cvFiles)} CV files using Reference Pattern...")
+        print(f"[INFO] Storing {len(job_data.cvFiles)} CV files using Reference Pattern...")
         
         for idx, cv_base64 in enumerate(job_data.cvFiles):
             try:
@@ -120,63 +117,11 @@ async def create_job(
             {"$set": {"job_posting_id": job_id}}
         )
     
-    # Step 4: Process CVs for ranking
-    rankings_created = []
-    evaluations_created = []
-    
-    if job_data.cvFiles and len(job_data.cvFiles) > 0:
-        try:
-            ranking_service = CVRankingService()
-            
-            ranked_candidates = await ranking_service.screen_and_rank_cvs(
-                cv_files=job_data.cvFiles,
-                job_description=job_data.jobDescription or f"Position: {job_data.interviewField} - {job_data.positionLevel}",
-                interview_field=job_data.interviewField,
-                position_level=job_data.positionLevel,
-                number_of_questions=job_data.numberOfQuestions,
-                top_n=job_data.topNCvs
-            )
-            
-            for candidate in ranked_candidates:
-                ranking_id = await create_candidate_ranking(
-                    db=db,
-                    job_posting_id=job_id,
-                    recruiter_id=job_data.recruiterId,
-                    candidate_name=candidate["candidate_name"],
-                    rank=candidate["rank"],
-                    score=candidate["score"],
-                    cv_score=candidate.get("cv_score", 0),
-                    interview_score=candidate.get("interview_score", 0),
-                    facial_recognition_score=candidate.get("facial_recognition_score", 0),
-                    completion=candidate["completion"],
-                    interview_status=candidate["interview_status"],
-                    cv_data=candidate.get("cv_data"),
-                    evaluation_details=candidate.get("evaluation_details")
-                )
-                rankings_created.append(ranking_id)
-                
-                evaluation_id = await create_evaluation_report(
-                    db=db,
-                    job_posting_id=job_id,
-                    recruiter_id=job_data.recruiterId,
-                    candidate_ranking_id=ranking_id,
-                    candidate_name=candidate["candidate_name"],
-                    position=f"{job_data.interviewField} - {job_data.positionLevel}",
-                    overall_score=candidate["score"],
-                    skill_scores=candidate.get("skill_scores", {}),
-                    detailed_analysis=str(candidate.get("evaluation_details", {})),
-                    recommendations=f"Rank: {candidate['rank']}, Status: {candidate['interview_status']}"
-                )
-                evaluations_created.append(evaluation_id)
-                
-        except Exception as e:
-            print(f"Error processing CVs: {str(e)}")
-    
     job = await get_job_posting_by_id(db, job_id)
     
     return {
         "success": True,
-        "message": "Job posting created successfully",
+        "message": "Job posting created successfully. Use CV Screening to rank candidates.",
         "job": {
             "id": job["_id"],
             "recruiterId": job["recruiter_id"],
@@ -189,9 +134,7 @@ async def create_job(
             "jobDescription": job.get("job_description"),
             "createdAt": job["created_at"].isoformat(),
             "isActive": job["is_active"]
-        },
-        "rankings_created": len(rankings_created),
-        "evaluations_created": len(evaluations_created)
+        }
     }
 
 
@@ -299,6 +242,17 @@ async def update_job(
         update_fields["number_of_questions"] = update_data.numberOfQuestions
     if update_data.topNCvs is not None:
         update_fields["top_n_cvs"] = update_data.topNCvs
+    
+    # Map new fields
+    if update_data.workModel is not None:
+        update_fields["work_model"] = update_data.workModel
+    if update_data.status is not None:
+        update_fields["status"] = update_data.status
+    if update_data.location is not None:
+        update_fields["location"] = update_data.location
+    if update_data.salaryRange is not None:
+        update_fields["salary_range"] = update_data.salaryRange
+        
     if update_data.cvFiles is not None:
         update_fields["cv_files"] = update_data.cvFiles
     if update_data.jobDescription is not None:

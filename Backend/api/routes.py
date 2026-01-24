@@ -11,6 +11,8 @@ from cv_screener.gemini_screener import GeminiCVScreener
 from cv_screener.cv_parser import parse_cv_file
 from database.connection import get_database
 from database import crud
+from database.job_posting_crud import create_job_cv_file, create_job_posting
+from database.ranking_crud import create_candidate_ranking
 
 # Import voice interview routes
 from vc_agent.api_routes import router as voice_router
@@ -747,3 +749,259 @@ def format_candidate_analysis(analysis_data: dict) -> dict:
     formatted["full_analysis"] = "\n\n".join(full)
     
     return formatted
+
+
+# ==================== CV Screening (Bulk) Endpoint ====================
+
+class CVScreeningRequest(BaseModel):
+    """Request model for bulk CV screening from the recruiter dashboard."""
+    recruiterId: str
+    cvFiles: List[str]  # List of base64 encoded CV files
+    jobDescription: str
+    interviewField: str
+    positionLevel: str
+    topNCvs: int = 5
+
+
+@router.post("/screen-cvs-batch")
+async def screen_cvs_batch(
+    request: CVScreeningRequest,
+    db=Depends(get_database)
+):
+    """
+    Screen multiple CVs against a job description.
+    
+    This endpoint:
+    1. Accepts base64 encoded CV files from the frontend
+    2. Creates a Job Posting reference for the ranking system
+    3. Stores original CV files (Reference Pattern)
+    4. Screens each CV against the job description using AI
+    5. Stores detailed screening results and candidate rankings
+    6. Returns the top N candidates
+    """
+    import base64
+    import tempfile
+    import os
+    from cv_screener import parse_cv_file
+    from bson import ObjectId
+    from datetime import datetime
+    
+    if not request.cvFiles or len(request.cvFiles) == 0:
+        raise HTTPException(status_code=400, detail="No CV files provided")
+    
+    if not request.jobDescription.strip():
+        raise HTTPException(status_code=400, detail="Job description is required")
+    
+    # 1. Create a Job Description record (for AI/Screening context)
+    full_job_description = f"""
+Position: {request.interviewField}
+Level: {request.positionLevel}
+
+Job Description:
+{request.jobDescription}
+"""
+    
+    jd_id = await crud.create_job_description(
+        db,
+        title=f"{request.interviewField} - {request.positionLevel}",
+        content=full_job_description
+    )
+    
+    # 2. Create a Job Posting record (for Ranking Page visibility)
+    # We will update cv_file_ids later
+    job_posting_id = await create_job_posting(
+        db,
+        recruiter_id=request.recruiterId,
+        interview_field=request.interviewField,
+        position_level=request.positionLevel,
+        number_of_questions=5,
+        top_n_cvs=request.topNCvs,
+        work_model="Remote",
+        status="Screening",
+        location="Not specified",
+        salary_range="Not specified",
+        cv_file_ids=[],
+        job_description=request.jobDescription
+    )
+    
+    # Create screening batch
+    batch_id = await crud.create_screening_batch(db, jd_id, [])
+    
+    results = []
+    result_ids = []
+    cv_file_ids = []
+    
+    for idx, cv_base64 in enumerate(request.cvFiles):
+        try:
+            print(f"[INFO] Processing CV {idx + 1}/{len(request.cvFiles)}")
+            
+            # Decode base64
+            if "," in cv_base64:
+                cv_base64_clean = cv_base64.split(",")[1]
+            else:
+                cv_base64_clean = cv_base64
+            
+            cv_bytes = base64.b64decode(cv_base64_clean)
+            print(f"[INFO] Decoded CV bytes: {len(cv_bytes)} bytes")
+            
+            # Create temp file with PDF extension
+            with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as temp_file:
+                temp_file.write(cv_bytes)
+                temp_path = temp_file.name
+            
+            try:
+                file_name = f"CV_{idx + 1}.pdf"
+                print(f"[INFO] Created temp file: {temp_path}")
+
+                # 3. Store ORIGINAL FILE (Reference Pattern)
+                print(f"[INFO] Storing CV file with Reference Pattern...")
+                cv_file_id_ref = await create_job_cv_file(
+                    db,
+                    job_posting_id=job_posting_id,
+                    file_name=file_name,
+                    file_content=cv_base64_clean,
+                    file_size=len(cv_bytes)
+                )
+                cv_file_ids.append(cv_file_id_ref)
+                print(f"[INFO] Stored CV file with ID: {cv_file_id_ref}")
+
+                # Parse CV content for screening
+                print(f"[INFO] Parsing CV content...")
+                cv_content = parse_cv_file(temp_path)
+                print(f"[INFO] Parsed CV content: {len(cv_content)} chars")
+                
+                # Store CV Metadata/Text in cvs collection
+                print(f"[INFO] Saving CV metadata...")
+                cv_id = await crud.save_cv(
+                    db,
+                    file_name=file_name,
+                    content=cv_content,
+                    file_size=len(cv_bytes)
+                )
+                print(f"[INFO] Saved CV with ID: {cv_id}")
+                
+                # 4. Screen the CV
+                print(f"[INFO] Screening CV against job description...")
+                screening_result = await screener.screen_cv(
+                    job_description=full_job_description,
+                    cv_content=cv_content,
+                    file_name=file_name
+                )
+                print(f"[INFO] Screening result: overall_score={screening_result.get('overall_score', 'N/A')}")
+                
+                # Store detailed screening result
+                print(f"[INFO] Creating screening result record...")
+                result_id = await crud.create_screening_result(
+                    db,
+                    jd_id,
+                    cv_id,
+                    screening_result
+                )
+                result_ids.append(result_id)
+                print(f"[INFO] Created screening result with ID: {result_id}")
+                
+                # 5. Create Candidate Ranking (for Ranking Page)
+                candidate_name = screening_result.get("candidate_name", f"Candidate {idx + 1}")
+                
+                # Ensure validation of score 
+                raw_score = screening_result.get("overall_score", 0)
+                try:
+                    # Handle "85/100", "85%", etc
+                    if isinstance(raw_score, str):
+                        import re
+                        # Extract first number
+                        match = re.search(r'\d+(\.\d+)?', raw_score)
+                        overall_score = float(match.group()) if match else 0.0
+                    else:
+                        overall_score = float(raw_score)
+                except Exception:
+                    overall_score = 0.0
+                
+                print(f"[INFO] Creating candidate ranking: {candidate_name}, score: {overall_score}")
+                
+                # Sanitize evaluation details
+                import json
+                evaluation_details_safe = json.loads(json.dumps(screening_result, default=str))
+
+                try:
+                    ranking_id = await create_candidate_ranking(
+                        db,
+                        job_posting_id=job_posting_id,
+                        recruiter_id=request.recruiterId,
+                        candidate_name=candidate_name,
+                        rank=idx + 1,
+                        score=overall_score,
+                        cv_score=overall_score,
+                        completion=100,
+                        interview_status="Shortlisted" if overall_score >= 80 else "Pending",
+                        cv_data={"text": cv_content[:500] + "...", "file_id": cv_file_id_ref},
+                        evaluation_details=evaluation_details_safe
+                    )
+                    print(f"[INFO] ✅ Created ranking with ID: {ranking_id}")
+                except Exception as ranking_error:
+                    print(f"[ERROR] Failed to create ranking: {str(ranking_error)}")
+                    import traceback
+                    traceback.print_exc()
+                
+                # Add to results for response
+                screening_result["id"] = result_id
+                screening_result["cv_id"] = cv_id
+                results.append(screening_result)
+                print(f"[INFO] ✅ CV {idx + 1} processed successfully")
+                
+            finally:
+                # Clean up temp file
+                if os.path.exists(temp_path):
+                    os.remove(temp_path)
+                    
+        except Exception as e:
+            print(f"[ERROR] Error screening CV {idx + 1}: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            results.append({
+                "candidate_name": f"Candidate {idx + 1}",
+                "overall_score": 0,
+                "score": 0,
+                "recommendation": "Error",
+                "summary": f"Error: {str(e)}"
+            })
+    
+    # Update batch
+    if result_ids:
+        await crud.update_batch_results(db, batch_id, result_ids)
+        
+    # Update Job Posting with CV IDs
+    if cv_file_ids:
+        await db.job_postings.update_one(
+            {"_id": ObjectId(job_posting_id)},
+            {"$set": {"cv_file_ids": cv_file_ids}}
+        )
+    
+    # Sort results
+    results.sort(key=lambda x: x.get("overall_score", x.get("score", 0)), reverse=True)
+    
+    # Apply Top N
+    top_results = results[:request.topNCvs]
+    
+    # Format for frontend
+    formatted_results = []
+    for idx, result in enumerate(top_results):
+        formatted_results.append({
+            "rank": idx + 1,
+            "candidate_name": result.get("candidate_name", f"Candidate {idx + 1}"),
+            "email": result.get("email", ""),
+            "score": result.get("overall_score", result.get("score", 0)),
+            "skills_match": result.get("skills_match", 0),
+            "recommendation": result.get("recommendation", "Pending"),
+            "summary": result.get("summary", "")
+        })
+    
+    return {
+        "success": True,
+        "batch_id": batch_id,
+        "job_description_id": jd_id,
+        "job_posting_id": job_posting_id, # Return this ID so UI can show it
+        "total_screened": len(results),
+        "results": formatted_results
+    }
+

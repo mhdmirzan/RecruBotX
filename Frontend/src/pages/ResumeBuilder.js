@@ -60,7 +60,7 @@ const ResumeBuilder = () => {
     return (
       <div className="h-screen flex items-center justify-center bg-gray-100">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#0a2a5e] mx-auto mb-4"></div>
           <p className="text-gray-600">Loading...</p>
         </div>
       </div>
@@ -88,7 +88,7 @@ const ResumeBuilder = () => {
               </p>
               <p className="text-sm text-gray-500">{user.email}</p>
             </div>
-            <div className="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold">
+            <div className="w-10 h-10 rounded-full bg-[#0a2a5e] text-white flex items-center justify-center font-bold">
               {user.firstName?.charAt(0)}
               {user.lastName?.charAt(0)}
             </div>
@@ -104,7 +104,7 @@ const ResumeBuilder = () => {
         <div className="flex justify-end items-center gap-4 py-5 px-10 bg-white/80 backdrop-blur-lg border-t border-gray-200 flex-shrink-0">
           <button
             onClick={() => setShowPreview(!showPreview)}
-            className="flex items-center gap-2 px-8 py-3 bg-white text-blue-600 border-2 border-blue-600 rounded-xl font-bold hover:bg-blue-50 transition-all shadow-sm"
+            className="flex items-center gap-2 px-8 py-3 bg-white text-[#0a2a5e] border-2 border-[#0a2a5e] rounded-xl font-bold hover:bg-[#0a2a5e]/5 transition-all shadow-sm"
           >
             <Eye className="w-5 h-5" />
             {showPreview ? "Edit" : "Preview"}
@@ -112,7 +112,7 @@ const ResumeBuilder = () => {
           <DownloadButton
             showPreview={showPreview}
             setShowPreview={setShowPreview}
-            className="flex items-center gap-2 px-8 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-all shadow-sm"
+            className="flex items-center gap-2 px-8 py-3 bg-[#0a2a5e] text-white rounded-xl font-bold hover:bg-[#061a3d] transition-all shadow-sm"
           />
         </div>
       </main>

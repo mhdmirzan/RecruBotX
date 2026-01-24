@@ -117,7 +117,7 @@ const CandidateSettings = () => {
   if (!user) {
     return (
       <div className="h-screen flex items-center justify-center bg-gray-100">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#0a2a5e]"></div>
       </div>
     );
   }
@@ -144,7 +144,7 @@ const CandidateSettings = () => {
                 </h3>
                 <p className="text-sm text-gray-500">{user.email}</p>
               </div>
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg overflow-hidden">
+              <div className="w-12 h-12 bg-gradient-to-br from-[#0a2a5e] to-[#2b4c8c] rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg overflow-hidden">
                 {user.profileImage ? (
                   <img src={user.profileImage} alt="Profile" className="w-full h-full object-cover" />
                 ) : (
@@ -162,7 +162,7 @@ const CandidateSettings = () => {
               {/* Profile Picture Section */}
               <div className="flex items-center gap-6 pb-6 border-b border-gray-200">
                 <div className="relative group">
-                  <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-3xl shadow-lg overflow-hidden">
+                  <div className="w-24 h-24 bg-gradient-to-br from-[#0a2a5e] to-[#2b4c8c] rounded-full flex items-center justify-center text-white font-bold text-3xl shadow-lg overflow-hidden">
                     {formData.profileImage ? (
                       <img src={formData.profileImage} alt="Profile" className="w-full h-full object-cover" />
                     ) : (
@@ -172,7 +172,7 @@ const CandidateSettings = () => {
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className="absolute bottom-0 right-0 w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white shadow-md hover:bg-blue-700 transition-all"
+                    className="absolute bottom-0 right-0 w-8 h-8 bg-[#0a2a5e] rounded-full flex items-center justify-center text-white shadow-md hover:bg-[#061a3d] transition-all"
                   >
                     <Camera className="w-4 h-4" />
                   </button>
@@ -199,7 +199,7 @@ const CandidateSettings = () => {
                     name="firstName"
                     value={formData.firstName}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#0a2a5e] focus:border-transparent outline-none transition-all"
                     required
                   />
                 </div>
@@ -278,7 +278,7 @@ const CandidateSettings = () => {
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="px-8 py-3 bg-gradient-to-r from-[#0a2a5e] to-[#0d3b82] text-white rounded-xl font-semibold hover:from-[#061a3d] hover:to-[#0a2a5e] transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {isLoading ? (
                     <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>

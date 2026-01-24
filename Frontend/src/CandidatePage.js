@@ -172,7 +172,7 @@ const CandidatePage = () => {
         </div>
 
         {/* Right Side - Benefits */}
-        <div className="hidden lg:flex bg-gradient-to-br from-blue-50 to-indigo-100 items-center justify-center p-6 lg:p-12 h-full">
+        <div className="hidden lg:flex bg-gradient-to-br from-[#0a2a5e]/5 to-[#0a2a5e]/15 items-center justify-center p-6 lg:p-12 h-full">
           <motion.div
             className="w-full max-w-lg text-center"
             initial={{ opacity: 0, x: 50 }}
