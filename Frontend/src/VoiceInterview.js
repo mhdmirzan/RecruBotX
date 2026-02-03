@@ -471,7 +471,7 @@ const VoiceInterview = () => {
     return (
       <div className="h-screen flex items-center justify-center bg-gray-100">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#0a2a5e] mx-auto mb-4"></div>
           <p className="text-gray-600">Loading...</p>
         </div>
       </div>
@@ -488,7 +488,7 @@ const VoiceInterview = () => {
           {/* Top Header */}
           <div className="mb-6 flex-shrink-0 flex justify-between items-center">
             <div>
-              <h2 className="text-3xl font-bold text-gray-800">AI Voice Interview</h2>
+              <h2 className="text-3xl font-bold text-[#0a2a5e]">AI Voice Interview</h2>
               <p className="text-gray-500 text-md mt-1 py-4">Practice technical interviews with intelligent feedback.</p>
             </div>
 
@@ -501,7 +501,7 @@ const VoiceInterview = () => {
                   </h3>
                   <p className="text-sm text-gray-500">{user.email}</p>
                 </div>
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg overflow-hidden">
+                <div className="w-12 h-12 bg-gradient-to-br from-[#0a2a5e] to-[#2b4c8c] rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg overflow-hidden">
                   {user.profileImage ? (
                     <img src={user.profileImage} alt="Profile" className="w-full h-full object-cover" />
                   ) : (
@@ -517,7 +517,7 @@ const VoiceInterview = () => {
             {/* Configuration Card */}
             <div className="lg:col-span-2 bg-white rounded-2xl shadow-lg p-8 flex flex-col overflow-hidden">
               <h3 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2 flex-shrink-0">
-                <Target className="w-6 h-6 text-blue-600" />
+                <Target className="w-6 h-6 text-[#0a2a5e]" />
                 Configure Your Interview
               </h3>
 
@@ -570,7 +570,7 @@ const VoiceInterview = () => {
                   <select
                     value={interviewField}
                     onChange={(e) => setInterviewField(e.target.value)}
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none transition bg-gray-50 hover:bg-white"
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-[#0a2a5e] focus:outline-none transition bg-gray-50 hover:bg-white"
                   >
                     <option value="">Select a field...</option>
                     {availableFields.map((field) => (
@@ -591,8 +591,8 @@ const VoiceInterview = () => {
                         type="button"
                         onClick={() => setPositionLevel(level)}
                         className={`p-3 rounded-xl border-2 transition-all ${positionLevel === level
-                          ? "border-blue-500 bg-blue-50 text-blue-700"
-                          : "border-gray-200 hover:border-blue-300 hover:bg-gray-50"
+                          ? "border-[#0a2a5e] bg-[#0a2a5e]/5 text-[#0a2a5e]"
+                          : "border-gray-200 hover:border-[#0a2a5e]/50 hover:bg-gray-50"
                           }`}
                       >
                         <div className="font-semibold text-sm">{level}</div>
@@ -667,8 +667,8 @@ const VoiceInterview = () => {
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
                     Upload Your CV <span className="text-red-500">*</span>
                   </label>
-                  <div className="border-2 border-dashed border-blue-300 rounded-xl p-4 flex flex-col items-center justify-center hover:bg-blue-50 transition">
-                    <Upload className="w-6 h-6 text-blue-600 mb-2" />
+                  <div className="border-2 border-dashed border-[#0a2a5e]/30 rounded-xl p-4 flex flex-col items-center justify-center hover:bg-[#0a2a5e]/5 transition">
+                    <Upload className="w-6 h-6 text-[#0a2a5e] mb-2" />
                     <input
                       id="cvFileUpload"
                       type="file"
@@ -678,7 +678,7 @@ const VoiceInterview = () => {
                     />
                     <label
                       htmlFor="cvFileUpload"
-                      className="cursor-pointer text-blue-600 font-medium hover:underline text-center text-sm"
+                      className="cursor-pointer text-[#0a2a5e] font-medium hover:underline text-center text-sm"
                     >
                       {cvFile ? (
                         <div className="flex items-center gap-2">
@@ -697,7 +697,7 @@ const VoiceInterview = () => {
               <button
                 onClick={startInterview}
                 disabled={isProcessing || !interviewField || !positionLevel || !candidateName || !phoneNumber || !emailAddress || !education || !projects || !skills || !experience || !cvFile}
-                className="w-full bg-blue-600 text-white py-4 rounded-xl font-semibold hover:bg-blue-700 transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 mt-6 flex-shrink-0"
+                className="w-full bg-gradient-to-r from-[#0a2a5e] to-[#0d3b82] text-white py-4 rounded-xl font-semibold hover:from-[#061a3d] hover:to-[#0a2a5e] transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 mt-6 flex-shrink-0"
               >
                 {isProcessing ? (
                   <>
@@ -722,28 +722,28 @@ const VoiceInterview = () => {
 
               <div className="space-y-4">
                 <div className="flex items-start gap-3 py-2">
-                  <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 font-bold text-sm flex-shrink-0">1</div>
+                  <div className="w-8 h-8 bg-[#0a2a5e]/10 rounded-lg flex items-center justify-center text-[#0a2a5e] font-bold text-sm flex-shrink-0">1</div>
                   <div>
                     <p className="font-medium text-gray-800">Upload Your CV</p>
                     <p className="text-sm text-gray-500">Submit your resume in PDF format</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3 py-2">
-                  <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 font-bold text-sm flex-shrink-0">2</div>
+                  <div className="w-8 h-8 bg-[#0a2a5e]/10 rounded-lg flex items-center justify-center text-[#0a2a5e] font-bold text-sm flex-shrink-0">2</div>
                   <div>
                     <p className="font-medium text-gray-800">Start Your Interview</p>
                     <p className="text-sm text-gray-500">Click the Start Interview button to begin</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3 py-2">
-                  <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 font-bold text-sm flex-shrink-0">3</div>
+                  <div className="w-8 h-8 bg-[#0a2a5e]/10 rounded-lg flex items-center justify-center text-[#0a2a5e] font-bold text-sm flex-shrink-0">3</div>
                   <div>
                     <p className="font-medium text-gray-800">AI Asks Questions</p>
                     <p className="text-sm text-gray-500">Respond naturally with video feed</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3 py-2">
-                  <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 font-bold text-sm flex-shrink-0">4</div>
+                  <div className="w-8 h-8 bg-[#0a2a5e]/10 rounded-lg flex items-center justify-center text-[#0a2a5e] font-bold text-sm flex-shrink-0">4</div>
                   <div>
                     <p className="font-medium text-gray-800">Get Feedback</p>
                     <p className="text-sm text-gray-500">Receive instant AI-powered insights</p>
@@ -751,12 +751,12 @@ const VoiceInterview = () => {
                 </div>
               </div>
 
-              <div className="mt-6 p-4 bg-blue-50 rounded-xl">
-                <div className="flex items-center gap-2 text-blue-700 font-medium mb-2">
+              <div className="mt-6 p-4 bg-[#0a2a5e]/5 rounded-xl">
+                <div className="flex items-center gap-2 text-[#0a2a5e] font-medium mb-2">
                   <Clock className="w-4 h-4" />
                   Recording Info
                 </div>
-                <p className="text-sm text-blue-600">
+                <p className="text-sm text-[#0a2a5e]/80">
                   Auto-stops after 4 seconds of silence or 1 minute maximum per answer.
                 </p>
               </div>
@@ -770,7 +770,7 @@ const VoiceInterview = () => {
   // Complete Screen
   if (isComplete && reportData) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-purple-50 p-6">
+      <div className="min-h-screen bg-gradient-to-br from-green-50 via-[#0a2a5e]/5 to-purple-50 p-6">
         <div className="max-w-4xl mx-auto">
           <div className="bg-white rounded-3xl shadow-2xl p-8">
             <div className="text-center mb-8">
@@ -780,9 +780,9 @@ const VoiceInterview = () => {
             </div>
 
             <div className="grid md:grid-cols-2 gap-6 mb-8">
-              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-6">
+              <div className="bg-gradient-to-br from-[#0a2a5e]/5 to-[#0a2a5e]/10 rounded-2xl p-6">
                 <h3 className="text-lg font-semibold text-gray-800 mb-2">Overall Score</h3>
-                <div className="text-5xl font-bold text-blue-600">{reportData.avg_score}/100</div>
+                <div className="text-5xl font-bold text-[#0a2a5e]">{reportData.avg_score}/100</div>
               </div>
 
               <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-6">

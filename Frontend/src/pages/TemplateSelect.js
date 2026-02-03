@@ -45,7 +45,7 @@ export default function TemplateSelect() {
     return (
       <div className="h-screen flex items-center justify-center bg-gray-100">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#0a2a5e] mx-auto mb-4"></div>
           <p className="text-gray-600">Loading...</p>
         </div>
       </div>
@@ -77,7 +77,7 @@ export default function TemplateSelect() {
               </p>
               <p className="text-sm text-gray-500">{user.email}</p>
             </div>
-            <div className="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold">
+            <div className="w-10 h-10 rounded-full bg-[#0a2a5e] text-white flex items-center justify-center font-bold">
               {user.firstName?.charAt(0)}
               {user.lastName?.charAt(0)}
             </div>
@@ -100,8 +100,8 @@ export default function TemplateSelect() {
                 >
                   <div
                     className={`h-[360px] border-2 rounded-lg p-2 transition ${isActive
-                      ? "border-blue-600 ring-4 ring-blue-600 shadow-lg"
-                      : "border-gray-200 hover:border-blue-300"
+                      ? "border-[#0a2a5e] ring-4 ring-[#0a2a5e] shadow-lg"
+                      : "border-gray-200 hover:border-[#0a2a5e]/50"
                       }`}
                   >
                     <img
@@ -116,7 +116,7 @@ export default function TemplateSelect() {
                   </p>
 
                   {isActive && (
-                    <span className="absolute top-3 right-3 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center">
+                    <span className="absolute top-3 right-3 w-8 h-8 bg-[#0a2a5e] text-white rounded-full flex items-center justify-center">
                       <Check size={18} />
                     </span>
                   )}
@@ -132,7 +132,7 @@ export default function TemplateSelect() {
               disabled={!selected}
               className={`flex items-center gap-2 px-8 py-3 rounded-lg font-semibold transition shadow
                 ${selected
-                  ? "bg-blue-600 text-white hover:bg-blue-700"
+                  ? "bg-[#0a2a5e] text-white hover:bg-[#061a3d]"
                   : "bg-gray-400 text-white cursor-not-allowed"
                 }`}
             >

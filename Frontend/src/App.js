@@ -1,6 +1,6 @@
 // App.js
 import React from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
 
 // Global Components
 import Navbar from "./components/Navbar";
@@ -37,6 +37,7 @@ import RecruiterSignupPage from "./RecruiterSignupPage";
 import RecruiterSigninPage from "./RecruiterSigninPage";
 import RecruiterDashboard from "./RecruiterDashboard";
 import JobPosting from "./JobPosting";
+import RecruiterCVScreening from "./RecruiterCVScreening";
 import Evaluation from "./Evaluation";
 import Ranking from "./Ranking";
 import CandidateReport from "./CandidateReport";
@@ -52,11 +53,31 @@ import { initializeDummyUsers } from "./utils/userDatabase";
 // Initialize dummy users on app load
 initializeDummyUsers();
 
+// Helper component to conditionally render Navbar
+const ConditionalNavbar = () => {
+  const location = useLocation();
+  // Hide Navbar on specific recruiter pages where full-screen dashboard is used
+  const hiddenPaths = [
+    "/recruiter/dashboard",
+    "/recruiter/job-posting",
+    "/recruiter/cv-screening",
+    "/recruiter/ranking",
+    "/recruiter/evaluation",
+    "/recruiter/settings",
+    "/recruiter/report"
+  ];
+
+  const shouldHide = hiddenPaths.some(path => location.pathname.startsWith(path));
+
+  if (shouldHide) return null;
+  return <Navbar />;
+};
+
 function App() {
   return (
     <Router>
       <ScrollToTop />
-      <Navbar />
+      <ConditionalNavbar />
 
       <Routes>
         {/* ===== HOME ===== */}
@@ -108,6 +129,7 @@ function App() {
         <Route path="/recruiter/signup" element={<><RecruiterSignupPage /><Footer /></>} />
         <Route path="/recruiter/dashboard" element={<RecruiterDashboard />} />
         <Route path="/recruiter/job-posting" element={<JobPosting />} />
+        <Route path="/recruiter/cv-screening" element={<RecruiterCVScreening />} />
         <Route path="/recruiter/evaluation" element={<Evaluation />} />
         <Route path="/recruiter/ranking" element={<Ranking />} />
         <Route path="/recruiter/report/:rankingId" element={<CandidateReport />} />

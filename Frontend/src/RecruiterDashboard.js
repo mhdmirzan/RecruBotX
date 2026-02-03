@@ -13,7 +13,8 @@ import {
   Settings,
   LogOut,
   X,
-  Trash2
+  Trash2,
+  Search
 } from "lucide-react";
 import API_BASE_URL from "./apiConfig";
 
@@ -103,7 +104,7 @@ const RecruiterDashboard = () => {
     return (
       <div className="h-screen flex items-center justify-center bg-gray-100">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#0a2a5e] mx-auto mb-4"></div>
           <p className="text-gray-600">Loading dashboard...</p>
         </div>
       </div>
@@ -115,14 +116,14 @@ const RecruiterDashboard = () => {
       {/* Sidebar */}
       <aside className="w-72 h-screen bg-white shadow-xl flex flex-col p-6 border-r border-gray-200 flex-shrink-0">
         <div className="mb-8 text-center flex-shrink-0">
-          <h1 className="text-3xl font-bold text-blue-600">RecruBotX</h1>
+          <h1 className="text-3xl font-bold text-[#0a2a5e]">RecruBotX</h1>
         </div>
 
         <nav className="flex flex-col space-y-4 text-gray-700 flex-shrink-0">
           <NavLink
             to="/recruiter/dashboard"
             className={({ isActive }) =>
-              `font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 ${isActive ? "bg-blue-50 text-blue-600" : "text-gray-700 hover:bg-gray-50 hover:text-blue-600"
+              `font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 ${isActive ? "bg-[#0a2a5e]/10 text-[#0a2a5e]" : "text-gray-700 hover:bg-[#0a2a5e]/5 hover:text-[#0a2a5e]"
               }`
             }
           >
@@ -132,7 +133,7 @@ const RecruiterDashboard = () => {
           <NavLink
             to="/recruiter/job-posting"
             className={({ isActive }) =>
-              `font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 ${isActive ? "bg-blue-50 text-blue-600" : "text-gray-700 hover:bg-gray-50 hover:text-blue-600"
+              `font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 ${isActive ? "bg-[#0a2a5e]/10 text-[#0a2a5e]" : "text-gray-700 hover:bg-[#0a2a5e]/5 hover:text-[#0a2a5e]"
               }`
             }
           >
@@ -140,9 +141,19 @@ const RecruiterDashboard = () => {
           </NavLink>
 
           <NavLink
+            to="/recruiter/cv-screening"
+            className={({ isActive }) =>
+              `font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 ${isActive ? "bg-[#0a2a5e]/10 text-[#0a2a5e]" : "text-gray-700 hover:bg-[#0a2a5e]/5 hover:text-[#0a2a5e]"
+              }`
+            }
+          >
+            <Search className="w-5 h-5" /> CV Screening
+          </NavLink>
+
+          <NavLink
             to="/recruiter/ranking"
             className={({ isActive }) =>
-              `font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 ${isActive ? "bg-blue-50 text-blue-600" : "text-gray-700 hover:bg-gray-50 hover:text-blue-600"
+              `font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 ${isActive ? "bg-[#0a2a5e]/10 text-[#0a2a5e]" : "text-gray-700 hover:bg-[#0a2a5e]/5 hover:text-[#0a2a5e]"
               }`
             }
           >
@@ -152,7 +163,7 @@ const RecruiterDashboard = () => {
           <NavLink
             to="/recruiter/evaluation"
             className={({ isActive }) =>
-              `font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 ${isActive ? "bg-blue-50 text-blue-600" : "text-gray-700 hover:bg-gray-50 hover:text-blue-600"
+              `font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 ${isActive ? "bg-[#0a2a5e]/10 text-[#0a2a5e]" : "text-gray-700 hover:bg-[#0a2a5e]/5 hover:text-[#0a2a5e]"
               }`
             }
           >
@@ -162,7 +173,7 @@ const RecruiterDashboard = () => {
           <NavLink
             to="/recruiter/settings"
             className={({ isActive }) =>
-              `font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 ${isActive ? "bg-blue-50 text-blue-600" : "text-gray-700 hover:bg-gray-50 hover:text-blue-600"
+              `font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 ${isActive ? "bg-[#0a2a5e]/10 text-[#0a2a5e]" : "text-gray-700 hover:bg-[#0a2a5e]/5 hover:text-[#0a2a5e]"
               }`
             }
           >
@@ -186,7 +197,7 @@ const RecruiterDashboard = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-gradient-to-r from-blue-900 to-indigo-900 rounded-2xl p-6 mb-6 text-white shadow-lg flex-shrink-0"
+          className="bg-gradient-to-r from-[#0a2a5e] to-[#0d3b82] rounded-2xl p-6 mb-6 text-white shadow-lg flex-shrink-0"
         >
           <div className="flex items-center justify-between">
             <div>
@@ -202,7 +213,7 @@ const RecruiterDashboard = () => {
                 </h3>
                 <p className="text-sm text-blue-200">{recruiterData.email}</p>
               </div>
-              <div className="w-14 h-14 bg-white rounded-full flex items-center justify-center text-blue-900 font-bold text-xl shadow-lg overflow-hidden">
+              <div className="w-14 h-14 bg-white rounded-full flex items-center justify-center text-[#0a2a5e] font-bold text-xl shadow-lg overflow-hidden">
                 {recruiterData.profileImage ? (
                   <img src={recruiterData.profileImage} alt="Profile" className="w-full h-full object-cover" />
                 ) : (
@@ -261,7 +272,7 @@ const RecruiterDashboard = () => {
                 <h3 className="text-3xl font-bold text-gray-800 mt-2">{dashboardStats.aiInterviews}</h3>
               </div>
               <div className="w-14 h-14 bg-blue-100 rounded-xl flex items-center justify-center">
-                <Video className="w-7 h-7 text-blue-600" />
+                <Video className="w-7 h-7 text-[#0a2a5e]" />
               </div>
             </div>
           </motion.div>
@@ -287,7 +298,7 @@ const RecruiterDashboard = () => {
         {/* Recent Job Postings - Fixed height container with scrollable content */}
         <div className="bg-white rounded-2xl shadow-lg flex-1 flex flex-col overflow-hidden">
           <div className="flex items-center gap-2 p-6 pb-4 flex-shrink-0 border-b border-gray-100">
-            <Briefcase className="w-6 h-6 text-blue-600" />
+            <Briefcase className="w-6 h-6 text-[#0a2a5e]" />
             <h3 className="text-xl font-bold text-gray-800">Recent Job Postings</h3>
           </div>
 
@@ -299,7 +310,7 @@ const RecruiterDashboard = () => {
                 <p className="text-sm mt-2">Create your first job posting to get started!</p>
                 <button
                   onClick={() => navigate('/recruiter/job-posting')}
-                  className="mt-4 px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all"
+                  className="mt-4 px-6 py-3 bg-[#0a2a5e] text-white rounded-xl hover:bg-[#061a3d] transition-all"
                 >
                   Create Job Posting
                 </button>
@@ -314,7 +325,7 @@ const RecruiterDashboard = () => {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.1 }}
-                    className="border border-gray-200 rounded-xl p-5 hover:shadow-md hover:border-blue-300 transition-all"
+                    className="border border-gray-200 rounded-xl p-5 hover:shadow-md hover:border-[#0a2a5e]/30 transition-all"
                   >
                     <div className="flex justify-between items-start mb-3">
                       <div className="flex-1">
@@ -337,7 +348,7 @@ const RecruiterDashboard = () => {
                       <div className="flex gap-2">
                         <button
                           onClick={() => handleViewJob(job)}
-                          className="text-blue-600 hover:bg-blue-50 px-3 py-1.5 rounded-lg text-sm font-semibold transition-all border border-blue-100"
+                          className="text-[#0a2a5e] hover:bg-[#0a2a5e]/5 px-3 py-1.5 rounded-lg text-sm font-semibold transition-all border border-[#0a2a5e]/20"
                         >
                           View
                         </button>
@@ -378,7 +389,7 @@ const RecruiterDashboard = () => {
             className="relative bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden"
           >
             {/* Modal Header */}
-            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-6">
+            <div className="bg-gradient-to-r from-[#0a2a5e] to-[#0d3b82] text-white p-6">
               <div className="flex justify-between items-start">
                 <div>
                   <h2 className="text-2xl font-bold mb-2">{selectedJob.interviewField}</h2>
@@ -417,7 +428,7 @@ const RecruiterDashboard = () => {
                   <p className="text-sm text-gray-600 mb-1 font-medium">Total CVs Uploaded</p>
                   <p className="font-bold text-gray-800 text-lg">{selectedJob.cvFilesCount || 0}</p>
                 </div>
-                <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
+                <div className="bg-[#0a2a5e]/5 rounded-xl p-4 border border-[#0a2a5e]/10">
                   <p className="text-sm text-gray-600 mb-1 font-medium">Created Date</p>
                   <p className="font-bold text-gray-800 text-lg">
                     {new Date(selectedJob.createdAt).toLocaleDateString('en-US', {
@@ -432,7 +443,7 @@ const RecruiterDashboard = () => {
               {/* Job Description */}
               <div>
                 <h3 className="text-lg font-bold text-gray-800 mb-3 flex items-center gap-2">
-                  <FileText className="w-5 h-5 text-blue-600" />
+                  <FileText className="w-5 h-5 text-[#0a2a5e]" />
                   Job Description
                 </h3>
                 <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
@@ -459,7 +470,7 @@ const RecruiterDashboard = () => {
                     navigate('/recruiter/evaluation');
                     closeModal();
                   }}
-                  className="bg-blue-600 text-white px-6 py-2.5 rounded-xl font-semibold hover:bg-blue-700 transition-all shadow-md flex items-center gap-2"
+                  className="bg-[#0a2a5e] text-white px-6 py-2.5 rounded-xl font-semibold hover:bg-[#061a3d] transition-all shadow-md flex items-center gap-2"
                 >
                   <BarChart3 className="w-4 h-4" />
                   View Evaluations

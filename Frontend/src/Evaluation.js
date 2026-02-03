@@ -8,7 +8,8 @@ import {
     BarChart3,
     Cog,
     Download,
-    Eye
+    Eye,
+    Search
 } from "lucide-react";
 import API_BASE_URL from "./apiConfig";
 
@@ -140,14 +141,14 @@ const Evaluation = () => {
             {/* Sidebar */}
             <aside className="w-72 h-screen bg-white shadow-xl flex flex-col p-6 border-r border-gray-200 flex-shrink-0">
                 <div className="mb-8 text-center flex-shrink-0">
-                    <h1 className="text-3xl font-bold text-blue-600">RecruBotX</h1>
+                    <h1 className="text-3xl font-bold text-[#0a2a5e]">RecruBotX</h1>
                 </div>
 
                 <nav className="flex flex-col space-y-4 text-gray-700 flex-shrink-0">
                     <NavLink
                         to="/recruiter/dashboard"
                         className={({ isActive }) =>
-                            `font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 ${isActive ? "bg-blue-50 text-blue-600" : "text-gray-700 hover:bg-gray-50 hover:text-blue-600"
+                            `font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 ${isActive ? "bg-[#0a2a5e]/10 text-[#0a2a5e]" : "text-gray-700 hover:bg-[#0a2a5e]/5 hover:text-[#0a2a5e]"
                             }`
                         }
                     >
@@ -157,7 +158,7 @@ const Evaluation = () => {
                     <NavLink
                         to="/recruiter/job-posting"
                         className={({ isActive }) =>
-                            `font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 ${isActive ? "bg-blue-50 text-blue-600" : "text-gray-700 hover:bg-gray-50 hover:text-blue-600"
+                            `font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 ${isActive ? "bg-[#0a2a5e]/10 text-[#0a2a5e]" : "text-gray-700 hover:bg-[#0a2a5e]/5 hover:text-[#0a2a5e]"
                             }`
                         }
                     >
@@ -165,9 +166,19 @@ const Evaluation = () => {
                     </NavLink>
 
                     <NavLink
+                        to="/recruiter/cv-screening"
+                        className={({ isActive }) =>
+                            `font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 ${isActive ? "bg-[#0a2a5e]/10 text-[#0a2a5e]" : "text-gray-700 hover:bg-[#0a2a5e]/5 hover:text-[#0a2a5e]"
+                            }`
+                        }
+                    >
+                        <Search className="w-5 h-5" /> CV Screening
+                    </NavLink>
+
+                    <NavLink
                         to="/recruiter/ranking"
                         className={({ isActive }) =>
-                            `font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 ${isActive ? "bg-blue-50 text-blue-600" : "text-gray-700 hover:bg-gray-50 hover:text-blue-600"
+                            `font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 ${isActive ? "bg-[#0a2a5e]/10 text-[#0a2a5e]" : "text-gray-700 hover:bg-[#0a2a5e]/5 hover:text-[#0a2a5e]"
                             }`
                         }
                     >
@@ -177,7 +188,7 @@ const Evaluation = () => {
                     <NavLink
                         to="/recruiter/evaluation"
                         className={({ isActive }) =>
-                            `font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 ${isActive ? "bg-blue-50 text-blue-600" : "text-gray-700 hover:bg-gray-50 hover:text-blue-600"
+                            `font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 ${isActive ? "bg-[#0a2a5e]/10 text-[#0a2a5e]" : "text-gray-700 hover:bg-[#0a2a5e]/5 hover:text-[#0a2a5e]"
                             }`
                         }
                     >
@@ -187,7 +198,7 @@ const Evaluation = () => {
                     <NavLink
                         to="/recruiter/settings"
                         className={({ isActive }) =>
-                            `font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 ${isActive ? "bg-blue-50 text-blue-600" : "text-gray-700 hover:bg-gray-50 hover:text-blue-600"
+                            `font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 ${isActive ? "bg-[#0a2a5e]/10 text-[#0a2a5e]" : "text-gray-700 hover:bg-[#0a2a5e]/5 hover:text-[#0a2a5e]"
                             }`
                         }
                     >
@@ -211,7 +222,7 @@ const Evaluation = () => {
                 <div className="mb-4 flex-shrink-0 flex justify-between items-center">
                     <div>
                         <h2 className="text-3xl font-bold text-gray-800">Evaluation Reports</h2>
-                        <p className="text-gray-500 text-md mt-1 py-4">{getCurrentDate()}</p>
+                        <p className="text-gray-500 text-md mt-1 py-4">Comprehensive reports and insights on candidate performance.</p>
                     </div>
 
                     {/* User Profile - Top Right */}
@@ -222,7 +233,7 @@ const Evaluation = () => {
                             </h3>
                             <p className="text-sm text-gray-500">{recruiterData.email}</p>
                         </div>
-                        <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg overflow-hidden">
+                        <div className="w-12 h-12 bg-gradient-to-br from-[#0a2a5e] to-[#2b4c8c] rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg overflow-hidden">
                             {recruiterData.profileImage ? (
                                 <img src={recruiterData.profileImage} alt="Profile" className="w-full h-full object-cover" />
                             ) : (
@@ -241,7 +252,7 @@ const Evaluation = () => {
                         <select
                             value={selectedJob}
                             onChange={handleJobChange}
-                            className="w-56 px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-sm"
+                            className="w-56 px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#0a2a5e] focus:border-transparent outline-none transition-all text-sm"
                         >
                             <option value="all">All Jobs</option>
                             {jobPostings.map((job) => (
@@ -259,7 +270,7 @@ const Evaluation = () => {
                         <select
                             value={selectedScore}
                             onChange={handleScoreChange}
-                            className="w-56 px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-sm"
+                            className="w-56 px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#0a2a5e] focus:border-transparent outline-none transition-all text-sm"
                         >
                             <option value="all">All Scores</option>
                             <option value="high">High (80-100%)</option>
@@ -273,7 +284,7 @@ const Evaluation = () => {
                 <div className="flex-1 overflow-y-auto">
                     {isLoading ? (
                         <div className="text-center py-12">
-                            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#0a2a5e] mx-auto mb-4"></div>
                             <p className="text-gray-600">Loading evaluations...</p>
                         </div>
                     ) : filteredEvaluations.length === 0 ? (
@@ -306,7 +317,7 @@ const Evaluation = () => {
                                                 </div>
                                                 <div className="w-full bg-gray-200 rounded-full h-2.5">
                                                     <div
-                                                        className="bg-blue-500 h-2.5 rounded-full transition-all duration-500"
+                                                        className="bg-[#0a2a5e] h-2.5 rounded-full transition-all duration-500"
                                                         style={{ width: `${skill.percentage}%` }}
                                                     ></div>
                                                 </div>
@@ -318,7 +329,7 @@ const Evaluation = () => {
                                     <div className="flex gap-2">
                                         <button
                                             onClick={() => handleViewReport(evaluation.rankingId)}
-                                            className="flex-1 bg-gradient-to-r from-blue-900 to-indigo-900 text-white py-2.5 rounded-xl font-semibold hover:from-blue-800 hover:to-indigo-800 transition-all shadow-md flex items-center justify-center gap-2"
+                                            className="flex-1 bg-gradient-to-r from-[#0a2a5e] to-[#0d3b82] text-white py-2.5 rounded-xl font-semibold hover:from-[#061a3d] hover:to-[#0a2a5e] transition-all shadow-md flex items-center justify-center gap-2"
                                         >
                                             <Eye className="w-4 h-4" />
                                             View Report

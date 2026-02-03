@@ -59,21 +59,34 @@ async def get_recruiter_rankings(
     db=Depends(get_database)
 ):
     """Get all candidate rankings by recruiter."""
+    print(f"[DEBUG] Fetching rankings for recruiter_id: {recruiter_id}")
     rankings = await get_rankings_by_recruiter(db, recruiter_id)
-    return [
-        {
+    print(f"[DEBUG] Found {len(rankings)} rankings")
+    
+    for ranking in rankings:
+        print(f"[DEBUG] Processing ranking: {ranking.get('_id')}, job_posting_id: {ranking.get('job_posting_id')}")
+        
+        # Safe score formatting
+        try:
+            score_val = ranking.get('score', 0)
+            score_display = f"{float(score_val):.0f}/100"
+        except (ValueError, TypeError):
+            score_display = "N/A"
+            
+        result.append({
             "id": ranking["_id"],
             "jobPostingId": ranking["job_posting_id"],
             "recruiterId": ranking["recruiter_id"],
             "candidateName": ranking["candidate_name"],
             "rank": ranking["rank"],
-            "score": f"{ranking['score']:.0f}/100",
-            "completion": f"{ranking['completion']}%",
+            "score": score_display,
+            "completion": f"{ranking.get('completion', 100)}%",
             "interviewStatus": ranking["interview_status"],
             "date": ranking["created_at"].strftime("%d-%m-%Y")
-        }
-        for ranking in rankings
-    ]
+        })
+    
+    print(f"[DEBUG] Returning {len(result)} formatted rankings")
+    return result
 
 
 @router.put("/{ranking_id}/status", response_model=dict)

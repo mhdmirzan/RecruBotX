@@ -11,7 +11,8 @@ import {
     Eye,
     EyeOff,
     Check,
-    X
+    X,
+    Search
 } from "lucide-react";
 
 const RecruiterSettings = () => {
@@ -125,15 +126,16 @@ const RecruiterSettings = () => {
             {/* Sidebar */}
             <aside className="w-72 h-screen bg-white shadow-xl flex flex-col p-6 border-r border-gray-200 flex-shrink-0">
                 <div className="mb-8 text-center flex-shrink-0">
-                    <h1 className="text-3xl font-bold text-blue-600">RecruBotX</h1>
+                    <h1 className="text-3xl font-bold text-[#0a2a5e]">RecruBotX</h1>
                 </div>
 
                 <nav className="flex flex-col space-y-4 text-gray-700 flex-shrink-0">
-                    <NavLink to="/recruiter/dashboard" className={({ isActive }) => `font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 ${isActive ? "bg-blue-50 text-blue-600" : "text-gray-700 hover:bg-gray-50 hover:text-blue-600"}`}><LayoutDashboard className="w-5 h-5" /> Dashboard</NavLink>
-                    <NavLink to="/recruiter/job-posting" className={({ isActive }) => `font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 ${isActive ? "bg-blue-50 text-blue-600" : "text-gray-700 hover:bg-gray-50 hover:text-blue-600"}`}><PlusCircle className="w-5 h-5" /> Job Posting</NavLink>
-                    <NavLink to="/recruiter/ranking" className={({ isActive }) => `font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 ${isActive ? "bg-blue-50 text-blue-600" : "text-gray-700 hover:bg-gray-50 hover:text-blue-600"}`}><TrendingUp className="w-5 h-5" /> Ranking</NavLink>
-                    <NavLink to="/recruiter/evaluation" className={({ isActive }) => `font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 ${isActive ? "bg-blue-50 text-blue-600" : "text-gray-700 hover:bg-gray-50 hover:text-blue-600"}`}><BarChart3 className="w-5 h-5" /> Evaluation</NavLink>
-                    <NavLink to="/recruiter/settings" className={({ isActive }) => `font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 ${isActive ? "bg-blue-50 text-blue-600" : "text-gray-700 hover:bg-gray-50 hover:text-blue-600"}`}><Cog className="w-5 h-5" /> Settings</NavLink>
+                    <NavLink to="/recruiter/dashboard" className={({ isActive }) => `font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 ${isActive ? "bg-[#0a2a5e]/10 text-[#0a2a5e]" : "text-gray-700 hover:bg-[#0a2a5e]/5 hover:text-[#0a2a5e]"}`}><LayoutDashboard className="w-5 h-5" /> Dashboard</NavLink>
+                    <NavLink to="/recruiter/job-posting" className={({ isActive }) => `font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 ${isActive ? "bg-[#0a2a5e]/10 text-[#0a2a5e]" : "text-gray-700 hover:bg-[#0a2a5e]/5 hover:text-[#0a2a5e]"}`}><PlusCircle className="w-5 h-5" /> Job Posting</NavLink>
+                    <NavLink to="/recruiter/cv-screening" className={({ isActive }) => `font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 ${isActive ? "bg-[#0a2a5e]/10 text-[#0a2a5e]" : "text-gray-700 hover:bg-[#0a2a5e]/5 hover:text-[#0a2a5e]"}`}><Search className="w-5 h-5" /> CV Screening</NavLink>
+                    <NavLink to="/recruiter/ranking" className={({ isActive }) => `font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 ${isActive ? "bg-[#0a2a5e]/10 text-[#0a2a5e]" : "text-gray-700 hover:bg-[#0a2a5e]/5 hover:text-[#0a2a5e]"}`}><TrendingUp className="w-5 h-5" /> Ranking</NavLink>
+                    <NavLink to="/recruiter/evaluation" className={({ isActive }) => `font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 ${isActive ? "bg-[#0a2a5e]/10 text-[#0a2a5e]" : "text-gray-700 hover:bg-[#0a2a5e]/5 hover:text-[#0a2a5e]"}`}><BarChart3 className="w-5 h-5" /> Evaluation</NavLink>
+                    <NavLink to="/recruiter/settings" className={({ isActive }) => `font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 ${isActive ? "bg-[#0a2a5e]/10 text-[#0a2a5e]" : "text-gray-700 hover:bg-[#0a2a5e]/5 hover:text-[#0a2a5e]"}`}><Cog className="w-5 h-5" /> Settings</NavLink>
                 </nav>
 
                 <div className="mt-auto flex-shrink-0">
@@ -144,10 +146,10 @@ const RecruiterSettings = () => {
             {/* Main Content */}
             <main className="flex-1 h-screen flex flex-col overflow-hidden py-8 px-8">
                 {/* Header */}
-                <div className="mb-6 flex-shrink-0 flex justify-between items-center">
+                <div className="mb-4 flex-shrink-0 flex justify-between items-center">
                     <div>
                         <h2 className="text-3xl font-bold text-gray-800">Recruiter Settings</h2>
-                        <p className="text-gray-500 text-md mt-1">Manage your professional profile and account settings</p>
+                        <p className="text-gray-500 text-md mt-1 py-4">Manage your professional profile and account settings</p>
                     </div>
 
                     {/* User Profile - Top Right */}
@@ -156,7 +158,7 @@ const RecruiterSettings = () => {
                             <h3 className="font-bold text-gray-800">{recruiterData.firstName} {recruiterData.lastName}</h3>
                             <p className="text-sm text-gray-500">{recruiterData.email}</p>
                         </div>
-                        <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg overflow-hidden">
+                        <div className="w-12 h-12 bg-gradient-to-br from-[#0a2a5e] to-[#2b4c8c] rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg overflow-hidden">
                             {formData.profileImage ? (
                                 <img src={formData.profileImage} alt="Profile" className="w-full h-full object-cover" />
                             ) : (
@@ -173,7 +175,7 @@ const RecruiterSettings = () => {
                             {/* Profile Picture Section */}
                             <div className="flex items-center gap-6 pb-6 border-b border-gray-200">
                                 <div className="relative group">
-                                    <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-3xl shadow-lg overflow-hidden">
+                                    <div className="w-24 h-24 bg-gradient-to-br from-[#0a2a5e] to-[#2b4c8c] rounded-full flex items-center justify-center text-white font-bold text-3xl shadow-lg overflow-hidden">
                                         {formData.profileImage ? (
                                             <img src={formData.profileImage} alt="Profile" className="w-full h-full object-cover" />
                                         ) : (
@@ -183,7 +185,7 @@ const RecruiterSettings = () => {
                                     <button
                                         type="button"
                                         onClick={() => fileInputRef.current?.click()}
-                                        className="absolute bottom-0 right-0 w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white shadow-md hover:bg-blue-700 transition-all"
+                                        className="absolute bottom-0 right-0 w-8 h-8 bg-[#0a2a5e] rounded-full flex items-center justify-center text-white shadow-md hover:bg-[#061a3d] transition-all"
                                     >
                                         <Camera className="w-4 h-4" />
                                     </button>
@@ -210,7 +212,7 @@ const RecruiterSettings = () => {
                                         name="firstName"
                                         value={formData.firstName}
                                         onChange={handleInputChange}
-                                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#0a2a5e] focus:border-transparent outline-none transition-all"
                                         required
                                     />
                                 </div>
@@ -302,7 +304,7 @@ const RecruiterSettings = () => {
                                 <button
                                     type="submit"
                                     disabled={isLoading}
-                                    className="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                    className="px-8 py-3 bg-gradient-to-r from-[#0a2a5e] to-[#0d3b82] text-white rounded-xl font-semibold hover:from-[#061a3d] hover:to-[#0a2a5e] transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                                 >
                                     {isLoading ? (
                                         <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>

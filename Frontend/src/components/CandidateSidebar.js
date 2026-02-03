@@ -29,14 +29,14 @@ const CandidateSidebar = () => {
         <aside className="w-72 h-screen bg-white shadow-xl flex flex-col p-6 border-r border-gray-200 flex-shrink-0">
             {/* Logo */}
             <div className="mb-8 text-center flex-shrink-0">
-                <h1 className="text-3xl font-bold text-blue-600">RecruBotX</h1>
+                <h1 className="text-3xl font-bold text-[#0a2a5e]">RecruBotX</h1>
             </div>
 
             <nav className="flex flex-col space-y-4 text-gray-700 flex-shrink-0">
                 <NavLink
                     to="/candidate/dashboard"
                     className={({ isActive }) =>
-                        `font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 ${isActive ? "bg-blue-50 text-blue-600" : "text-gray-700 hover:bg-gray-50 hover:text-blue-600"
+                        `font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 ${isActive ? "bg-[#0a2a5e]/10 text-[#0a2a5e]" : "text-gray-700 hover:bg-[#0a2a5e]/5 hover:text-[#0a2a5e]"
                         }`
                     }
                 >
@@ -45,21 +45,21 @@ const CandidateSidebar = () => {
 
                 <button
                     onClick={handleStartInterview}
-                    className="font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 text-gray-700 hover:bg-gray-50 hover:text-blue-600 text-left"
+                    className="font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 text-gray-700 hover:bg-[#0a2a5e]/5 hover:text-[#0a2a5e] text-left"
                 >
                     <Mic className="w-5 h-5" /> Start Interview
                 </button>
 
                 <button
                     onClick={handleCreateResume}
-                    className="font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 text-gray-700 hover:bg-gray-50 hover:text-blue-600 text-left"
+                    className="font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 text-gray-700 hover:bg-[#0a2a5e]/5 hover:text-[#0a2a5e] text-left"
                 >
                     <FileText className="w-5 h-5" /> Create Resume
                 </button>
 
                 <button
                     onClick={handleCVScreening}
-                    className="font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 text-gray-700 hover:bg-gray-50 hover:text-blue-600 text-left"
+                    className="font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 text-gray-700 hover:bg-[#0a2a5e]/5 hover:text-[#0a2a5e] text-left"
                 >
                     <Search className="w-5 h-5" /> CV Screening
                 </button>
@@ -67,7 +67,7 @@ const CandidateSidebar = () => {
                 <NavLink
                     to="/candidate/settings"
                     className={({ isActive }) =>
-                        `font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 ${isActive ? "bg-blue-50 text-blue-600" : "text-gray-700 hover:bg-gray-50 hover:text-blue-600"
+                        `font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 ${isActive ? "bg-[#0a2a5e]/10 text-[#0a2a5e]" : "text-gray-700 hover:bg-[#0a2a5e]/5 hover:text-[#0a2a5e]"
                         }`
                     }
                 >
