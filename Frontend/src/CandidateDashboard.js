@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { LogOut, FileText, Mic, Search, LayoutDashboard, Cog, Briefcase, Calendar, MapPin, CheckCircle, Clock, Send, ArrowRight, ChevronRight, Zap, DollarSign, Home, X } from "lucide-react";
+import { LogOut, FileText, Mic, Search, LayoutDashboard, Cog, Briefcase, Calendar, MapPin, CheckCircle, Clock, Send, ArrowRight, ChevronRight, Zap, DollarSign, Home, X, BarChart3 } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { getCurrentUser, logoutUser } from "./utils/userDatabase";
 import API_BASE_URL from "./apiConfig";
@@ -71,7 +71,11 @@ const CandidateDashboard = () => {
           salaryRange: job.salaryRange,
           appliedDate: new Date(job.createdAt),
           isActive: job.isActive,
-          jobDescription: job.jobDescription // Added jobDescription
+          isActive: job.isActive,
+          jobDescription: job.jobDescription, // Added jobDescription
+          experienceRange: job.experienceRange,
+          industryDomain: job.industryDomain,
+          questions: job.questions
         }));
 
         setJobPostings(transformedJobs);
@@ -541,17 +545,17 @@ const CandidateDashboard = () => {
                   </div>
                 </div>
                 <div className="flex flex-col gap-1">
-                  <span className="text-xs text-gray-500 font-semibold uppercase tracking-wider">Model</span>
+                  <span className="text-xs text-gray-500 font-semibold uppercase tracking-wider">Experience</span>
                   <div className="flex items-center gap-2 text-gray-800 font-medium">
-                    <Home className="w-5 h-5 text-[#0a2a5e]" />
-                    {selectedJob.workModel}
+                    <Briefcase className="w-5 h-5 text-[#0a2a5e]" />
+                    {selectedJob.experienceRange || "Not specified"}
                   </div>
                 </div>
                 <div className="flex flex-col gap-1">
-                  <span className="text-xs text-gray-500 font-semibold uppercase tracking-wider">Posted</span>
+                  <span className="text-xs text-gray-500 font-semibold uppercase tracking-wider">Industry</span>
                   <div className="flex items-center gap-2 text-gray-800 font-medium">
-                    <Calendar className="w-5 h-5 text-[#0a2a5e]" />
-                    {selectedJob.appliedDate.toLocaleDateString()}
+                    <BarChart3 className="w-5 h-5 text-[#0a2a5e]" />
+                    {selectedJob.industryDomain || "General"}
                   </div>
                 </div>
               </div>
