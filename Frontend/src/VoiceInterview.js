@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   Mic, MicOff, Send, CheckCircle, XCircle, Volume2, Loader,
   Sparkles, Play, Clock, Target, Upload, FileText
@@ -10,6 +10,7 @@ import API_BASE_URL from "./apiConfig";
 
 const VoiceInterview = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [user, setUser] = useState(null);
   const [sessionId, setSessionId] = useState(null);
   const [isSetupComplete, setIsSetupComplete] = useState(false);
@@ -59,6 +60,28 @@ const VoiceInterview = () => {
   const silenceTimerRef = useRef(null);
   const recordingTimerRef = useRef(null);
   const lastSoundTimeRef = useRef(Date.now());
+
+  // Handle Context-Aware Session Init
+  useEffect(() => {
+    if (location.state && location.state.sessionId) {
+      console.log("Initializing from State:", location.state);
+      setSessionId(location.state.sessionId);
+      setCandidateName(location.state.candidateName || "");
+      setInterviewField(location.state.jobTitle || "");
+
+      if (location.state.question) {
+        setCurrentQuestion(location.state.question);
+        setCurrentQuestionNum(location.state.currentQuestionNum || 1);
+        setTotalQuestions(location.state.totalQuestions || 5);
+        setIsSetupComplete(true);
+
+        // Short delay before speaking to allow UI to render
+        setTimeout(() => {
+          speakQuestion(location.state.question);
+        }, 1000);
+      }
+    }
+  }, [location.state]);
 
   // Get current user and fetch fields on mount
   useEffect(() => {

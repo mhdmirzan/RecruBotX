@@ -52,7 +52,7 @@ class VoiceAgent:
         "AR/VR Development",
     ]
 
-    LEVELS = ["Junior", "Intermediate", "Senior"]
+    LEVELS = ["Intern", "Junior", "Intermediate", "Senior", "Manager", "Director", "Executive"]
     
     # Field-specific core topics for 80/20 rule
     FIELD_TOPICS = {
@@ -64,7 +64,7 @@ class VoiceAgent:
         "Cybersecurity": ["encryption", "authentication", "vulnerabilities", "firewalls", "penetration testing", "security protocols", "incident response", "compliance"],
     }
     
-    def __init__(self, interview_field=None, num_questions=None, position_level=None):
+    def __init__(self, interview_field=None, num_questions=None, position_level=None, job_description=None, cv_text=None):
         print("Initializing Voice Agent...")
         
         # Configure Deepgram API
@@ -89,6 +89,10 @@ class VoiceAgent:
         print("Voice Agent initialized successfully!\n")
         print("Note: Using Deepgram Nova-2 (STT), Deepgram Aura (TTS), and Gemini 2.5 Flash (Questions & Evaluation)\n")
         
+        # Store Context
+        self.job_description = job_description
+        self.cv_text = cv_text
+
         # Get interview configuration from user
         if interview_field is None:
             self.interview_type = self._get_interview_field()
@@ -298,8 +302,16 @@ class VoiceAgent:
             difficulty_guide = {
                 "Junior": "Focus on fundamental concepts, basic terminology, and simple problem-solving. Expect clear explanations of core principles.",
                 "Intermediate": "Focus on practical application, design patterns, best practices, and real-world scenarios. Expect detailed technical knowledge and experience-based insights.",
-                "Senior": "Focus on system design, architecture decisions, scalability, trade-offs, leadership, and complex problem-solving. Expect deep expertise, critical thinking, and strategic understanding."
+                "Senior": "Focus on system design, architecture decisions, scalability, trade-offs, leadership, and complex problem-solving. Expect deep expertise, critical thinking, and strategic understanding.",
+                "Manager": "Focus on leadership, team management, project delivery, stakeholder communication, and high-level technical strategy. Expect insights on people management and process optimization.",
+                "Director": "Focus on organizational strategy, long-term technical vision, business alignment, and executive leadership. Expect high-level strategic thinking and business impact analysis.",
+                "Executive": "Focus on company-wide strategy, market positioning, innovation, and organizational culture. Expect visionary thinking and broad business acumen.",
+                "Intern": "Focus on learning potential, basic coding concepts, and problem-solving aptitude. Expect enthusiasm and foundational knowledge."
             }
+            
+            # Safe access to difficulty guide
+            difficulty = difficulty_guide.get(self.position_level, difficulty_guide["Intermediate"])
+
             
             retry_note = f"\n\n⚠️ RETRY #{attempt + 1}: Previous attempt generated a duplicate. Generate a COMPLETELY DIFFERENT question on a NEW topic!" if attempt > 0 else ""
             
@@ -307,7 +319,15 @@ class VoiceAgent:
             field_topics = self.FIELD_TOPICS.get(self.interview_type, ["core concepts", "best practices", "common tools"])
             topics_list = ", ".join(field_topics)
             
-            prompt = f"""You are conducting a {self.interview_type} technical interview for a {self.position_level} level role.
+            # Construct Context-Aware Prompt
+            context_section = ""
+            if self.job_description:
+                context_section += f"\nJOB DESCRIPTION:\n{self.job_description[:1000]}...\n"
+            
+            if self.cv_text:
+                context_section += f"\nCANDIDATE CV SUMMARY:\n{str(self.cv_text)[:1000]}...\n"
+
+            prompt = f"""You are conducting a {self.interview_type} technical interview for a {self.position_level} level role.{context_section}
 
 Generate ONE concise, direct technical question for a {self.position_level} {self.interview_type} candidate.
 
@@ -315,11 +335,18 @@ Interview context:
 - Position Level: {self.position_level}
 - Interview Field: {self.interview_type}
 - Question number: {self.question_count} of {self.max_questions}
-- Difficulty guideline: {difficulty_guide[self.position_level]}
+- Difficulty guideline: {difficulty}
 
 **MANDATORY FIELD RELEVANCE**: Question MUST be directly about {self.interview_type}. 
 Core topics for {self.interview_type}: {topics_list}
 Choose ONE of these topics or closely related concepts.
+
+**CONTEXTUAL RELEVANCE (IMPORTANT)**:
+If Job Description and CV are provided above:
+1. Identify a key requirement from the Job Description.
+2. Check if the Candidate's CV mentions this skill.
+3. If they DO have it -> Ask a deep probing question to verify mastery.
+4. If they DO NOT have it -> Ask a fundamental question to check for gaps.
 
 PREVIOUSLY ASKED QUESTIONS (NEVER REPEAT OR ASK SIMILAR):
 {previous_questions}
@@ -753,13 +780,20 @@ Example: "Score: 82/100 - Demonstrates strong conceptual understanding with accu
                 return f"Recommend for {self.position_level} position with initial mentorship. Has foundation but needs growth in some areas."
             else:
                 return f"Not recommended for {self.position_level} position. Consider junior role or additional training."
-        else:  # Junior
+        elif self.position_level == "Junior":
             if avg_score >= 7.0:
                 return f"Strong recommendation for {self.position_level} position. Demonstrates good foundational understanding."
             elif avg_score >= 5.5:
                 return f"Recommend for {self.position_level} position with close mentorship. Shows basic understanding with room for growth."
             else:
                 return f"Not recommended at this time. Candidate should strengthen core fundamentals before reapplying."
+        else: # Manager, Director, others -> Treat similar to Senior but with adjusted text
+            if avg_score >= 8.0:
+                 return f"Strong recommendation for {self.position_level} position. Demonstrates necessary leadership and strategic insight."
+            elif avg_score >= 6.5:
+                 return f"Recommend for {self.position_level} position. Shows potential but may need support in specific areas."
+            else:
+                 return f"Not recommended for {self.position_level} position. Metrics do not align with expectations for this level."
     
     def _save_report_to_file(self, avg_score):
         """Save the interview report to text and PDF files"""

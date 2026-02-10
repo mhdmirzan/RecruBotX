@@ -31,6 +31,8 @@ import CandidateDashboard from "./CandidateDashboard";
 import CandidateSettings from "./CandidateSettings";
 import AnalyzeResume from "./analyze_resume";
 import VoiceInterview from "./VoiceInterview";
+import InterviewPage from "./InterviewPage";
+import CandidateJobs from "./CandidateJobs";
 
 // Recruiter (HR)
 import RecruiterSignupPage from "./RecruiterSignupPage";
@@ -41,7 +43,10 @@ import RecruiterCVScreening from "./RecruiterCVScreening";
 import Evaluation from "./Evaluation";
 import Ranking from "./Ranking";
 import CandidateReport from "./CandidateReport";
+import RecruiterInterviewReports from "./RecruiterInterviewReports";
+import InterviewReportDetail from "./InterviewReportDetail";
 import RecruiterSettings from "./RecruiterSettings";
+import RecruiterAllJobs from "./RecruiterAllJobs";
 
 // Resume Builder Pages
 import TemplateSelect from "./pages/TemplateSelect";
@@ -64,7 +69,14 @@ const ConditionalNavbar = () => {
     "/recruiter/ranking",
     "/recruiter/evaluation",
     "/recruiter/settings",
-    "/recruiter/report"
+    "/recruiter/report",
+    "/recruiter/all-jobs",
+    "/candidate/dashboard",
+    "/candidate/jobs",
+    "/candidate/apply",
+    "/candidate/interview",
+    "/candidate/analyze-resume",
+    "/candidate/settings"
   ];
 
   const shouldHide = hiddenPaths.some(path => location.pathname.startsWith(path));
@@ -111,7 +123,9 @@ function App() {
         <Route path="/candidate/signup" element={<><CandidateSignupPage /><Footer /></>} />
         <Route path="/candidate/dashboard" element={<CandidateDashboard />} />
         <Route path="/candidate/settings" element={<CandidateSettings />} />
-        <Route path="/candidate/interview" element={<VoiceInterview />} />
+        <Route path="/candidate/jobs" element={<CandidateJobs />} />
+        <Route path="/candidate/apply/:jobId" element={<InterviewPage />} />
+        <Route path="/candidate/interview-room" element={<VoiceInterview />} />
         <Route path="/candidate/analyze-resume" element={<AnalyzeResume />} />
 
         {/* ===== RESUME BUILDER FLOW ===== */}
@@ -132,7 +146,10 @@ function App() {
         <Route path="/recruiter/cv-screening" element={<RecruiterCVScreening />} />
         <Route path="/recruiter/evaluation" element={<Evaluation />} />
         <Route path="/recruiter/ranking" element={<Ranking />} />
+        <Route path="/recruiter/reports/:jobId" element={<RecruiterInterviewReports />} />
+        <Route path="/recruiter/interview-report/:reportId" element={<InterviewReportDetail />} />
         <Route path="/recruiter/report/:rankingId" element={<CandidateReport />} />
+        <Route path="/recruiter/all-jobs" element={<RecruiterAllJobs />} />
         <Route path="/recruiter/settings" element={<RecruiterSettings />} />
       </Routes>
     </Router>

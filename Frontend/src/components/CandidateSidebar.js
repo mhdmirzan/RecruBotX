@@ -1,81 +1,59 @@
 import React from "react";
 import { NavLink, useNavigate } from "react-router-dom";
-import { LayoutDashboard, Mic, FileText, Search, Cog, LogOut } from "lucide-react";
-import { logoutUser, getCurrentUser } from "../utils/userDatabase";
+import {
+    LayoutDashboard,
+    Briefcase,
+    FileText,
+    Search,
+    Cog,
+    LogOut
+} from "lucide-react";
+import { logoutUser } from "../utils/userDatabase";
 
 const CandidateSidebar = () => {
     const navigate = useNavigate();
-    // eslint-disable-next-line no-unused-vars
-    const user = getCurrentUser();
 
     const handleLogout = () => {
         logoutUser();
         navigate("/candidate/signin");
     };
 
-    const handleStartInterview = () => {
-        navigate("/candidate/interview");
-    };
-
-    const handleCreateResume = () => {
-        navigate("/candidate/resume/choose-template");
-    };
-
-    const handleCVScreening = () => {
-        navigate("/candidate/analyze-resume");
-    };
+    const navItemClass = ({ isActive }) =>
+        `font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 ${isActive
+            ? "bg-[#0a2a5e]/10 text-[#0a2a5e]"
+            : "text-gray-700 hover:bg-gray-100 hover:text-[#0a2a5e]"
+        }`;
 
     return (
-        <aside className="w-72 h-screen bg-white shadow-xl flex flex-col p-6 border-r border-gray-200 flex-shrink-0">
+        <aside className="w-72 h-screen bg-white shadow-xl flex flex-col p-6 border-r border-gray-200 flex-shrink-0 z-20">
             {/* Logo */}
             <div className="mb-8 text-center flex-shrink-0">
                 <h1 className="text-3xl font-bold text-[#0a2a5e]">RecruBotX</h1>
             </div>
 
             <nav className="flex flex-col space-y-4 text-gray-700 flex-shrink-0">
-                <NavLink
-                    to="/candidate/dashboard"
-                    className={({ isActive }) =>
-                        `font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 ${isActive ? "bg-[#0a2a5e]/10 text-[#0a2a5e]" : "text-gray-700 hover:bg-[#0a2a5e]/5 hover:text-[#0a2a5e]"
-                        }`
-                    }
-                >
+                <NavLink to="/candidate/dashboard" className={navItemClass}>
                     <LayoutDashboard className="w-5 h-5" /> Dashboard
                 </NavLink>
 
-                <button
-                    onClick={handleStartInterview}
-                    className="font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 text-gray-700 hover:bg-[#0a2a5e]/5 hover:text-[#0a2a5e] text-left"
-                >
-                    <Mic className="w-5 h-5" /> Start Interview
-                </button>
+                <NavLink to="/candidate/jobs" className={navItemClass}>
+                    <Briefcase className="w-5 h-5" /> Job Applications
+                </NavLink>
 
-                <button
-                    onClick={handleCreateResume}
-                    className="font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 text-gray-700 hover:bg-[#0a2a5e]/5 hover:text-[#0a2a5e] text-left"
-                >
+                <NavLink to="/candidate/resume/choose-template" className={navItemClass}>
                     <FileText className="w-5 h-5" /> Create Resume
-                </button>
+                </NavLink>
 
-                <button
-                    onClick={handleCVScreening}
-                    className="font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 text-gray-700 hover:bg-[#0a2a5e]/5 hover:text-[#0a2a5e] text-left"
-                >
+                <NavLink to="/candidate/analyze-resume" className={navItemClass}>
                     <Search className="w-5 h-5" /> CV Screening
-                </button>
+                </NavLink>
 
-                <NavLink
-                    to="/candidate/settings"
-                    className={({ isActive }) =>
-                        `font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 ${isActive ? "bg-[#0a2a5e]/10 text-[#0a2a5e]" : "text-gray-700 hover:bg-[#0a2a5e]/5 hover:text-[#0a2a5e]"
-                        }`
-                    }
-                >
+                <NavLink to="/candidate/settings" className={navItemClass}>
                     <Cog className="w-5 h-5" /> Settings
                 </NavLink>
             </nav>
 
-            {/* Bottom Section - Logout Only */}
+            {/* Bottom Section - Logout */}
             <div className="mt-auto flex-shrink-0">
                 <button
                     onClick={handleLogout}

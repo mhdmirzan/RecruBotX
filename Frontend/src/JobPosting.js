@@ -277,12 +277,12 @@ const JobPosting = () => {
                 {/* Header */}
                 <div className="mb-4 flex-shrink-0 flex justify-between items-center">
                     <div>
-                        <h2 className="text-3xl font-bold text-gray-800">{selectedJobId ? "Edit Job" : "Create a Job"}</h2>
-                        <p className="text-gray-500 text-md mt-1">Define requirement, questions, and details for your new position.</p>
+                        <h2 className="text-3xl font-bold text-[#0a2a5e]">{selectedJobId ? "Edit Job" : "Create a Job"}</h2>
+                        <p className="text-gray-500 text-md mt-1 py-4">Define requirement, questions, and details for your new position.</p>
                     </div>
                     <div className="flex items-center gap-4">
                         {/* View All Jobs Button */}
-                        <NavLink to="/recruiter/dashboard" className="px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 flex items-center gap-2 shadow-sm">
+                        <NavLink to="/recruiter/all-jobs" className="px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 flex items-center gap-2 shadow-sm">
                             <Briefcase className="w-4 h-4" /> View All Jobs
                         </NavLink>
 

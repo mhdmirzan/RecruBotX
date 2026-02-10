@@ -226,12 +226,14 @@ const CandidateDashboard = () => {
             <LayoutDashboard className="w-5 h-5" /> Dashboard
           </NavLink>
 
-          <button
-            onClick={handleStartInterview}
-            className="font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 text-gray-700 hover:bg-[#0a2a5e]/5 hover:text-[#0a2a5e] text-left"
+          <NavLink
+            to="/candidate/jobs"
+            className={({ isActive }) =>
+              `font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 ${isActive ? "bg-[#0a2a5e]/10 text-[#0a2a5e]" : "text-gray-700 hover:bg-[#0a2a5e]/5 hover:text-[#0a2a5e]"}`
+            }
           >
-            <Mic className="w-5 h-5" /> Start Interview
-          </button>
+            <Briefcase className="w-5 h-5" /> Job Applications
+          </NavLink>
 
           <button
             onClick={handleCreateResume}
@@ -578,7 +580,7 @@ const CandidateDashboard = () => {
               <button
                 onClick={() => {
                   setShowJobModal(false);
-                  navigate("/candidate/interview");
+                  navigate(`/candidate/apply/${selectedJob.id}`);
                 }}
                 className="group relative flex items-center gap-3 bg-gradient-to-r from-[#0a2a5e] to-[#0d3b82] text-white px-10 py-3 rounded-2xl font-bold text-lg hover:from-[#061a3d] hover:to-[#0a2a5e] transition-all shadow-xl hover:shadow-2xl hover:-translate-y-1 active:translate-y-0"
               >

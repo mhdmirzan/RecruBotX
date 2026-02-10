@@ -345,6 +345,7 @@ async def create_interview_cv(
         "summary": cv_data.get("summary"),
         "cv_file_name": cv_data.get("cv_file_name"),
         "cv_file_path": cv_data.get("cv_file_path"),
+        "job_id": cv_data.get("job_id"),
         "interview_field": cv_data.get("interview_field"),
         "position_level": cv_data.get("position_level"),
         "created_at": datetime.utcnow()
