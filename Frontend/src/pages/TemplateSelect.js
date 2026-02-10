@@ -4,6 +4,7 @@ import { ArrowRight, Check } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { getCurrentUser } from "../utils/userDatabase";
 import CandidateSidebar from "../components/CandidateSidebar";
+import UserProfileHeader from "../components/UserProfileHeader";
 
 
 import template1 from "./Double column.jpg";
@@ -58,30 +59,19 @@ export default function TemplateSelect() {
       <CandidateSidebar />
 
       {/* Main */}
-      <main className="flex-1 px-10 py-8 overflow-hidden">
+      <main className="flex-1 h-screen flex flex-col overflow-hidden py-8 px-8">
         {/* Header */}
-        <div className="flex justify-between items-center mb-6">
+        <div className="mb-6 flex-shrink-0 flex justify-between items-center">
           <div>
-            <h2 className="text-3xl font-bold text-gray-800">
+            <h2 className="text-3xl font-bold text-[#0a2a5e]">
               Choose a CV Template
             </h2>
-            <p className="text-gray-500 mt-1">
+            <p className="text-gray-500 text-md mt-1 py-2">
               Select a professional template that best represents your style and career level.
             </p>
           </div>
 
-          <div className="flex items-center gap-4">
-            <div className="text-right">
-              <p className="font-semibold text-gray-800">
-                {user.firstName} {user.lastName}
-              </p>
-              <p className="text-sm text-gray-500">{user.email}</p>
-            </div>
-            <div className="w-10 h-10 rounded-full bg-[#0a2a5e] text-white flex items-center justify-center font-bold">
-              {user.firstName?.charAt(0)}
-              {user.lastName?.charAt(0)}
-            </div>
-          </div>
+          <UserProfileHeader user={user} />
         </div>
 
         {/* Card */}

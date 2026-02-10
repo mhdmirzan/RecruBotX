@@ -3,6 +3,7 @@ import { Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { getCurrentUser } from "../utils/userDatabase";
 import CandidateSidebar from "../components/CandidateSidebar";
+import UserProfileHeader from "../components/UserProfileHeader";
 import DownloadButton from "../components/DownloadButton";
 
 // Import Builder Components
@@ -73,26 +74,15 @@ const ResumeBuilder = () => {
       <CandidateSidebar />
 
       {/* Main Content */}
-      <main className="flex-1 h-screen flex flex-col overflow-hidden">
+      <main className="flex-1 h-screen flex flex-col overflow-hidden py-8 px-8">
         {/* Top Header */}
-        <div className="flex justify-between items-center py-5 px-10 flex-shrink-0 bg-white border-b border-gray-200">
+        <div className="mb-6 flex-shrink-0 flex justify-between items-center">
           <div>
-            <h2 className="text-3xl font-bold text-gray-800">Build Your Resume</h2>
-            <p className="mt-1 text-gray-500 text-md">Fill in your details and watch your professional resume come to life.</p>
+            <h2 className="text-3xl font-bold text-[#0a2a5e]">Build Your Resume</h2>
+            <p className="text-gray-500 text-md mt-1 py-2">Fill in your details and watch your professional resume come to life.</p>
           </div>
 
-          <div className="flex items-center gap-4">
-            <div className="text-right">
-              <p className="font-semibold text-gray-800">
-                {user.firstName} {user.lastName}
-              </p>
-              <p className="text-sm text-gray-500">{user.email}</p>
-            </div>
-            <div className="w-10 h-10 rounded-full bg-[#0a2a5e] text-white flex items-center justify-center font-bold">
-              {user.firstName?.charAt(0)}
-              {user.lastName?.charAt(0)}
-            </div>
-          </div>
+          <UserProfileHeader user={user} />
         </div>
 
         {/* Builder Content - Dynamic based on template */}

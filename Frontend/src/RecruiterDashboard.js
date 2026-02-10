@@ -475,6 +475,16 @@ const RecruiterDashboard = () => {
                   <BarChart3 className="w-4 h-4" />
                   View Evaluations
                 </button>
+                <button
+                  onClick={() => {
+                    navigate(`/recruiter/reports/${selectedJob.id || selectedJob._id}`);
+                    closeModal();
+                  }}
+                  className="bg-purple-600 text-white px-6 py-2.5 rounded-xl font-semibold hover:bg-purple-700 transition-all shadow-md flex items-center gap-2"
+                >
+                  <Video className="w-4 h-4" />
+                  View Interviews
+                </button>
               </div>
             </div>
           </motion.div>

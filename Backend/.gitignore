@@ -60,3 +60,6 @@ vc_agent/*.ogg
 vc_agent/dist/
 vc_agent/build/
 vc_agent/*.egg-info/
+
+
+output/

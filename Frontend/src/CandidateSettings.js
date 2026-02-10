@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Camera, Eye, EyeOff, Check, X } from "lucide-react";
 import { getCurrentUser, updateCurrentUser } from "./utils/userDatabase";
 import CandidateSidebar from "./components/CandidateSidebar";
+import UserProfileHeader from "./components/UserProfileHeader";
 
 const CandidateSettings = () => {
   const navigate = useNavigate();
@@ -131,28 +132,12 @@ const CandidateSettings = () => {
         {/* Header */}
         <div className="mb-6 flex-shrink-0 flex justify-between items-center">
           <div>
-            <h2 className="text-3xl font-bold text-gray-800">Account Settings</h2>
-            <p className="text-gray-500 text-md mt-1">Manage your profile and account preferences</p>
+            <h2 className="text-3xl font-bold text-[#0a2a5e]">Account Settings</h2>
+            <p className="text-gray-500 text-md mt-1 py-2">Manage your profile and account preferences</p>
           </div>
 
           {/* User Profile - Top Right */}
-          {user && (
-            <div className="flex items-center gap-3">
-              <div className="text-right">
-                <h3 className="font-bold text-gray-800">
-                  {user.firstName} {user.lastName}
-                </h3>
-                <p className="text-sm text-gray-500">{user.email}</p>
-              </div>
-              <div className="w-12 h-12 bg-gradient-to-br from-[#0a2a5e] to-[#2b4c8c] rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg overflow-hidden">
-                {user.profileImage ? (
-                  <img src={user.profileImage} alt="Profile" className="w-full h-full object-cover" />
-                ) : (
-                  <>{user.firstName?.charAt(0)}{user.lastName?.charAt(0)}</>
-                )}
-              </div>
-            </div>
-          )}
+          <UserProfileHeader user={user} />
         </div>
 
         {/* Settings Form - Full Page Scrollable Content Area */}

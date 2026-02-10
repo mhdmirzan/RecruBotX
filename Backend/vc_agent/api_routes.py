@@ -3,7 +3,7 @@ Voice Interview API Routes
 Provides REST API endpoints for voice-based interview system
 """
 
-from fastapi import APIRouter, HTTPException, UploadFile, File, Form
+from fastapi import APIRouter, HTTPException, UploadFile, File, Form, Depends
 from fastapi.responses import StreamingResponse, FileResponse
 from pydantic import BaseModel
 from typing import Optional, Dict, Any, List
@@ -14,6 +14,7 @@ from pathlib import Path
 import asyncio
 import shutil
 from datetime import datetime
+from bson import ObjectId
 
 # Import from parent directory
 import sys
@@ -49,6 +50,114 @@ class InterviewStatus(BaseModel):
     total_questions: int
     questions_asked: List[str]
     avg_score: float
+
+
+from database.job_posting_crud import get_job_posting_by_id
+
+@router.post("/initiate")
+async def initiate_interview(
+    job_id: str = Form(...),
+    cv_file: UploadFile = File(...),
+    candidate_name: str = Form(...),
+    email_address: str = Form(...),
+    phone_number: str = Form(...),
+    linkedin_profile: Optional[str] = Form(None),
+    db=Depends(get_database)
+):
+    """
+    Initiate a context-aware voice interview for a specific job application.
+    
+    1. Fetches Job Description from Job ID.
+    2. Parses uploaded CV.
+    3. Initializes VoiceAgent with CV + JD context.
+    4. Returns session_id.
+    """
+    try:
+        # 1. Fetch Job Description
+        job = await get_job_posting_by_id(db, job_id)
+        if not job:
+            raise HTTPException(status_code=404, detail="Job posting not found")
+        
+        job_description = job.get("job_description", "")
+        interview_field = job.get("interview_field", "General")
+        position_level = job.get("position_level", "Intermediate")
+        
+        # 2. Save and Parse CV
+        import uuid
+        session_id = str(uuid.uuid4())
+        
+        if not cv_file.filename.lower().endswith('.pdf'):
+            raise HTTPException(status_code=400, detail="Only PDF files are accepted")
+        
+        upload_dir = Path("uploads/interview_cvs")
+        upload_dir.mkdir(parents=True, exist_ok=True)
+        
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        safe_filename = f"{session_id}_{timestamp}_{cv_file.filename}"
+        file_path = upload_dir / safe_filename
+        
+        with file_path.open("wb") as buffer:
+            shutil.copyfileobj(cv_file.file, buffer)
+            
+        print(f"[INFO] CV file saved: {file_path}")
+        
+        # Parse text from CV for Context
+        try:
+            cv_text = parse_cv_file(str(file_path))
+        except Exception as e:
+            print(f"⚠️ Failed to parse CV text: {e}")
+            cv_text = ""
+
+        # 3. Store Candidate/Application Data (simplified for now)
+        # In a real app, you'd create an 'Application' record here linking Job + Candidate + CV
+        cv_data = {
+            "candidate_name": candidate_name,
+            "email_address": email_address,
+            "phone_number": phone_number,
+            "linkedin": linkedin_profile,
+            "cv_file_path": str(file_path),
+            "job_id": job_id,
+            "cv_text": cv_text[:2000] # Store snippet
+        }
+        
+        cv_id = await create_interview_cv(db, session_id, cv_data)
+        
+        # 4. Initialize Context-Aware Voice Agent
+        # Get question count preference or default
+        num_questions = 5 # Default
+        
+        agent = VoiceAgent(
+            interview_field=interview_field,
+            position_level=position_level,
+            num_questions=num_questions,
+            job_description=job_description,
+            cv_text=cv_text
+        )
+        
+        active_sessions[session_id] = agent
+        
+        # Generate first question immediately
+        agent.question_count = 1
+        first_question = agent.generate_question()
+        
+        return {
+            "success": True,
+            "session_id": session_id,
+            "job_title": job.get("interview_field"), # Using field as title if title missing
+            "candidate_name": candidate_name,
+            "total_questions": num_questions,
+            "current_question": 1,
+            "question": first_question,
+            "message": "Context-aware interview started successfully"
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"[ERROR] Failed to initiate interview: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Failed to initiate interview: {str(e)}")
 
 
 @router.post("/start-session-with-cv")
@@ -364,9 +473,9 @@ async def get_session_status(session_id: str):
 
 
 @router.post("/generate-report/{session_id}")
-async def generate_report(session_id: str):
+async def generate_report(session_id: str, db=Depends(get_database)):
     """
-    Generate final interview report
+    Generate final interview report and save to database
     """
     if session_id not in active_sessions:
         raise HTTPException(status_code=404, detail="Session not found")
@@ -387,6 +496,34 @@ async def generate_report(session_id: str):
         # Get strengths and improvements
         strengths, improvements = agent._analyze_performance()
         
+        # Prepare data for database
+        report_data = {
+            "report_path": str(report_path),
+            "avg_score": round(avg_score, 1),
+            "performance_level": performance_level,
+            "strengths": strengths,
+            "improvements": improvements,
+            "questions": agent.interview_data["questions"],
+            "answers": agent.interview_data["answers"],
+            "scores": agent.interview_data["scores"],
+            "feedback": agent.interview_data["feedback"],
+            "completed_at": datetime.utcnow(),
+            "status": "Completed"
+        }
+        
+        # Find the interview_cv record for this session
+        interview_cv = await db.interview_cvs.find_one({"session_id": session_id})
+        
+        if interview_cv:
+            # Update existing record
+            await db.interview_cvs.update_one(
+                {"session_id": session_id},
+                {"$set": report_data}
+            )
+            print(f"[INFO] Saved interview report for session {session_id} to database.")
+        else:
+            print(f"[WARNING] No interview_cv record found for session {session_id}. Report linking failed.")
+
         return {
             "success": True,
             "session_id": session_id,
@@ -407,6 +544,9 @@ async def generate_report(session_id: str):
         }
         
     except Exception as e:
+        print(f"[ERROR] Failed to generate/save report: {e}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Failed to generate report: {str(e)}")
 
 
@@ -426,6 +566,44 @@ async def end_session(session_id: str):
         "message": "Session ended successfully"
     }
 
+
+@router.get("/reports/{job_id}")
+async def get_reports_by_job(job_id: str, db=Depends(get_database)):
+    """
+    Get all interview reports for a specific job
+    """
+    try:
+        # Find all interview CVs for this job that have a report
+        cursor = db.interview_cvs.find({"job_id": job_id, "status": "Completed"}).sort("avg_score", -1)
+        reports = await cursor.to_list(length=100)
+        
+        # Convert ObjectIds to strings
+        for report in reports:
+            report["_id"] = str(report["_id"])
+            
+        return {
+            "success": True,
+            "reports": reports
+        }
+    except Exception as e:
+        print(f"[ERROR] Failed to fetch reports: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch reports: {str(e)}")
+
+@router.get("/report/{report_id}")
+async def get_interview_report(report_id: str, db=Depends(get_database)):
+    """
+    Get a single interview report by ID
+    """
+    try:
+        report = await db.interview_cvs.find_one({"_id": ObjectId(report_id)})
+        if not report:
+            raise HTTPException(status_code=404, detail="Report not found")
+            
+        report["_id"] = str(report["_id"])
+        return report
+    except Exception as e:
+        print(f"[ERROR] Failed to fetch report: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch report: {str(e)}")
 
 @router.get("/available-fields")
 async def get_available_fields():
