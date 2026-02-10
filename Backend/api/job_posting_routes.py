@@ -21,30 +21,38 @@ from database.job_posting_crud import (
 router = APIRouter(prefix="/jobs", tags=["Job Postings"])
 
 
+class JobQuestion(BaseModel):
+    text: str
+    type: str  # e.g., "behavioral", "technical"
+    difficulty: str  # e.g., "easy", "medium", "hard"
+
+
 class JobPostingRequest(BaseModel):
     recruiterId: str
     interviewField: str
     positionLevel: str
-    numberOfQuestions: int
-    topNCvs: int
     workModel: str
-    status: str
+    status: str  # Employment Status
     location: str
     salaryRange: str
-    cvFiles: Optional[List[str]] = []
+    experienceRange: str
+    industryDomain: str
+    questions: Optional[List[JobQuestion]] = []
+    specificInstruction: Optional[str] = None
     jobDescription: Optional[str] = None
 
 
 class JobPostingUpdateRequest(BaseModel):
     interviewField: Optional[str] = None
     positionLevel: Optional[str] = None
-    numberOfQuestions: Optional[int] = None
-    topNCvs: Optional[int] = None
     workModel: Optional[str] = None
     status: Optional[str] = None
     location: Optional[str] = None
     salaryRange: Optional[str] = None
-    cvFiles: Optional[List[str]] = None
+    experienceRange: Optional[str] = None
+    industryDomain: Optional[str] = None
+    questions: Optional[List[JobQuestion]] = None
+    specificInstruction: Optional[str] = None
     jobDescription: Optional[str] = None
 
 
@@ -68,54 +76,22 @@ async def create_job(
             detail="Database connection unavailable. MongoDB is not connected."
         )
     
-    # Step 1: Store each CV file individually in job_cv_files collection (if any)
-    cv_file_ids = []
-    
-    if job_data.cvFiles and len(job_data.cvFiles) > 0:
-        print(f"[INFO] Storing {len(job_data.cvFiles)} CV files using Reference Pattern...")
-        
-        for idx, cv_base64 in enumerate(job_data.cvFiles):
-            try:
-                # Calculate approximate file size from base64
-                file_size = int(len(cv_base64) * 0.75)
-                
-                # Store in separate collection (bypasses 16MB limit)
-                cv_file_id = await create_job_cv_file(
-                    db=db,
-                    job_posting_id="pending",
-                    file_name=f"CV_{idx + 1}.pdf",
-                    file_content=cv_base64,
-                    file_size=file_size
-                )
-                cv_file_ids.append(cv_file_id)
-                
-            except Exception as e:
-                print(f"[ERROR] Failed to store CV {idx + 1}: {str(e)}")
-                continue
-    
-    # Step 2: Create job posting with only the CV file IDs
+    # Create job posting
     job_id = await create_job_posting(
         db,
         job_data.recruiterId,
         job_data.interviewField,
         job_data.positionLevel,
-        job_data.numberOfQuestions,
-        job_data.topNCvs,
         job_data.workModel,
         job_data.status,
         job_data.location,
         job_data.salaryRange,
-        cv_file_ids,
+        job_data.experienceRange,
+        job_data.industryDomain,
+        [q.dict() for q in job_data.questions],
+        job_data.specificInstruction,
         job_data.jobDescription
     )
-    
-    # Step 3: Update stored CV files with the job_posting_id
-    if cv_file_ids:
-        from bson import ObjectId
-        await db.job_cv_files.update_many(
-            {"_id": {"$in": [ObjectId(cid) for cid in cv_file_ids]}},
-            {"$set": {"job_posting_id": job_id}}
-        )
     
     job = await get_job_posting_by_id(db, job_id)
     
@@ -127,11 +103,11 @@ async def create_job(
             "recruiterId": job["recruiter_id"],
             "interviewField": job["interview_field"],
             "positionLevel": job["position_level"],
-            "numberOfQuestions": job["number_of_questions"],
-            "topNCvs": job["top_n_cvs"],
-            "cvFileIds": job.get("cv_file_ids", []),
-            "cvFilesCount": len(job.get("cv_file_ids", [])),
             "jobDescription": job.get("job_description"),
+            "experienceRange": job.get("experience_range"),
+            "industryDomain": job.get("industry_domain"),
+            "questions": job.get("questions", []),
+            "specificInstruction": job.get("specific_instruction"),
             "createdAt": job["created_at"].isoformat(),
             "isActive": job["is_active"]
         }
@@ -160,6 +136,10 @@ async def get_recruiter_jobs(
             "cvFileIds": job.get("cv_file_ids", []),
             "cvFilesCount": len(job.get("cv_file_ids", [])),
             "jobDescription": job.get("job_description"),
+            "experienceRange": job.get("experience_range"),
+            "industryDomain": job.get("industry_domain"),
+            "questions": job.get("questions", []),
+            "specificInstruction": job.get("specific_instruction"),
             "createdAt": job["created_at"].isoformat(),
             "isActive": job["is_active"]
         }
@@ -188,6 +168,10 @@ async def get_all_jobs(
             "cvFileIds": job.get("cv_file_ids", []),
             "cvFilesCount": len(job.get("cv_file_ids", [])),
             "jobDescription": job.get("job_description"),
+            "experienceRange": job.get("experience_range"),
+            "industryDomain": job.get("industry_domain"),
+            "questions": job.get("questions", []),
+            "specificInstruction": job.get("specific_instruction"),
             "createdAt": job["created_at"].isoformat(),
             "isActive": job["is_active"]
         }
@@ -211,11 +195,11 @@ async def get_job(
         "recruiterId": job["recruiter_id"],
         "interviewField": job["interview_field"],
         "positionLevel": job["position_level"],
-        "numberOfQuestions": job["number_of_questions"],
-        "topNCvs": job["top_n_cvs"],
-        "cvFileIds": job.get("cv_file_ids", []),
-        "cvFilesCount": len(job.get("cv_file_ids", [])),
         "jobDescription": job.get("job_description"),
+        "experienceRange": job.get("experience_range"),
+        "industryDomain": job.get("industry_domain"),
+        "questions": job.get("questions", []),
+        "specificInstruction": job.get("specific_instruction"),
         "createdAt": job["created_at"].isoformat(),
         "isActive": job["is_active"]
     }
@@ -238,10 +222,6 @@ async def update_job(
         update_fields["interview_field"] = update_data.interviewField
     if update_data.positionLevel is not None:
         update_fields["position_level"] = update_data.positionLevel
-    if update_data.numberOfQuestions is not None:
-        update_fields["number_of_questions"] = update_data.numberOfQuestions
-    if update_data.topNCvs is not None:
-        update_fields["top_n_cvs"] = update_data.topNCvs
     
     # Map new fields
     if update_data.workModel is not None:
@@ -252,9 +232,15 @@ async def update_job(
         update_fields["location"] = update_data.location
     if update_data.salaryRange is not None:
         update_fields["salary_range"] = update_data.salaryRange
+    if update_data.experienceRange is not None:
+        update_fields["experience_range"] = update_data.experienceRange
+    if update_data.industryDomain is not None:
+        update_fields["industry_domain"] = update_data.industryDomain
+    if update_data.questions is not None:
+        update_fields["questions"] = [q.dict() for q in update_data.questions]
+    if update_data.specificInstruction is not None:
+        update_fields["specific_instruction"] = update_data.specificInstruction
         
-    if update_data.cvFiles is not None:
-        update_fields["cv_files"] = update_data.cvFiles
     if update_data.jobDescription is not None:
         update_fields["job_description"] = update_data.jobDescription
     
@@ -273,11 +259,11 @@ async def update_job(
             "recruiterId": updated_job["recruiter_id"],
             "interviewField": updated_job["interview_field"],
             "positionLevel": updated_job["position_level"],
-            "numberOfQuestions": updated_job["number_of_questions"],
-            "topNCvs": updated_job["top_n_cvs"],
-            "cvFileIds": updated_job.get("cv_file_ids", []),
-            "cvFilesCount": len(updated_job.get("cv_file_ids", [])),
             "jobDescription": updated_job.get("job_description"),
+            "experienceRange": updated_job.get("experience_range"),
+            "industryDomain": updated_job.get("industry_domain"),
+            "questions": updated_job.get("questions", []),
+            "specificInstruction": updated_job.get("specific_instruction"),
             "createdAt": updated_job["created_at"].isoformat(),
             "isActive": updated_job["is_active"]
         }

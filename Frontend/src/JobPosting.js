@@ -7,7 +7,17 @@ import {
     TrendingUp,
     BarChart3,
     Search,
-    Cog
+    Cog,
+    ChevronRight,
+    ChevronLeft,
+    Save,
+    Trash2,
+    Eye,
+    CheckCircle,
+    X,
+    FileText,
+    HelpCircle,
+    Briefcase
 } from "lucide-react";
 import API_BASE_URL from "./apiConfig";
 
@@ -17,18 +27,34 @@ const JobPosting = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [successMessage, setSuccessMessage] = useState("");
     const [errorMessage, setErrorMessage] = useState("");
+    const [currentStep, setCurrentStep] = useState(1);
+    const [isPreviewMode, setIsPreviewMode] = useState(false);
 
-    const [formData, setFormData] = useState({
+    // Initial Form State
+    const initialFormState = {
         interviewField: "",
         positionLevel: "",
         workModel: "",
-        status: "",
+        status: "", // Employment Status
         location: "",
-        salaryRange: ""
-    });
+        salaryRange: "",
+        experienceRange: "",
+        industryDomain: "",
+        jobDescription: "",
+        questions: [], // Array of { text, type, difficulty }
+        specificInstruction: ""
+    };
 
+    const [formData, setFormData] = useState(initialFormState);
     const [jobPostings, setJobPostings] = useState([]);
     const [selectedJobId, setSelectedJobId] = useState("");
+
+    // Question State
+    const [newQuestion, setNewQuestion] = useState({
+        text: "",
+        type: "Behavioral",
+        difficulty: "Medium"
+    });
 
     useEffect(() => {
         const storedUser = localStorage.getItem("recruiterUser");
@@ -60,25 +86,22 @@ const JobPosting = () => {
         if (jobId) {
             const selectedJob = jobPostings.find(job => job.id === jobId);
             if (selectedJob) {
-                setFormData(prev => ({
-                    ...prev,
+                setFormData({
                     interviewField: selectedJob.interviewField || "",
                     positionLevel: selectedJob.positionLevel || "",
                     workModel: selectedJob.workModel || "",
                     status: selectedJob.status || "",
                     location: selectedJob.location || "",
-                    salaryRange: selectedJob.salaryRange || ""
-                }));
+                    salaryRange: selectedJob.salaryRange || "",
+                    experienceRange: selectedJob.experienceRange || "",
+                    industryDomain: selectedJob.industryDomain || "",
+                    jobDescription: selectedJob.jobDescription || "",
+                    questions: selectedJob.questions || [],
+                    specificInstruction: selectedJob.specificInstruction || ""
+                });
             }
         } else {
-            setFormData({
-                interviewField: "",
-                positionLevel: "",
-                workModel: "",
-                status: "",
-                location: "",
-                salaryRange: ""
-            });
+            setFormData(initialFormState);
         }
     };
 
@@ -97,17 +120,65 @@ const JobPosting = () => {
         setSuccessMessage("");
     };
 
+    const handleQuestionChange = (e) => {
+        const { name, value } = e.target;
+        setNewQuestion({
+            ...newQuestion,
+            [name]: value
+        });
+    };
+
+    const addQuestion = () => {
+        if (!newQuestion.text.trim()) {
+            setErrorMessage("Question text cannot be empty.");
+            return;
+        }
+        setFormData({
+            ...formData,
+            questions: [...formData.questions, newQuestion]
+        });
+        setNewQuestion({ text: "", type: "Behavioral", difficulty: "Medium" });
+        setErrorMessage("");
+    };
+
+    const removeQuestion = (index) => {
+        const updatedQuestions = formData.questions.filter((_, i) => i !== index);
+        setFormData({
+            ...formData,
+            questions: updatedQuestions
+        });
+    };
+
+    const validateStep = (step) => {
+        if (step === 1) {
+            if (!formData.interviewField || !formData.positionLevel || !formData.workModel || !formData.status || !formData.location || !formData.salaryRange || !formData.experienceRange || !formData.industryDomain) {
+                setErrorMessage("Please fill in all required fields in Job Details.");
+                return false;
+            }
+        } else if (step === 2) {
+            if (!formData.jobDescription.trim()) {
+                setErrorMessage("Job Description is required.");
+                return false;
+            }
+        }
+        setErrorMessage("");
+        return true;
+    };
+
+    const nextStep = () => {
+        if (validateStep(currentStep)) {
+            setCurrentStep(currentStep + 1);
+        }
+    };
+
+    const prevStep = () => {
+        setCurrentStep(currentStep - 1);
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setErrorMessage("");
         setSuccessMessage("");
-
-        // Validation
-        if (!formData.interviewField || !formData.positionLevel || !formData.workModel || !formData.status || !formData.location || !formData.salaryRange) {
-            setErrorMessage("Please fill in all required fields");
-            return;
-        }
-
         setIsLoading(true);
 
         try {
@@ -119,17 +190,7 @@ const JobPosting = () => {
 
             const payload = {
                 recruiterId: recruiterData.id,
-                interviewField: formData.interviewField,
-                positionLevel: formData.positionLevel,
-                workModel: formData.workModel,
-                status: formData.status,
-                location: formData.location,
-                salaryRange: formData.salaryRange,
-                // Hidden defaults required by backend
-                numberOfQuestions: 5,
-                topNCvs: 5,
-                cvFiles: [],
-                jobDescription: ""
+                ...formData
             };
 
             const response = await fetch(url, {
@@ -149,15 +210,13 @@ const JobPosting = () => {
             setSuccessMessage(selectedJobId ? "Job posting updated successfully!" : "Job posting created successfully!");
 
             if (!selectedJobId) {
-                setFormData({
-                    interviewField: "",
-                    positionLevel: "",
-                    workModel: "",
-                    status: "",
-                    location: "",
-                    salaryRange: ""
-                });
+                setFormData(initialFormState);
+                setCurrentStep(1);
+                setIsPreviewMode(false);
             }
+
+            // Refresh job list if needed
+            fetchJobPostings(recruiterData.id);
 
             setTimeout(() => {
                 navigate("/recruiter/dashboard");
@@ -170,10 +229,14 @@ const JobPosting = () => {
         }
     };
 
-    const getCurrentDate = () => {
-        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-        return new Date().toLocaleDateString('en-US', options);
-    };
+    const StepIndicator = ({ step, title, active }) => (
+        <div className={`flex items-center gap-2 ${active ? "text-[#0a2a5e] font-bold" : "text-gray-400"}`}>
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${active ? "bg-[#0a2a5e] text-white" : "bg-gray-200 text-gray-500"}`}>
+                {step}
+            </div>
+            <span className="hidden md:block">{title}</span>
+        </div>
+    );
 
     if (!recruiterData) {
         return (
@@ -208,193 +271,323 @@ const JobPosting = () => {
                 </div>
             </aside>
 
+
             {/* Main Content */}
             <main className="flex-1 h-screen flex flex-col overflow-hidden py-6 px-10">
                 {/* Header */}
                 <div className="mb-4 flex-shrink-0 flex justify-between items-center">
                     <div>
-                        <h2 className="text-3xl font-bold text-gray-800">Job Posting</h2>
-                        <p className="text-gray-500 text-md mt-1 py-4">Create and manage your job requisitions efficiently.</p>
+                        <h2 className="text-3xl font-bold text-gray-800">{selectedJobId ? "Edit Job" : "Create a Job"}</h2>
+                        <p className="text-gray-500 text-md mt-1">Define requirement, questions, and details for your new position.</p>
                     </div>
-                    {/* User Profile */}
-                    <div className="flex items-center gap-3">
-                        <div className="text-right">
-                            <h3 className="font-bold text-gray-800">{recruiterData.firstName} {recruiterData.lastName}</h3>
-                            <p className="text-sm text-gray-500">{recruiterData.email}</p>
-                        </div>
-                        <div className="w-12 h-12 bg-gradient-to-br from-[#0a2a5e] to-[#2b4c8c] rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg overflow-hidden">
-                            {recruiterData.profileImage ? (<img src={recruiterData.profileImage} alt="Profile" className="w-full h-full object-cover" />) : (<>{recruiterData.firstName?.charAt(0)}{recruiterData.lastName?.charAt(0)}</>)}
+                    <div className="flex items-center gap-4">
+                        {/* View All Jobs Button */}
+                        <NavLink to="/recruiter/dashboard" className="px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 flex items-center gap-2 shadow-sm">
+                            <Briefcase className="w-4 h-4" /> View All Jobs
+                        </NavLink>
+
+                        {/* User Profile */}
+                        <div className="flex items-center gap-3">
+                            <div className="text-right">
+                                <h3 className="font-bold text-gray-800">{recruiterData.firstName} {recruiterData.lastName}</h3>
+                                <p className="text-sm text-gray-500">{recruiterData.email}</p>
+                            </div>
+                            <div className="w-12 h-12 bg-gradient-to-br from-[#0a2a5e] to-[#2b4c8c] rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg overflow-hidden">
+                                {recruiterData.profileImage ? (<img src={recruiterData.profileImage} alt="Profile" className="w-full h-full object-cover" />) : (<>{recruiterData.firstName?.charAt(0)}{recruiterData.lastName?.charAt(0)}</>)}
+                            </div>
                         </div>
                     </div>
                 </div>
 
+                {/* Progress Indicators */}
+                <div className="flex justify-between items-center mb-6 px-12">
+                    <StepIndicator step={1} title="Job Details" active={currentStep >= 1} />
+                    <div className={`h-1 flex-1 mx-4 ${currentStep >= 2 ? "bg-[#0a2a5e]" : "bg-gray-200"}`}></div>
+                    <StepIndicator step={2} title="Job Description" active={currentStep >= 2} />
+                    <div className={`h-1 flex-1 mx-4 ${currentStep >= 3 ? "bg-[#0a2a5e]" : "bg-gray-200"}`}></div>
+                    <StepIndicator step={3} title="Interview Questions" active={currentStep >= 3} />
+                    <div className={`h-1 flex-1 mx-4 ${currentStep >= 4 ? "bg-[#0a2a5e]" : "bg-gray-200"}`}></div>
+                    <StepIndicator step={4} title="Review" active={currentStep >= 4} />
+                </div>
+
                 {/* Messages */}
-                {successMessage && <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg mb-4 flex-shrink-0">{successMessage}</div>}
-                {errorMessage && <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4 flex-shrink-0">{errorMessage}</div>}
+                {successMessage && <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg mb-4 flex-shrink-0 flex items-center gap-2"><CheckCircle className="w-5 h-5" /> {successMessage}</div>}
+                {errorMessage && <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4 flex-shrink-0 flex items-center gap-2"><X className="w-5 h-5" /> {errorMessage}</div>}
 
-                {/* Form Content */}
-                <div className="flex-1 overflow-hidden">
-                    <div className="bg-white rounded-2xl shadow-lg p-6 w-full h-full overflow-y-auto">
-                        <form onSubmit={handleSubmit} className="space-y-4">
 
-                            {/* SELECT JOB ID ROW */}
-                            <div className="mb-6">
-                                <label className="block font-medium text-gray-700 mb-2">
-                                    Select Job to Post <span className="text-red-500">*</span>
-                                </label>
-                                <select
-                                    value={selectedJobId}
-                                    onChange={handleJobSelect}
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#0a2a5e] focus:border-transparent outline-none transition-all"
-                                    required
-                                >
-                                    <option value="">-- Select a Job from Screening --</option>
-                                    {jobPostings.map((job) => (
-                                        <option key={job.id} value={job.id}>
-                                            ID: {job.id ? job.id.substring(0, 8).toUpperCase() : 'N/A'} - {job.interviewField} ({job.positionLevel})
-                                        </option>
-                                    ))}
-                                </select>
-                                {jobPostings.length === 0 && (
-                                    <p className="text-sm text-amber-600 mt-2">
-                                        No pending jobs found. Please screen CVs first to create a job batch.
-                                    </p>
-                                )}
-                            </div>
 
-                            {/* Row 1 - 3 Columns */}
-                            <div className="grid grid-cols-3 gap-8">
-                                <div>
+                {/* Main Form Area - Scrollable */}
+                <div className="flex-1 overflow-hidden bg-white rounded-2xl shadow-lg border border-gray-100 flex flex-col">
+                    <div className="flex-1 overflow-y-auto p-8">
+
+                        {/* STEP 1: JOB DETAILS */}
+                        {currentStep === 1 && (
+                            <div className="space-y-6 animate-in fade-in slide-in-from-right duration-300">
+                                <h3 className="text-xl font-bold text-gray-800 border-b pb-2 mb-4">Basic Information</h3>
+
+                                {/* Load Existing Job (Optional) */}
+                                <div className="mb-6">
                                     <label className="block font-medium text-gray-700 mb-2">
-                                        Interview Field <span className="text-red-500">*</span>
+                                        Load Existing Job (Optional)
                                     </label>
                                     <select
-                                        name="interviewField"
-                                        value={formData.interviewField}
-                                        onChange={handleInputChange}
-                                        disabled={true}
-                                        className="w-full px-4 py-3 border border-gray-300 rounded-xl bg-gray-100 text-gray-500 cursor-not-allowed outline-none"
-                                        required
+                                        value={selectedJobId}
+                                        onChange={handleJobSelect}
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0a2a5e] focus:border-transparent outline-none transition-all bg-gray-50"
                                     >
-                                        <option value="">Select a field...</option>
-                                        <option value="Software Engineering">Software Engineering</option>
-                                        <option value="Data Science">Data Science</option>
-                                        <option value="Product Management">Product Management</option>
-                                        <option value="UI/UX Design">UI/UX Design</option>
-                                        <option value="Marketing">Marketing</option>
-                                        <option value="Sales">Sales</option>
-                                        <option value="Finance">Finance</option>
-                                        <option value="Human Resources">Human Resources</option>
+                                        <option value="">-- Create New Job --</option>
+                                        {jobPostings.map((job) => (
+                                            <option key={job.id} value={job.id}>
+                                                {job.interviewField} ({job.positionLevel}) - {job.location}
+                                            </option>
+                                        ))}
                                     </select>
                                 </div>
 
-                                <div>
-                                    <label className="block font-medium text-gray-700 mb-2">
-                                        Position Level <span className="text-red-500">*</span>
-                                    </label>
-                                    <select
-                                        name="positionLevel"
-                                        value={formData.positionLevel}
-                                        onChange={handleInputChange}
-                                        disabled={true}
-                                        className="w-full px-4 py-3 border border-gray-300 rounded-xl bg-gray-100 text-gray-500 cursor-not-allowed outline-none"
-                                        required
-                                    >
-                                        <option value="">Select a level...</option>
-                                        <option value="Intern">Intern</option>
-                                        <option value="Junior">Junior</option>
-                                        <option value="Mid-level">Mid-level</option>
-                                        <option value="Senior">Senior</option>
-                                        <option value="Lead">Lead</option>
-                                        <option value="Manager">Manager</option>
-                                        <option value="Director">Director</option>
-                                    </select>
-                                </div>
-
-                                <div>
-                                    <label className="block font-medium text-gray-700 mb-2">
-                                        Work Model <span className="text-red-500">*</span>
-                                    </label>
-                                    <select
-                                        name="workModel"
-                                        value={formData.workModel}
-                                        onChange={handleInputChange}
-                                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
-                                        required
-                                    >
-                                        <option value="">Select work model...</option>
-                                        <option value="Remote">Remote</option>
-                                        <option value="Onsite">Onsite</option>
-                                        <option value="Hybrid">Hybrid</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            {/* Row 2 - 3 Columns */}
-                            <div className="grid grid-cols-3 gap-8">
-                                <div>
-                                    <label className="block font-medium text-gray-700 mb-2">
-                                        Status <span className="text-red-500">*</span>
-                                    </label>
-                                    <select
-                                        name="status"
-                                        value={formData.status}
-                                        onChange={handleInputChange}
-                                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
-                                        required
-                                    >
-                                        <option value="">Select status...</option>
-                                        <option value="Full-time">Full-time</option>
-                                        <option value="Part-time">Part-time</option>
-                                        <option value="Contract">Contract</option>
-                                    </select>
-                                </div>
-
-                                <div>
-                                    <label className="block font-medium text-gray-700 mb-2">
-                                        Location <span className="text-red-500">*</span>
-                                    </label>
-                                    <input
-                                        type="text"
-                                        name="location"
-                                        value={formData.location}
-                                        onChange={handleInputChange}
-                                        placeholder="e.g., New York, NY"
-                                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
-                                        required
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block font-medium text-gray-700 mb-2">
-                                        Salary Range <span className="text-red-500">*</span>
-                                    </label>
-                                    <input
-                                        type="text"
-                                        name="salaryRange"
-                                        value={formData.salaryRange}
-                                        onChange={handleInputChange}
-                                        placeholder="e.g., $70k - $150k"
-                                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
-                                        required
-                                    />
+                                <div className="grid grid-cols-2 gap-6">
+                                    <div>
+                                        <label className="block font-medium text-gray-700 mb-2">Interview Field <span className="text-red-500">*</span></label>
+                                        <select name="interviewField" value={formData.interviewField} onChange={handleInputChange} className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#0a2a5e] outline-none" required>
+                                            <option value="">Select a field...</option>
+                                            <option value="Software Engineering">Software Engineering</option>
+                                            <option value="Data Science">Data Science</option>
+                                            <option value="Product Management">Product Management</option>
+                                            <option value="UI/UX Design">UI/UX Design</option>
+                                            <option value="Marketing">Marketing</option>
+                                            <option value="Sales">Sales</option>
+                                            <option value="Finance">Finance</option>
+                                            <option value="Human Resources">Human Resources</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block font-medium text-gray-700 mb-2">Position Level <span className="text-red-500">*</span></label>
+                                        <select name="positionLevel" value={formData.positionLevel} onChange={handleInputChange} className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#0a2a5e] outline-none" required>
+                                            <option value="">Select a level...</option>
+                                            <option value="Intern">Intern</option>
+                                            <option value="Junior">Junior</option>
+                                            <option value="Mid-level">Mid-level</option>
+                                            <option value="Senior">Senior</option>
+                                            <option value="Lead">Lead</option>
+                                            <option value="Manager">Manager</option>
+                                            <option value="Director">Director</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block font-medium text-gray-700 mb-2">Industry / Domain <span className="text-red-500">*</span></label>
+                                        <input type="text" name="industryDomain" value={formData.industryDomain} onChange={handleInputChange} placeholder="e.g. Fintech, E-commerce, Healthcare" className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#0a2a5e] outline-none" required />
+                                    </div>
+                                    <div>
+                                        <label className="block font-medium text-gray-700 mb-2">Employment Status <span className="text-red-500">*</span></label>
+                                        <select name="status" value={formData.status} onChange={handleInputChange} className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#0a2a5e] outline-none" required>
+                                            <option value="">Select status...</option>
+                                            <option value="Full-time">Full-time</option>
+                                            <option value="Part-time">Part-time</option>
+                                            <option value="Contract">Contract</option>
+                                            <option value="Internship">Internship</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block font-medium text-gray-700 mb-2">Work Mode <span className="text-red-500">*</span></label>
+                                        <select name="workModel" value={formData.workModel} onChange={handleInputChange} className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#0a2a5e] outline-none" required>
+                                            <option value="">Select work model...</option>
+                                            <option value="Remote">Remote</option>
+                                            <option value="Onsite">Onsite</option>
+                                            <option value="Hybrid">Hybrid</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block font-medium text-gray-700 mb-2">Location <span className="text-red-500">*</span></label>
+                                        <input type="text" name="location" value={formData.location} onChange={handleInputChange} placeholder="e.g. New York, NY" className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#0a2a5e] outline-none" required />
+                                    </div>
+                                    <div>
+                                        <label className="block font-medium text-gray-700 mb-2">Salary Range <span className="text-red-500">*</span></label>
+                                        <input type="text" name="salaryRange" value={formData.salaryRange} onChange={handleInputChange} placeholder="e.g. $80,000 - $120,000" className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#0a2a5e] outline-none" required />
+                                    </div>
+                                    <div>
+                                        <label className="block font-medium text-gray-700 mb-2">Experience Range <span className="text-red-500">*</span></label>
+                                        <input type="text" name="experienceRange" value={formData.experienceRange} onChange={handleInputChange} placeholder="e.g. 3-5 Years" className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#0a2a5e] outline-none" required />
+                                    </div>
                                 </div>
                             </div>
+                        )}
 
-                            {/* Submit Button */}
-                            <div className="flex justify-center pt-4">
-                                <button
-                                    type="submit"
-                                    disabled={isLoading}
-                                    className={`px-8 py-3 rounded-xl font-semibold text-white transition-all shadow-lg ${isLoading
-                                        ? "bg-gray-400 cursor-not-allowed"
-                                        : "bg-[#0a2a5e] hover:bg-[#061a3d]"
-                                        }`}
-                                >
-                                    {isLoading ? "Saving..." : (selectedJobId ? "Update Job Posting" : "Create Job Posting")}
-                                </button>
+                        {/* STEP 2: JOB DESCRIPTION */}
+                        {currentStep === 2 && (
+                            <div className="space-y-6 animate-in fade-in slide-in-from-right duration-300 h-full flex flex-col">
+                                <h3 className="text-xl font-bold text-gray-800 border-b pb-2 mb-4">Job Description</h3>
+                                <div className="flex-1 flex flex-col">
+                                    <label className="block font-medium text-gray-700 mb-2">Detailed Description <span className="text-red-500">*</span></label>
+                                    <textarea
+                                        name="jobDescription"
+                                        value={formData.jobDescription}
+                                        onChange={handleInputChange}
+                                        placeholder="Enter the full job description here. You can use markdown for formatting."
+                                        className="w-full flex-1 p-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#0a2a5e] outline-none resize-none font-mono text-sm"
+                                        required
+                                    ></textarea>
+                                    <p className="text-xs text-gray-500 mt-2">Check spelling and formatting before proceeding.</p>
+                                </div>
                             </div>
-                        </form>
+                        )}
+
+                        {/* STEP 3: INTERVIEW QUESTIONS */}
+                        {currentStep === 3 && (
+                            <div className="space-y-6 animate-in fade-in slide-in-from-right duration-300">
+                                <h3 className="text-xl font-bold text-gray-800 border-b pb-2 mb-4">Interview Configuration</h3>
+
+                                {/* Specific Instructions */}
+                                <div className="mb-6">
+                                    <label className="block font-medium text-gray-700 mb-2">Specific Instructions for Interviewer (AI)</label>
+                                    <textarea
+                                        name="specificInstruction"
+                                        value={formData.specificInstruction}
+                                        onChange={handleInputChange}
+                                        placeholder="e.g. Focus on system design capabilities, ask about conflict resolution..."
+                                        className="w-full p-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#0a2a5e] outline-none h-24 resize-none"
+                                    ></textarea>
+                                </div>
+
+                                {/* Questions List */}
+                                <div>
+                                    <div className="flex justify-between items-center mb-4">
+                                        <h4 className="font-bold text-gray-700">Questions List ({formData.questions.length})</h4>
+                                    </div>
+
+                                    {/* Add New Question Form */}
+                                    <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 mb-6">
+                                        <div className="grid grid-cols-12 gap-4 mb-3">
+                                            <div className="col-span-8">
+                                                <input
+                                                    type="text"
+                                                    name="text"
+                                                    value={newQuestion.text}
+                                                    onChange={handleQuestionChange}
+                                                    placeholder="Type a question here..."
+                                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0a2a5e] outline-none"
+                                                />
+                                            </div>
+                                            <div className="col-span-2">
+                                                <select
+                                                    name="type"
+                                                    value={newQuestion.type}
+                                                    onChange={handleQuestionChange}
+                                                    className="w-full px-2 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0a2a5e] outline-none text-sm"
+                                                >
+                                                    <option value="Behavioral">Behavioral</option>
+                                                    <option value="Technical">Technical</option>
+                                                    <option value="Situational">Situational</option>
+                                                </select>
+                                            </div>
+                                            <div className="col-span-2">
+                                                <select
+                                                    name="difficulty"
+                                                    value={newQuestion.difficulty}
+                                                    onChange={handleQuestionChange}
+                                                    className="w-full px-2 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0a2a5e] outline-none text-sm"
+                                                >
+                                                    <option value="Easy">Easy</option>
+                                                    <option value="Medium">Medium</option>
+                                                    <option value="Hard">Hard</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <button onClick={addQuestion} type="button" className="w-full py-2 bg-white border border-[#0a2a5e] text-[#0a2a5e] rounded-lg font-medium hover:bg-[#0a2a5e] hover:text-white transition-all flex justify-center items-center gap-2">
+                                            <PlusCircle className="w-4 h-4" /> Add Question
+                                        </button>
+                                    </div>
+
+                                    {/* List of Added Questions */}
+                                    <div className="space-y-3">
+                                        {formData.questions.length === 0 ? (
+                                            <p className="text-gray-400 text-center italic py-4">No questions added yet. Add some questions to guide the interview.</p>
+                                        ) : (
+                                            formData.questions.map((q, idx) => (
+                                                <div key={idx} className="flex justify-between items-start bg-white p-4 rounded-xl border border-gray-100 shadow-sm group hover:shadow-md transition-all">
+                                                    <div>
+                                                        <p className="font-medium text-gray-800">{q.text}</p>
+                                                        <div className="flex gap-2 mt-2">
+                                                            <span className="px-2 py-1 bg-blue-50 text-blue-700 text-xs rounded-md">{q.type}</span>
+                                                            <span className={`px-2 py-1 text-xs rounded-md ${q.difficulty === 'Hard' ? 'bg-red-50 text-red-700' : q.difficulty === 'Medium' ? 'bg-yellow-50 text-yellow-700' : 'bg-green-50 text-green-700'}`}>{q.difficulty}</span>
+                                                        </div>
+                                                    </div>
+                                                    <button onClick={() => removeQuestion(idx)} className="text-red-400 hover:text-red-600 p-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        <Trash2 className="w-5 h-5" />
+                                                    </button>
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* STEP 4: REVIEW */}
+                        {currentStep === 4 && (
+                            <div className="space-y-8 animate-in fade-in slide-in-from-right duration-300">
+                                <h3 className="text-xl font-bold text-gray-800 border-b pb-2 mb-4">Review Job Posting</h3>
+
+                                {/* Review Details */}
+                                <div className="grid grid-cols-2 gap-8 text-sm">
+                                    <div>
+                                        <h4 className="font-semibold text-gray-500 mb-2 uppercase tracking-wide">Job Details</h4>
+                                        <div className="space-y-2">
+                                            <p><span className="font-medium text-gray-900">Role:</span> {formData.interviewField}</p>
+                                            <p><span className="font-medium text-gray-900">Level:</span> {formData.positionLevel}</p>
+                                            <p><span className="font-medium text-gray-900">Industry:</span> {formData.industryDomain}</p>
+                                            <p><span className="font-medium text-gray-900">Location:</span> {formData.location} ({formData.workModel})</p>
+                                            <p><span className="font-medium text-gray-900">Salary:</span> {formData.salaryRange}</p>
+                                            <p><span className="font-medium text-gray-900">Experience:</span> {formData.experienceRange}</p>
+                                            <p><span className="font-medium text-gray-900">Status:</span> {formData.status}</p>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <h4 className="font-semibold text-gray-500 mb-2 uppercase tracking-wide">Interview Config</h4>
+                                        <div className="space-y-2">
+                                            <p><span className="font-medium text-gray-900">Total Questions:</span> {formData.questions.length}</p>
+                                            <p><span className="font-medium text-gray-900">Specific Instruction:</span> {formData.specificInstruction || "None"}</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Review Description */}
+                                <div>
+                                    <h4 className="font-semibold text-gray-500 mb-2 uppercase tracking-wide">Description Preview</h4>
+                                    <div className="bg-gray-50 p-4 rounded-xl text-gray-700 text-sm max-h-48 overflow-y-auto whitespace-pre-wrap">
+                                        {formData.jobDescription}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                    </div>
+
+                    {/* Footer Actions */}
+                    <div className="p-6 border-t border-gray-200 bg-gray-50 flex justify-between items-center flex-shrink-0">
+                        <button
+                            onClick={prevStep}
+                            disabled={currentStep === 1}
+                            className={`px-6 py-2 rounded-xl font-medium flex items-center gap-2 transition-all ${currentStep === 1 ? "text-gray-300 cursor-not-allowed" : "text-gray-600 hover:bg-gray-200"}`}
+                        >
+                            <ChevronLeft className="w-5 h-5" /> Back
+                        </button>
+
+                        {currentStep < 4 ? (
+                            <button
+                                onClick={nextStep}
+                                className="px-8 py-3 bg-[#0a2a5e] hover:bg-[#061a3d] text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all flex items-center gap-2"
+                            >
+                                Next <ChevronRight className="w-5 h-5" />
+                            </button>
+                        ) : (
+                            <button
+                                onClick={handleSubmit}
+                                disabled={isLoading}
+                                className="px-8 py-3 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all flex items-center gap-2"
+                            >
+                                {isLoading ? <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div> : <Save className="w-5 h-5" />}
+                                {selectedJobId ? "Update Job" : "Publish Job"}
+                            </button>
+                        )}
                     </div>
                 </div>
             </main>
