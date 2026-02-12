@@ -20,14 +20,12 @@ load_dotenv()
 async def init_collections():
     """Initialize all MongoDB collections with proper schema and indexes."""
     
-    mongodb_url = os.getenv("MONGODB_URL")
+    mongodb_url = os.getenv("MONGODB_URL", "mongodb://localhost:27017")
     db_name = os.getenv("MONGODB_DB_NAME", "recrubotx")
     
-    if not mongodb_url:
-        print("❌ MONGODB_URL not found in .env file")
-        return
-    
     print(f"🔗 Connecting to MongoDB Atlas: {db_name}")
+    if "localhost" in mongodb_url:
+        print("ℹ Using local MongoDB URL")
     client = AsyncIOMotorClient(mongodb_url)
     db = client[db_name]
     
@@ -75,6 +73,79 @@ async def init_collections():
                         "updated_at": {
                             "bsonType": "date",
                             "description": "Last update timestamp"
+                        }
+                    }
+                }
+            },
+            "validationLevel": "moderate"
+        })
+        
+        print("   ✓ Indexes created")
+        print("   ✓ Indexes created")
+        print("   ✓ Schema validation set")
+        
+        # ==================== JOB POSTINGS COLLECTION ====================
+        print("\n📢 Setting up 'job_postings' collection...")
+        
+        # Create indexes
+        await db.job_postings.create_index("recruiter_id", background=True)
+        await db.job_postings.create_index("created_at", background=True)
+        await db.job_postings.create_index("is_active", background=True)
+        
+        await db.command({
+            "collMod": "job_postings",
+            "validator": {
+                "$jsonSchema": {
+                    "bsonType": "object",
+                    "required": [
+                        "recruiter_id", "interview_field", "position_level", 
+                        "work_model", "status", "location", "is_active", "created_at"
+                    ],
+                    "properties": {
+                        "recruiter_id": {
+                            "bsonType": "string",
+                            "description": "ID of the recruiter - required"
+                        },
+                        "interview_field": {
+                            "bsonType": "string",
+                            "description": "Job domain/field - required"
+                        },
+                        "position_level": {
+                            "bsonType": "string",
+                            "description": "Seniority level - required"
+                        },
+                        "work_model": {
+                            "bsonType": "string",
+                            "description": "Remote/Hybrid/Onsite - required"
+                        },
+                        "status": {
+                            "bsonType": "string",
+                            "description": "Employment type - required"
+                        },
+                        "location": {
+                            "bsonType": "string",
+                            "description": "Job location - required"
+                        },
+                        "salary_range": {
+                            "bsonType": "string",
+                            "description": "Salary range"
+                        },
+                        "cv_file_ids": {
+                            "bsonType": "array",
+                            "items": {"bsonType": "objectId"},
+                            "description": "List of linked CV file IDs"
+                        },
+                        "job_description": {
+                            "bsonType": ["string", "null"],
+                            "description": "Full job description text"
+                        },
+                        "is_active": {
+                            "bsonType": "bool",
+                            "description": "Whether job is active - required"
+                        },
+                        "created_at": {
+                            "bsonType": "date",
+                            "description": "Creation timestamp - required"
                         }
                     }
                 }
