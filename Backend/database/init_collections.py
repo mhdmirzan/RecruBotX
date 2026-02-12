@@ -42,8 +42,7 @@ async def init_collections():
         await db.job_descriptions.create_index("is_active", background=True)
         await db.job_descriptions.create_index(
             [("is_active", -1), ("created_at", -1)], 
-            background=True,
-            name="active_jds_idx"
+            background=True
         )
         
         # Create validation schema
