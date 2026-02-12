@@ -52,7 +52,7 @@ class InterviewStatus(BaseModel):
     avg_score: float
 
 
-from database.job_posting_crud import get_job_posting_by_id
+from database.job_posting_crud import get_job_posting_by_id, create_job_cv_file, add_cv_to_job
 
 @router.post("/initiate")
 async def initiate_interview(
@@ -107,6 +107,26 @@ async def initiate_interview(
         except Exception as e:
             print(f"⚠️ Failed to parse CV text: {e}")
             cv_text = ""
+
+        # Store CV in Database (job_cv_files) and Link to Job
+        try:
+            with open(file_path, "rb") as f:
+                file_content = f.read()
+            
+            cv_file_id = await create_job_cv_file(
+                db, 
+                job_id, 
+                cv_file.filename, 
+                file_content, 
+                len(file_content)
+            )
+            
+            await add_cv_to_job(db, job_id, cv_file_id)
+            print(f"[INFO] CV stored in DB ({cv_file_id}) and linked to Job ({job_id})")
+            
+        except Exception as e:
+            print(f"⚠️ Failed to store CV in database: {e}")
+            cv_file_id = None
 
         # 3. Store Candidate/Application Data (simplified for now)
         # In a real app, you'd create an 'Application' record here linking Job + Candidate + CV

@@ -58,7 +58,27 @@ This is the main collection that stores AI-powered CV screening results.
 
 ## 🗂️ All Collections
 
-### 1. **job_descriptions**
+### 1. **job_postings**
+Stores job postings created by recruiters.
+
+**Key Fields:**
+- `recruiter_id` (string): ID of the recruiter
+- `interview_field` (string): Job domain
+- `position_level` (string): Seniority level
+- `work_model` (string): Remote/Hybrid/Onsite
+- `status` (string): Employment type
+- `cv_file_ids` (array of ObjectIds): Linked CV files
+- `is_active` (boolean): Status flag
+- `created_at` (date)
+
+**Indexes:**
+- `recruiter_id`
+- `created_at`
+- `is_active`
+
+---
+
+### 2. **job_descriptions**
 Stores job postings and requirements.
 
 **Key Fields:**

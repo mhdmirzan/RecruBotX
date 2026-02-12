@@ -121,7 +121,7 @@ async def create_job_cv_file(
     db: AsyncIOMotorDatabase,
     job_posting_id: str,
     file_name: str,
-    file_content: str,
+    file_content: Any,  # str or bytes
     file_size: int
 ) -> str:
     """
@@ -137,6 +137,19 @@ async def create_job_cv_file(
     }
     result = await db.job_cv_files.insert_one(cv_file)
     return str(result.inserted_id)
+
+
+async def add_cv_to_job(
+    db: AsyncIOMotorDatabase,
+    job_id: str,
+    cv_file_id: str
+) -> bool:
+    """Add a CV file ID to the job posting's cv_file_ids list."""
+    result = await db.job_postings.update_one(
+        {"_id": ObjectId(job_id)},
+        {"$push": {"cv_file_ids": cv_file_id}}
+    )
+    return result.modified_count > 0
 
 
 async def get_job_cv_file_by_id(
