@@ -30,7 +30,9 @@ class CandidateRankingModel(BaseModel):
     id: Optional[PyObjectId] = Field(alias="_id", default=None)
     job_posting_id: str  # Reference to job posting
     recruiter_id: str
+    candidate_id: str = ""  # Generated candidate identifier
     candidate_name: str
+    email: str = ""  # Email extracted from CV
     rank: int
     score: float  # Overall final score out of 100
     cv_score: float = 0.0  # CV screening score out of 100

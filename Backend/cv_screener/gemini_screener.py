@@ -87,6 +87,44 @@ Return ONLY a valid JSON object.
 }}
 """
 
+        self.weighted_screening_prompt = """
+You are an elite HR recruiter and career strategist. Analyze the provided CV against the Job Description.
+Score the candidate on each of the following criteria from 0 to 100. Also extract the candidate's name and email address from the CV.
+Return ONLY a valid JSON object.
+
+## JOB DESCRIPTION:
+{job_description}
+
+## CV CONTENT:
+{cv_content}
+
+## SCORING CRITERIA (score each 0-100):
+1. Professional Experience - Relevant work experience, job roles, duration, and career progression
+2. Projects and Achievements - Notable projects, accomplishments, awards, and measurable results
+3. Educational Qualifications - Degrees, academic performance, relevant coursework
+4. Certifications and Licenses - Professional certifications, industry licenses, accreditations
+5. Publications - Research papers, articles, conference presentations, patents
+6. Technical Skills - Programming languages, tools, frameworks, technical competencies relevant to the role
+7. Other Details - Soft skills, languages, volunteer work, extracurricular activities, cultural fit
+
+## OUTPUT FORMAT (Return ONLY valid JSON):
+{{
+    "candidate_name": "Full Name from CV",
+    "email": "email@example.com extracted from CV or empty string if not found",
+    "professional_experience": 0-100,
+    "projects_achievements": 0-100,
+    "educational_qualifications": 0-100,
+    "certifications_licenses": 0-100,
+    "publications": 0-100,
+    "technical_skills": 0-100,
+    "other_details": 0-100,
+    "strengths": ["list of 3-5 specific strengths"],
+    "weaknesses": ["list of 3-5 specific areas for improvement"],
+    "recommendation": "Strongly Recommend / Recommend / Consider / Not Recommended",
+    "summary": "2-3 sentences executive summary"
+}}
+"""
+
     def _process_response(self, response: Any, file_name: str) -> Dict[str, Any]:
         """Parse and clean the AI response."""
         try:
@@ -123,19 +161,13 @@ Return ONLY a valid JSON object.
             print(f"[ERROR] Failed to process Gemini response: {e}")
             raise e
 
-    async def screen_cv(self, job_description: str, cv_content: str, file_name: str) -> Dict[str, Any]:
-        """Screen a CV using Gemini."""
+    async def _call_gemini(self, prompt: str, file_name: str) -> Dict[str, Any]:
+        """Call Gemini with fallback model support."""
         if not self.client:
             return self._error_response(file_name, "Gemini Client not initialized. Check API Key.")
 
-        prompt = self.screening_prompt.format(
-            job_description=job_description,
-            cv_content=cv_content
-        )
-        
         loop = asyncio.get_event_loop()
         try:
-            # Try primary model
             try:
                 print(f"[DEBUG] Attempting analysis with {self.MODEL_NAME}...")
                 response = await loop.run_in_executor(
@@ -150,8 +182,7 @@ Return ONLY a valid JSON object.
             except Exception as e:
                 error_str = str(e)
                 if "404" in error_str:
-                    print(f"[WARNING] 404 for {self.MODEL_NAME}. Trying fallback models (Gemini 2.0 and others)...")
-                    # Try fallbacks including 2.0 (user requested 2.5, which is likely 2.0)
+                    print(f"[WARNING] 404 for {self.MODEL_NAME}. Trying fallback models...")
                     for fallback in ["gemini-1.5-flash", "gemini-2.0-flash-exp", "gemini-1.5-flash-8b", "gemini-1.5-pro"]:
                         if fallback == self.MODEL_NAME: continue
                         try:
@@ -170,13 +201,49 @@ Return ONLY a valid JSON object.
                 raise e
         except Exception as e:
             error_msg = str(e)
-            print(f"[ERROR] screen_cv failed: {error_msg}")
-            
-            # Detect DNS error (Windows Errno 11001)
+            print(f"[ERROR] Gemini call failed: {error_msg}")
             if "11001" in error_msg or "getaddrinfo failed" in error_msg:
                 return self._error_response(file_name, "Network Error: Cannot reach AI servers. Please check your internet/DNS settings.")
-            
             return self._error_response(file_name, f"AI Analysis failed: {error_msg}")
+
+    async def screen_cv(self, job_description: str, cv_content: str, file_name: str) -> Dict[str, Any]:
+        """Screen a CV using Gemini (original generic prompt)."""
+        prompt = self.screening_prompt.format(
+            job_description=job_description,
+            cv_content=cv_content
+        )
+        return await self._call_gemini(prompt, file_name)
+
+    async def screen_cv_weighted(self, job_description: str, cv_content: str, file_name: str, weightages: Dict[str, float]) -> Dict[str, Any]:
+        """
+        Screen a CV using the weighted criteria prompt.
+        Computes a weighted final score based on recruiter-defined percentages.
+        """
+        prompt = self.weighted_screening_prompt.format(
+            job_description=job_description,
+            cv_content=cv_content
+        )
+        result = await self._call_gemini(prompt, file_name)
+
+        # If error response, return as-is
+        if result.get("candidate_name") == "Error During Analysis":
+            return result
+
+        # Compute weighted score from sub-scores
+        criteria_keys = [
+            "professional_experience", "projects_achievements",
+            "educational_qualifications", "certifications_licenses",
+            "publications", "technical_skills", "other_details"
+        ]
+        weighted_score = 0.0
+        for key in criteria_keys:
+            sub_score = float(result.get(key, 0))
+            weight = float(weightages.get(key, 0))
+            weighted_score += sub_score * (weight / 100.0)
+
+        result["overall_score"] = round(weighted_score, 2)
+        result["weightages_applied"] = weightages
+        return result
 
     def _error_response(self, file_name: str, message: str) -> Dict[str, Any]:
         """Generate a consistent error response structure."""

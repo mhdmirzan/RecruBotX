@@ -19,6 +19,26 @@ import {
 } from "lucide-react";
 import API_BASE_URL from "./apiConfig";
 
+const CRITERIA = [
+    { key: "professional_experience", label: "Professional Experience" },
+    { key: "projects_achievements", label: "Projects & Achievements" },
+    { key: "educational_qualifications", label: "Educational Qualifications" },
+    { key: "certifications_licenses", label: "Certifications & Licenses" },
+    { key: "publications", label: "Publications" },
+    { key: "technical_skills", label: "Technical Skills" },
+    { key: "other_details", label: "Other Details" },
+];
+
+const DEFAULT_WEIGHTAGES = () => {
+    const base = Math.floor(100 / CRITERIA.length);
+    const remainder = 100 - base * CRITERIA.length;
+    const w = {};
+    CRITERIA.forEach((c, i) => {
+        w[c.key] = i === 0 ? base + remainder : base;
+    });
+    return w;
+};
+
 const RecruiterCVScreening = () => {
     const navigate = useNavigate();
     const fileInputRef = useRef(null);
@@ -31,14 +51,12 @@ const RecruiterCVScreening = () => {
     // Form state
     const [cvFiles, setCvFiles] = useState([]);
     const [cvFileNames, setCvFileNames] = useState([]);
-    const [topNCvs, setTopNCvs] = useState(5);
     const [jobDescription, setJobDescription] = useState("");
-    const [interviewField, setInterviewField] = useState("");
-    const [positionLevel, setPositionLevel] = useState("");
+    const [weightages, setWeightages] = useState(DEFAULT_WEIGHTAGES());
 
     // Results state
-    const [screeningResults, setScreeningResults] = useState([]);
-    const [showResults, setShowResults] = useState(false);
+    const [rankingResults, setRankingResults] = useState([]);
+    const [showRankingTable, setShowRankingTable] = useState(false);
 
     useEffect(() => {
         const storedUser = localStorage.getItem("recruiterUser");
@@ -82,6 +100,14 @@ const RecruiterCVScreening = () => {
         setCvFileNames(prev => prev.filter((_, i) => i !== index));
     };
 
+    // Weightage handling
+    const weightageTotal = Object.values(weightages).reduce((sum, v) => sum + (parseFloat(v) || 0), 0);
+
+    const handleWeightageChange = (key, value) => {
+        const numVal = value === "" ? 0 : Math.max(0, Math.min(100, parseInt(value) || 0));
+        setWeightages(prev => ({ ...prev, [key]: numVal }));
+    };
+
     const handleScreenCVs = async () => {
         if (cvFiles.length === 0) {
             setErrorMessage("Please upload at least one CV to screen.");
@@ -91,18 +117,20 @@ const RecruiterCVScreening = () => {
             setErrorMessage("Please provide a job description.");
             return;
         }
-        if (!interviewField) {
-            setErrorMessage("Please select an interview field.");
-            return;
-        }
-        if (!positionLevel) {
-            setErrorMessage("Please select a position level.");
+        if (Math.abs(weightageTotal - 100) > 1) {
+            setErrorMessage(`Weightages must total 100%. Current total: ${weightageTotal}%`);
             return;
         }
 
         setIsScreening(true);
         setErrorMessage("");
         setSuccessMessage("");
+        setShowRankingTable(false);
+        setRankingResults([]);
+
+        // 5-minute timeout for screening multiple CVs
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5 * 60 * 1000);
 
         try {
             const response = await fetch(`${API_BASE_URL}/screen-cvs-batch`, {
@@ -110,15 +138,16 @@ const RecruiterCVScreening = () => {
                 headers: {
                     "Content-Type": "application/json",
                 },
+                signal: controller.signal,
                 body: JSON.stringify({
                     recruiterId: recruiterData.id,
                     cvFiles: cvFiles,
                     jobDescription: jobDescription,
-                    interviewField: interviewField,
-                    positionLevel: positionLevel,
-                    topNCvs: parseInt(topNCvs)
+                    weightages: weightages,
                 }),
             });
+
+            clearTimeout(timeoutId);
 
             const data = await response.json();
 
@@ -126,17 +155,24 @@ const RecruiterCVScreening = () => {
                 throw new Error(data.detail || "Failed to screen CVs");
             }
 
-            // Navigate to Ranking page with the job_posting_id to filter results
-            if (data.job_posting_id) {
-                navigate(`/recruiter/ranking?jobId=${data.job_posting_id}`);
+            // Show inline ranking table
+            const results = data.results || [];
+            setRankingResults(results);
+            setShowRankingTable(true);
+            if (results.length > 0) {
+                setSuccessMessage(`Successfully screened ${data.total_screened} CV(s). Results are shown below.`);
             } else {
-                // Fallback: just navigate to ranking page
-                navigate('/recruiter/ranking');
+                setErrorMessage("Screening completed but no results were returned. Please try again.");
             }
 
         } catch (error) {
+            clearTimeout(timeoutId);
             console.error("Error screening CVs:", error);
-            setErrorMessage(error.message || "Failed to screen CVs. Please try again.");
+            if (error.name === 'AbortError') {
+                setErrorMessage("Screening timed out. Try uploading fewer CVs at a time.");
+            } else {
+                setErrorMessage(error.message || "Failed to screen CVs. Please try again.");
+            }
         } finally {
             setIsScreening(false);
         }
@@ -145,19 +181,12 @@ const RecruiterCVScreening = () => {
     const resetForm = () => {
         setCvFiles([]);
         setCvFileNames([]);
-        setTopNCvs(5);
         setJobDescription("");
-        setInterviewField("");
-        setPositionLevel("");
-        setScreeningResults([]);
-        setShowResults(false);
+        setWeightages(DEFAULT_WEIGHTAGES());
+        setRankingResults([]);
+        setShowRankingTable(false);
         setSuccessMessage("");
         setErrorMessage("");
-    };
-
-    const getCurrentDate = () => {
-        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-        return new Date().toLocaleDateString('en-US', options);
     };
 
     if (!recruiterData) {
@@ -252,7 +281,7 @@ const RecruiterCVScreening = () => {
             </aside>
 
             {/* Main Content */}
-            <main className="flex-1 h-screen flex flex-col overflow-hidden py-6 px-10">
+            <main className="flex-1 h-screen overflow-y-auto py-6 px-10">
 
                 {/* Header */}
                 <div className="mb-4 flex-shrink-0 flex justify-between items-center">
@@ -294,257 +323,212 @@ const RecruiterCVScreening = () => {
                 )}
 
                 {/* Content */}
-                <div className="flex-1 overflow-hidden flex flex-col">
-                    {/* Added Title for Context since Header is removed, but User asked to remove 'header navigation bar', I'll keep a minimal title or remove it if strictly asked. 
-              The prompt says "remove the header navigation bar from RecruiterCVScreening.js". 
-              I removed the entire top header div containing the Title and Profile.
-           */}
+                <div className="flex-1">
+                    <div className="bg-white rounded-2xl shadow-lg p-6 w-full">
+                        <div className="space-y-6">
 
-                    <div className="bg-white rounded-2xl shadow-lg p-6 w-full h-full overflow-y-auto">
-                        {!showResults ? (
-                            /* Upload & Configuration Form */
-                            <div className="space-y-6 h-full flex flex-col">
-                                {/* Row 1: Interview Field, Position Level, Top N CVs (3 Columns) */}
-                                <div className="grid grid-cols-3 gap-6">
-                                    <div>
-                                        <label className="block font-medium text-gray-700 mb-2">
-                                            Interview Field <span className="text-red-500">*</span>
-                                        </label>
-                                        <select
-                                            value={interviewField}
-                                            onChange={(e) => setInterviewField(e.target.value)}
-                                            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#0a2a5e] focus:border-transparent outline-none transition-all"
-                                        >
-                                            <option value="">Select a field...</option>
-                                            <option value="Software Engineering">Software Engineering</option>
-                                            <option value="Data Science">Data Science</option>
-                                            <option value="Product Management">Product Management</option>
-                                            <option value="UI/UX Design">UI/UX Design</option>
-                                            <option value="Marketing">Marketing</option>
-                                            <option value="Sales">Sales</option>
-                                            <option value="Finance">Finance</option>
-                                            <option value="Human Resources">Human Resources</option>
-                                        </select>
-                                    </div>
-
-                                    <div>
-                                        <label className="block font-medium text-gray-700 mb-2">
-                                            Position Level <span className="text-red-500">*</span>
-                                        </label>
-                                        <select
-                                            value={positionLevel}
-                                            onChange={(e) => setPositionLevel(e.target.value)}
-                                            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
-                                        >
-                                            <option value="">Select a level...</option>
-                                            <option value="Intern">Intern</option>
-                                            <option value="Junior">Junior</option>
-                                            <option value="Mid-level">Mid-level</option>
-                                            <option value="Senior">Senior</option>
-                                            <option value="Lead">Lead</option>
-                                            <option value="Manager">Manager</option>
-                                            <option value="Director">Director</option>
-                                        </select>
-                                    </div>
-
-                                    <div>
-                                        <label className="block font-medium text-gray-700 mb-2">
-                                            Top N CVs
-                                        </label>
-                                        <select
-                                            value={topNCvs}
-                                            onChange={(e) => setTopNCvs(e.target.value)}
-                                            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
-                                        >
-                                            <option value="3">Top 3 Candidates</option>
-                                            <option value="5">Top 5 Candidates</option>
-                                            <option value="10">Top 10 Candidates</option>
-                                            <option value="15">Top 15 Candidates</option>
-                                            <option value="20">Top 20 Candidates</option>
-                                            <option value="25">Top 25 Candidates</option>
-                                            <option value="50">Top 50 Candidates</option>
-                                        </select>
-                                    </div>
+                            {/* Scoring Weightage Section */}
+                            <div>
+                                <div className="flex items-center justify-between mb-3">
+                                    <label className="block font-semibold text-gray-700 text-lg">
+                                        Scoring Weightage <span className="text-red-500">*</span>
+                                    </label>
+                                    <span className={`text-sm font-bold px-3 py-1 rounded-full ${Math.abs(weightageTotal - 100) <= 1
+                                        ? "bg-green-100 text-green-700"
+                                        : "bg-red-100 text-red-700"
+                                        }`}>
+                                        Total: {weightageTotal}%
+                                    </span>
                                 </div>
-
-                                {/* Row 2: JD (Left) and Upload (Right) Side by Side */}
-                                <div className="grid grid-cols-2 gap-6 flex-1 min-h-0">
-                                    {/* Left Col: Job Description */}
-                                    <div className="flex flex-col h-full">
-                                        <label className="block font-medium text-gray-700 mb-2">
-                                            <FileText className="w-4 h-4 inline mr-2" />
-                                            Job Description <span className="text-red-500">*</span>
-                                        </label>
-                                        <textarea
-                                            value={jobDescription}
-                                            onChange={(e) => setJobDescription(e.target.value)}
-                                            placeholder="Enter the job description, requirements, and qualifications..."
-                                            className="w-full flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all resize-none"
-                                        />
-                                    </div>
-
-                                    {/* Right Col: Upload */}
-                                    <div className="flex flex-col h-full">
-                                        <label className="block font-medium text-gray-700 mb-2">
-                                            <Upload className="w-4 h-4 inline mr-2" />
-                                            Upload CVs <span className="text-red-500">*</span>
-                                        </label>
-                                        <div className="flex-1 border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-[#0a2a5e] transition-all cursor-pointer bg-gray-50 flex flex-col items-center justify-center">
-                                            <input
-                                                ref={fileInputRef}
-                                                type="file"
-                                                accept=".pdf,.doc,.docx"
-                                                onChange={handleFileUpload}
-                                                multiple
-                                                className="hidden"
-                                            />
-                                            <button
-                                                type="button"
-                                                onClick={() => fileInputRef.current?.click()}
-                                                className="text-[#0a2a5e] hover:text-[#061a3d] w-full"
-                                            >
-                                                <Upload className="w-12 h-12 mx-auto mb-3 text-[#0a2a5e]" />
-                                                <p className="text-lg font-medium">Click to upload CVs</p>
-                                                <p className="text-sm text-gray-500 mt-1">PDF, DOC, DOCX</p>
-                                            </button>
-                                        </div>
-
-                                        {/* Uploaded Files List */}
-                                        {cvFileNames.length > 0 && (
-                                            <div className="mt-4 h-32 overflow-y-auto space-y-2 border border-gray-200 rounded-xl p-2 bg-gray-50">
-                                                {cvFileNames.map((name, index) => (
-                                                    <div key={index} className="flex items-center justify-between bg-white px-3 py-2 rounded-lg border border-gray-100 shadow-sm">
-                                                        <div className="flex items-center gap-2 overflow-hidden">
-                                                            <FileText className="w-4 h-4 text-blue-600 flex-shrink-0" />
-                                                            <span className="text-sm text-gray-700 truncate">{name}</span>
-                                                        </div>
-                                                        <button
-                                                            onClick={() => removeFile(index)}
-                                                            className="text-red-500 hover:text-red-700 p-1 flex-shrink-0"
-                                                        >
-                                                            <Trash2 className="w-4 h-4" />
-                                                        </button>
-                                                    </div>
-                                                ))}
+                                <p className="text-sm text-gray-500 mb-3">Assign percentage weights to each evaluation criterion. Total must equal 100%.</p>
+                                <div className="grid grid-cols-4 gap-3">
+                                    {CRITERIA.map((criterion) => (
+                                        <div key={criterion.key} className="bg-gray-50 rounded-xl p-3 border border-gray-200 hover:border-[#0a2a5e]/30 transition-all">
+                                            <label className="block text-sm font-medium text-gray-700 mb-2 truncate" title={criterion.label}>
+                                                {criterion.label}
+                                            </label>
+                                            <div className="flex items-center gap-1">
+                                                <input
+                                                    type="number"
+                                                    min="0"
+                                                    max="100"
+                                                    value={weightages[criterion.key]}
+                                                    onChange={(e) => handleWeightageChange(criterion.key, e.target.value)}
+                                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0a2a5e] focus:border-transparent outline-none transition-all text-center font-semibold text-lg"
+                                                />
+                                                <span className="text-gray-500 font-medium text-sm">%</span>
                                             </div>
-                                        )}
-                                    </div>
-                                </div>
-
-                                {/* Screen Button */}
-                                <div className="flex justify-center pt-2 pb-2">
-                                    <button
-                                        onClick={handleScreenCVs}
-                                        disabled={isScreening || cvFiles.length === 0}
-                                        className={`px-12 py-3 rounded-xl font-semibold text-white transition-all shadow-lg flex items-center gap-3 text-lg ${isScreening || cvFiles.length === 0
-                                            ? "bg-gray-400 cursor-not-allowed"
-                                            : "bg-gradient-to-r from-[#0a2a5e] to-[#0d3b82] hover:from-[#061a3d] hover:to-[#0a2a5e]"
-                                            }`}
-                                    >
-                                        {isScreening ? (
-                                            <>
-                                                <Loader2 className="w-6 h-6 animate-spin" />
-                                                Screening CVs...
-                                            </>
-                                        ) : (
-                                            <>
-                                                <Search className="w-6 h-6" />
-                                                Screen {cvFiles.length} CV{cvFiles.length !== 1 ? 's' : ''}
-                                            </>
-                                        )}
-                                    </button>
+                                        </div>
+                                    ))}
                                 </div>
                             </div>
-                        ) : (
-                            /* Results View */
-                            <div className="space-y-6 h-full flex flex-col">
-                                {/* Results Header */}
-                                <div className="flex items-center justify-between flex-shrink-0">
-                                    <div>
-                                        <h3 className="text-2xl font-bold text-gray-800">Screening Results</h3>
-                                        <p className="text-gray-500 mt-1">
-                                            Showing top {Math.min(topNCvs, screeningResults.length)} of {screeningResults.length} screened candidates
-                                        </p>
+
+                            {/* Row: JD (Left) and Upload (Right) Side by Side */}
+                            <div className="grid grid-cols-2 gap-6 min-h-[300px]">
+                                {/* Left Col: Job Description */}
+                                <div className="flex flex-col h-full">
+                                    <label className="block font-medium text-gray-700 mb-2">
+                                        <FileText className="w-4 h-4 inline mr-2" />
+                                        Job Description <span className="text-red-500">*</span>
+                                    </label>
+                                    <textarea
+                                        value={jobDescription}
+                                        onChange={(e) => setJobDescription(e.target.value)}
+                                        placeholder="Enter the job description, requirements, and qualifications..."
+                                        className="w-full flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all resize-none"
+                                    />
+                                </div>
+
+                                {/* Right Col: Upload */}
+                                <div className="flex flex-col h-full">
+                                    <label className="block font-medium text-gray-700 mb-2">
+                                        <Upload className="w-4 h-4 inline mr-2" />
+                                        Upload CVs <span className="text-red-500">*</span>
+                                    </label>
+                                    <div className="flex-1 border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-[#0a2a5e] transition-all cursor-pointer bg-gray-50 flex flex-col items-center justify-center">
+                                        <input
+                                            ref={fileInputRef}
+                                            type="file"
+                                            accept=".pdf,.doc,.docx"
+                                            onChange={handleFileUpload}
+                                            multiple
+                                            className="hidden"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => fileInputRef.current?.click()}
+                                            className="text-[#0a2a5e] hover:text-[#061a3d] w-full"
+                                        >
+                                            <Upload className="w-12 h-12 mx-auto mb-3 text-[#0a2a5e]" />
+                                            <p className="text-lg font-medium">Click to upload CVs</p>
+                                            <p className="text-sm text-gray-500 mt-1">PDF, DOC, DOCX</p>
+                                        </button>
                                     </div>
+
+                                    {/* Uploaded Files List */}
+                                    {cvFileNames.length > 0 && (
+                                        <div className="mt-4 h-32 overflow-y-auto space-y-2 border border-gray-200 rounded-xl p-2 bg-gray-50">
+                                            {cvFileNames.map((name, index) => (
+                                                <div key={index} className="flex items-center justify-between bg-white px-3 py-2 rounded-lg border border-gray-100 shadow-sm">
+                                                    <div className="flex items-center gap-2 overflow-hidden">
+                                                        <FileText className="w-4 h-4 text-blue-600 flex-shrink-0" />
+                                                        <span className="text-sm text-gray-700 truncate">{name}</span>
+                                                    </div>
+                                                    <button
+                                                        onClick={() => removeFile(index)}
+                                                        className="text-red-500 hover:text-red-700 p-1 flex-shrink-0"
+                                                    >
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Screen Button */}
+                            <div className="flex justify-center gap-4 pt-2 pb-2">
+                                <button
+                                    onClick={handleScreenCVs}
+                                    disabled={isScreening || cvFiles.length === 0 || Math.abs(weightageTotal - 100) > 1}
+                                    className={`px-12 py-3 rounded-xl font-semibold text-white transition-all shadow-lg flex items-center gap-3 text-lg ${isScreening || cvFiles.length === 0 || Math.abs(weightageTotal - 100) > 1
+                                        ? "bg-gray-400 cursor-not-allowed"
+                                        : "bg-gradient-to-r from-[#0a2a5e] to-[#0d3b82] hover:from-[#061a3d] hover:to-[#0a2a5e]"
+                                        }`}
+                                >
+                                    {isScreening ? (
+                                        <>
+                                            <Loader2 className="w-6 h-6 animate-spin" />
+                                            Screening CVs...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Search className="w-6 h-6" />
+                                            Screen {cvFiles.length} CV{cvFiles.length !== 1 ? 's' : ''}
+                                        </>
+                                    )}
+                                </button>
+                                {showRankingTable && (
                                     <button
                                         onClick={resetForm}
-                                        className="px-6 py-2 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-all font-medium"
+                                        className="px-8 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-all font-medium text-lg"
                                     >
                                         Screen More CVs
                                     </button>
-                                </div>
-
-                                {/* Results Table */}
-                                <div className="flex-1 overflow-x-auto overflow-y-auto">
-                                    <table className="w-full">
-                                        <thead className="sticky top-0 bg-white z-10">
-                                            <tr className="bg-gray-50 border-b border-gray-200">
-                                                <th className="text-left py-4 px-4 font-semibold text-gray-700">Rank</th>
-                                                <th className="text-left py-4 px-4 font-semibold text-gray-700">Candidate</th>
-                                                <th className="text-left py-4 px-4 font-semibold text-gray-700">Score</th>
-                                                <th className="text-left py-4 px-4 font-semibold text-gray-700">Skills Match</th>
-                                                <th className="text-left py-4 px-4 font-semibold text-gray-700">Status</th>
-                                                <th className="text-left py-4 px-4 font-semibold text-gray-700">Actions</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {screeningResults.slice(0, topNCvs).map((result, index) => (
-                                                <tr key={index} className="border-b border-gray-100 hover:bg-gray-50 transition-all">
-                                                    <td className="py-4 px-4">
-                                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm ${index === 0 ? "bg-yellow-500" : index === 1 ? "bg-gray-400" : index === 2 ? "bg-amber-600" : "bg-blue-500"
-                                                            }`}>
-                                                            {index + 1}
-                                                        </div>
-                                                    </td>
-                                                    <td className="py-4 px-4">
-                                                        <p className="font-medium text-gray-800">{result.candidate_name || `Candidate ${index + 1}`}</p>
-                                                        <p className="text-sm text-gray-500">{result.email || "Email not available"}</p>
-                                                    </td>
-                                                    <td className="py-4 px-4">
-                                                        <div className="flex items-center gap-2">
-                                                            <div className="w-24 h-2 bg-gray-200 rounded-full overflow-hidden">
-                                                                <div
-                                                                    className={`h-full rounded-full ${result.score >= 80 ? "bg-green-500" : result.score >= 60 ? "bg-yellow-500" : "bg-red-500"
-                                                                        }`}
-                                                                    style={{ width: `${result.score || 0}%` }}
-                                                                />
-                                                            </div>
-                                                            <span className="font-semibold text-gray-700">{result.score || 0}%</span>
-                                                        </div>
-                                                    </td>
-                                                    <td className="py-4 px-4">
-                                                        <span className="text-gray-700">{result.skills_match || 0}%</span>
-                                                    </td>
-                                                    <td className="py-4 px-4">
-                                                        <span className={`px-3 py-1 rounded-full text-sm font-medium ${result.recommendation === "Highly Recommended"
-                                                            ? "bg-green-100 text-green-700"
-                                                            : result.recommendation === "Recommended"
-                                                                ? "bg-blue-100 text-blue-700"
-                                                                : "bg-gray-100 text-gray-700"
-                                                            }`}>
-                                                            {result.recommendation || "Pending"}
-                                                        </span>
-                                                    </td>
-                                                    <td className="py-4 px-4">
-                                                        <button className="text-blue-600 hover:text-blue-700 flex items-center gap-1">
-                                                            <Eye className="w-4 h-4" />
-                                                            View
-                                                        </button>
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-
-                                {screeningResults.length === 0 && (
-                                    <div className="text-center py-12 text-gray-500">
-                                        <FileText className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-                                        <p className="text-lg">No screening results available</p>
-                                    </div>
                                 )}
                             </div>
-                        )}
+
+                            {/* Ranking Results Table */}
+                            {showRankingTable && rankingResults.length > 0 && (
+                                <div className="border border-gray-200 rounded-xl overflow-hidden">
+                                    <div className="bg-gradient-to-r from-[#0a2a5e] to-[#0d3b82] px-6 py-4">
+                                        <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                                            <TrendingUp className="w-5 h-5" />
+                                            Candidate Rankings
+                                        </h3>
+                                        <p className="text-blue-200 text-sm mt-1">
+                                            {rankingResults.length} candidate{rankingResults.length !== 1 ? 's' : ''} ranked by weighted score
+                                        </p>
+                                    </div>
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full">
+                                            <thead>
+                                                <tr className="bg-gray-50 border-b border-gray-200">
+                                                    <th className="text-left py-3 px-5 font-semibold text-gray-600 text-sm uppercase tracking-wider">Rank</th>
+                                                    <th className="text-left py-3 px-5 font-semibold text-gray-600 text-sm uppercase tracking-wider">Candidate ID</th>
+                                                    <th className="text-left py-3 px-5 font-semibold text-gray-600 text-sm uppercase tracking-wider">Name</th>
+                                                    <th className="text-left py-3 px-5 font-semibold text-gray-600 text-sm uppercase tracking-wider">Email</th>
+                                                    <th className="text-left py-3 px-5 font-semibold text-gray-600 text-sm uppercase tracking-wider">Score</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {rankingResults.map((result, index) => (
+                                                    <tr key={index} className="border-b border-gray-100 hover:bg-blue-50/40 transition-all">
+                                                        <td className="py-3 px-5">
+                                                            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm ${index === 0 ? "bg-yellow-500" : index === 1 ? "bg-gray-400" : index === 2 ? "bg-amber-600" : "bg-[#0a2a5e]"
+                                                                }`}>
+                                                                {result.rank}
+                                                            </div>
+                                                        </td>
+                                                        <td className="py-3 px-5">
+                                                            <span className="text-sm font-mono text-gray-600 bg-gray-100 px-2 py-1 rounded">
+                                                                {result.candidate_id}
+                                                            </span>
+                                                        </td>
+                                                        <td className="py-3 px-5">
+                                                            <span className="font-medium text-gray-800">{result.candidate_name}</span>
+                                                        </td>
+                                                        <td className="py-3 px-5">
+                                                            <span className="text-sm text-gray-600">{result.email || "N/A"}</span>
+                                                        </td>
+                                                        <td className="py-3 px-5">
+                                                            <div className="flex items-center gap-2">
+                                                                <div className="w-20 h-2 bg-gray-200 rounded-full overflow-hidden">
+                                                                    <div
+                                                                        className={`h-full rounded-full ${result.score >= 80 ? "bg-green-500" : result.score >= 60 ? "bg-yellow-500" : "bg-red-500"
+                                                                            }`}
+                                                                        style={{ width: `${Math.min(result.score, 100)}%` }}
+                                                                    />
+                                                                </div>
+                                                                <span className="font-bold text-gray-700 text-sm">{result.score}%</span>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            )}
+
+                            {showRankingTable && rankingResults.length === 0 && (
+                                <div className="text-center py-12 text-gray-500">
+                                    <FileText className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+                                    <p className="text-lg">No screening results available</p>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
             </main>

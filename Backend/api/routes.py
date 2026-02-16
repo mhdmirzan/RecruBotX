@@ -758,9 +758,7 @@ class CVScreeningRequest(BaseModel):
     recruiterId: str
     cvFiles: List[str]  # List of base64 encoded CV files
     jobDescription: str
-    interviewField: str
-    positionLevel: str
-    topNCvs: int = 5
+    weightages: dict  # {"professional_experience": 20, "projects_achievements": 15, ...}
 
 
 @router.post("/screen-cvs-batch")
@@ -769,15 +767,16 @@ async def screen_cvs_batch(
     db=Depends(get_database)
 ):
     """
-    Screen multiple CVs against a job description.
+    Screen multiple CVs against a job description using recruiter-defined weightages.
     
     This endpoint:
     1. Accepts base64 encoded CV files from the frontend
     2. Creates a Job Posting reference for the ranking system
     3. Stores original CV files (Reference Pattern)
-    4. Screens each CV against the job description using AI
-    5. Stores detailed screening results and candidate rankings
-    6. Returns the top N candidates
+    4. Screens each CV using weighted criteria via AI
+    5. Computes final scores from weightages
+    6. Stores detailed screening results and candidate rankings
+    7. Returns all candidates ranked by weighted score
     """
     import base64
     import tempfile
@@ -792,35 +791,31 @@ async def screen_cvs_batch(
     if not request.jobDescription.strip():
         raise HTTPException(status_code=400, detail="Job description is required")
     
-    # 1. Create a Job Description record (for AI/Screening context)
-    full_job_description = f"""
-Position: {request.interviewField}
-Level: {request.positionLevel}
-
-Job Description:
-{request.jobDescription}
-"""
+    # Validate weightages sum to 100
+    weightage_sum = sum(request.weightages.values())
+    if abs(weightage_sum - 100) > 1:  # Allow 1% tolerance for rounding
+        raise HTTPException(status_code=400, detail=f"Weightages must sum to 100%. Current sum: {weightage_sum}%")
     
+    # 1. Create a Job Description record
     jd_id = await crud.create_job_description(
         db,
-        title=f"{request.interviewField} - {request.positionLevel}",
-        content=full_job_description
+        title="CV Screening",
+        content=request.jobDescription
     )
     
     # 2. Create a Job Posting record (for Ranking Page visibility)
-    # We will update cv_file_ids later
     job_posting_id = await create_job_posting(
         db,
         recruiter_id=request.recruiterId,
-        interview_field=request.interviewField,
-        position_level=request.positionLevel,
-        number_of_questions=5,
-        top_n_cvs=request.topNCvs,
-        work_model="Remote",
+        interview_field="CV Screening",
+        position_level="Not specified",
+        work_model="Not specified",
         status="Screening",
         location="Not specified",
         salary_range="Not specified",
-        cv_file_ids=[],
+        experience_range="Not specified",
+        industry_domain="Not specified",
+        questions=[],
         job_description=request.jobDescription
     )
     
@@ -872,7 +867,7 @@ Job Description:
                 
                 # Store CV Metadata/Text in cvs collection
                 print(f"[INFO] Saving CV metadata...")
-                cv_id = await crud.save_cv(
+                cv_id = await crud.create_cv(
                     db,
                     file_name=file_name,
                     content=cv_content,
@@ -880,12 +875,13 @@ Job Description:
                 )
                 print(f"[INFO] Saved CV with ID: {cv_id}")
                 
-                # 4. Screen the CV
-                print(f"[INFO] Screening CV against job description...")
-                screening_result = await screener.screen_cv(
-                    job_description=full_job_description,
+                # 4. Screen the CV with weighted criteria
+                print(f"[INFO] Screening CV with weighted criteria...")
+                screening_result = await screener.screen_cv_weighted(
+                    job_description=request.jobDescription,
                     cv_content=cv_content,
-                    file_name=file_name
+                    file_name=file_name,
+                    weightages=request.weightages
                 )
                 print(f"[INFO] Screening result: overall_score={screening_result.get('overall_score', 'N/A')}")
                 
@@ -900,16 +896,16 @@ Job Description:
                 result_ids.append(result_id)
                 print(f"[INFO] Created screening result with ID: {result_id}")
                 
-                # 5. Create Candidate Ranking (for Ranking Page)
+                # Extract candidate info
                 candidate_name = screening_result.get("candidate_name", f"Candidate {idx + 1}")
+                candidate_email = screening_result.get("email", "")
+                candidate_id = f"CAN-{idx + 1:04d}"
                 
                 # Ensure validation of score 
                 raw_score = screening_result.get("overall_score", 0)
                 try:
-                    # Handle "85/100", "85%", etc
                     if isinstance(raw_score, str):
                         import re
-                        # Extract first number
                         match = re.search(r'\d+(\.\d+)?', raw_score)
                         overall_score = float(match.group()) if match else 0.0
                     else:
@@ -929,8 +925,10 @@ Job Description:
                         job_posting_id=job_posting_id,
                         recruiter_id=request.recruiterId,
                         candidate_name=candidate_name,
-                        rank=idx + 1,
+                        rank=idx + 1,  # Temporary rank, will reorder below
                         score=overall_score,
+                        candidate_id=candidate_id,
+                        email=candidate_email,
                         cv_score=overall_score,
                         completion=100,
                         interview_status="Shortlisted" if overall_score >= 80 else "Pending",
@@ -946,6 +944,7 @@ Job Description:
                 # Add to results for response
                 screening_result["id"] = result_id
                 screening_result["cv_id"] = cv_id
+                screening_result["candidate_id"] = candidate_id
                 results.append(screening_result)
                 print(f"[INFO] ✅ CV {idx + 1} processed successfully")
                 
@@ -960,47 +959,63 @@ Job Description:
             traceback.print_exc()
             results.append({
                 "candidate_name": f"Candidate {idx + 1}",
+                "candidate_id": f"CAN-{idx + 1:04d}",
+                "email": "",
                 "overall_score": 0,
                 "score": 0,
                 "recommendation": "Error",
                 "summary": f"Error: {str(e)}"
             })
     
-    # Update batch
-    if result_ids:
-        await crud.update_batch_results(db, batch_id, result_ids)
+    # Post-processing: update batch, job posting, and format results
+    try:
+        if result_ids:
+            await crud.update_batch_results(db, batch_id, result_ids)
+    except Exception as e:
+        print(f"[WARNING] Failed to update batch results: {e}")
         
-    # Update Job Posting with CV IDs
-    if cv_file_ids:
-        await db.job_postings.update_one(
-            {"_id": ObjectId(job_posting_id)},
-            {"$set": {"cv_file_ids": cv_file_ids}}
-        )
+    try:
+        if cv_file_ids:
+            object_id_list = [ObjectId(fid) for fid in cv_file_ids]
+            await db.job_postings.update_one(
+                {"_id": ObjectId(job_posting_id)},
+                {"$set": {"cv_file_ids": object_id_list}}
+            )
+    except Exception as e:
+        print(f"[WARNING] Failed to update job posting cv_file_ids: {e}")
     
-    # Sort results
-    results.sort(key=lambda x: x.get("overall_score", x.get("score", 0)), reverse=True)
+    # Sort results by weighted score descending
+    def get_score(r):
+        try:
+            s = r.get("overall_score", r.get("score", 0))
+            return float(s) if s else 0.0
+        except (ValueError, TypeError):
+            return 0.0
     
-    # Apply Top N
-    top_results = results[:request.topNCvs]
+    results.sort(key=get_score, reverse=True)
     
-    # Format for frontend
+    # Format for frontend ranking table (minimal details)
     formatted_results = []
-    for idx, result in enumerate(top_results):
+    for idx, result in enumerate(results):
+        try:
+            raw = result.get("overall_score", result.get("score", 0))
+            score_val = round(float(raw), 2) if raw else 0.0
+        except (ValueError, TypeError):
+            score_val = 0.0
+            
         formatted_results.append({
             "rank": idx + 1,
+            "candidate_id": result.get("candidate_id", f"CAN-{idx + 1:04d}"),
             "candidate_name": result.get("candidate_name", f"Candidate {idx + 1}"),
             "email": result.get("email", ""),
-            "score": result.get("overall_score", result.get("score", 0)),
-            "skills_match": result.get("skills_match", 0),
-            "recommendation": result.get("recommendation", "Pending"),
-            "summary": result.get("summary", "")
+            "score": score_val,
         })
     
     return {
         "success": True,
         "batch_id": batch_id,
         "job_description_id": jd_id,
-        "job_posting_id": job_posting_id, # Return this ID so UI can show it
+        "job_posting_id": job_posting_id,
         "total_screened": len(results),
         "results": formatted_results
     }

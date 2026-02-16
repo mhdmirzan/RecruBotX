@@ -17,6 +17,8 @@ async def create_candidate_ranking(
     candidate_name: str,
     rank: int,
     score: float,
+    candidate_id: str = "",
+    email: str = "",
     cv_score: float = 0.0,
     interview_score: float = 0.0,
     facial_recognition_score: float = 0.0,
@@ -29,7 +31,9 @@ async def create_candidate_ranking(
     ranking = {
         "job_posting_id": job_posting_id,
         "recruiter_id": recruiter_id,
+        "candidate_id": candidate_id,
         "candidate_name": candidate_name,
+        "email": email,
         "rank": rank,
         "score": score,  # Final weighted score
         "cv_score": cv_score,
