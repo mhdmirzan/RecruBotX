@@ -14,17 +14,16 @@ from database import crud
 from database.job_posting_crud import create_job_cv_file, create_job_posting
 from database.ranking_crud import create_candidate_ranking
 
-# Import voice interview routes
-from vc_agent.api_routes import router as voice_router
 from api.job_posting_routes import router as job_posting_router
 from api.ranking_routes import router as ranking_router
+from api.interview_routes import router as new_interview_router
 
 router = APIRouter()
 
 # Include routes
-router.include_router(voice_router)
 router.include_router(job_posting_router)
 router.include_router(ranking_router)
+router.include_router(new_interview_router)
 
 # Initialize the Gemini screener
 screener = GeminiCVScreener()

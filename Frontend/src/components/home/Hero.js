@@ -61,7 +61,7 @@ const Hero = () => {
             </Link>
 
             <Link
-              to="/recruiter"
+              to="/recruiter/signin"
               className="group inline-flex items-center justify-center gap-2 min-w-[180px] bg-white text-gray-800 px-6 py-3.5 rounded-xl font-medium border border-gray-200 shadow-md hover:shadow-lg hover:border-blue-200 hover:bg-blue-50 hover:-translate-y-0.5 transition-all duration-300"
             >
               <Briefcase className="w-5 h-5 text-blue-600" />

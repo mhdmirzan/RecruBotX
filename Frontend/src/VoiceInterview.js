@@ -799,53 +799,7 @@ const VoiceInterview = () => {
             <div className="text-center mb-8">
               <CheckCircle className="w-20 h-20 text-green-500 mx-auto mb-4" />
               <h1 className="text-4xl font-bold text-gray-800 mb-2">Interview Complete!</h1>
-              <p className="text-gray-600">Great job completing the interview</p>
-            </div>
-
-            <div className="grid md:grid-cols-2 gap-6 mb-8">
-              <div className="bg-gradient-to-br from-[#0a2a5e]/5 to-[#0a2a5e]/10 rounded-2xl p-6">
-                <h3 className="text-lg font-semibold text-gray-800 mb-2">Overall Score</h3>
-                <div className="text-5xl font-bold text-[#0a2a5e]">{reportData.avg_score}/100</div>
-              </div>
-
-              <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-6">
-                <h3 className="text-lg font-semibold text-gray-800 mb-2">Performance Level</h3>
-                <div className="text-2xl font-bold text-purple-600">{reportData.performance_level}</div>
-              </div>
-            </div>
-
-            <div className="space-y-6 mb-8">
-              {/* Strengths */}
-              <div className="bg-green-50 rounded-2xl p-6">
-                <h3 className="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                  <CheckCircle className="w-6 h-6 text-green-600" />
-                  Strengths
-                </h3>
-                <ul className="space-y-2">
-                  {reportData.strengths.map((strength, idx) => (
-                    <li key={idx} className="text-gray-700 flex items-start gap-2">
-                      <span className="text-green-600 mt-1">•</span>
-                      <span>{strength}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              {/* Areas for Improvement */}
-              <div className="bg-orange-50 rounded-2xl p-6">
-                <h3 className="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                  <XCircle className="w-6 h-6 text-orange-600" />
-                  Areas for Improvement
-                </h3>
-                <ul className="space-y-2">
-                  {reportData.improvements.map((improvement, idx) => (
-                    <li key={idx} className="text-gray-700 flex items-start gap-2">
-                      <span className="text-orange-600 mt-1">•</span>
-                      <span>{improvement}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+              <p className="text-gray-600">Great job completing the interview. Our HR team will review your responses and contact you shortly.</p>
             </div>
 
             <div className="flex gap-4">
