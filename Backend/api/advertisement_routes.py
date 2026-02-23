@@ -420,9 +420,30 @@ def compose_text_overlay(bg: Image.Image, refined: dict, input_data: dict, prima
     img = bg.copy().convert("RGBA")
 
     # ── Helper: hex to RGBA tuple ────────────────────────────────────────
+    DEFAULT_PRIMARY_RGB = (10, 42, 94)  # matches "#0a2a5e"
+
     def hex_rgba(h, a=255):
+        """
+        Convert hex color string to an (R, G, B, A) tuple.
+        Falls back to DEFAULT_PRIMARY_RGB on malformed input.
+        """
+        if not isinstance(h, str):
+            r, g, b = DEFAULT_PRIMARY_RGB
+            return (r, g, b, a)
         h = h.lstrip("#")
-        return (int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16), a)
+        # Require at least 6 hex chars; ignore any extras.
+        if len(h) < 6:
+            r, g, b = DEFAULT_PRIMARY_RGB
+            return (r, g, b, a)
+        h = h[:6]
+        try:
+            r = int(h[0:2], 16)
+            g = int(h[2:4], 16)
+            b = int(h[4:6], 16)
+            return (r, g, b, a)
+        except ValueError:
+            r, g, b = DEFAULT_PRIMARY_RGB
+            return (r, g, b, a)
 
     pc = hex_rgba(primary_color)  # user-selected primary colour
 
