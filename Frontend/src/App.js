@@ -1,6 +1,6 @@
 // App.js
 import React from "react";
-import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom";
 
 // Global Components
 import Navbar from "./components/Navbar";
@@ -148,6 +148,8 @@ function App() {
         <Route path="/recruiter/report/:rankingId" element={<CandidateReport />} />
         <Route path="/recruiter/all-jobs" element={<RecruiterAllJobs />} />
         <Route path="/recruiter/settings" element={<RecruiterSettings />} />
+        <Route path="/recruiter/ranking" element={<Navigate to="/recruiter/advertisement" replace />} />
+        <Route path="/recruiter/evaluation" element={<Navigate to="/recruiter/advertisement" replace />} />
       </Routes>
     </Router>
   );
