@@ -46,6 +46,8 @@ import RecruiterInterviewReports from "./RecruiterInterviewReports";
 import InterviewReportDetail from "./InterviewReportDetail";
 import RecruiterSettings from "./RecruiterSettings";
 import RecruiterAllJobs from "./RecruiterAllJobs";
+import Ranking from "./Ranking";
+import Evaluation from "./Evaluation";
 
 // Resume Builder Pages
 import TemplateSelect from "./pages/TemplateSelect";
@@ -143,6 +145,8 @@ function App() {
         <Route path="/recruiter/job-posting" element={<JobPosting />} />
         <Route path="/recruiter/cv-screening" element={<RecruiterCVScreening />} />
         <Route path="/recruiter/advertisement" element={<Advertisement />} />
+        <Route path="/recruiter/ranking" element={<Ranking />} />
+        <Route path="/recruiter/evaluation" element={<Evaluation />} />
         <Route path="/recruiter/reports/:jobId" element={<RecruiterInterviewReports />} />
         <Route path="/recruiter/interview-report/:reportId" element={<InterviewReportDetail />} />
         <Route path="/recruiter/report/:rankingId" element={<CandidateReport />} />
