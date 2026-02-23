@@ -168,9 +168,10 @@ const Advertisement = () => {
     };
 
     const handleDeleteAd = async (adId) => {
+        if (!recruiterData) return;
         if (!window.confirm("Delete this advertisement?")) return;
         try {
-            const response = await fetch(`${API_BASE_URL}/advertisements/${adId}`, {
+            const response = await fetch(`${API_BASE_URL}/advertisements/${adId}?recruiterId=${encodeURIComponent(recruiterData.id)}`, {
                 method: "DELETE",
             });
             if (response.ok) {
