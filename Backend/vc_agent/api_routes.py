@@ -108,13 +108,20 @@ async def initiate_interview(
             print(f"⚠️ Failed to parse CV text: {e}")
             cv_text = ""
 
-        # Parse CV using Gemini Flash 2.5 for structured extraction
+        # Parse CV using Gemini Flash 2.5 for structured extraction with timeout
         parsed_cv = None
         if cv_text:
             try:
-                print(f"[INFO] Parsing CV with Gemini Flash 2.5...")
-                parsed_cv = extract_cv_information(cv_text)
+                print(f"[INFO] Parsing CV with Gemini Flash 2.5 (with timeout)...")
+                loop = asyncio.get_running_loop()
+                parsed_cv = await asyncio.wait_for(
+                    loop.run_in_executor(None, extract_cv_information, cv_text),
+                    timeout=15.0,
+                )
                 print(f"[INFO] CV parsed successfully: {len(parsed_cv.get('skills', []))} skills, {len(parsed_cv.get('education', []))} education entries")
+            except asyncio.TimeoutError:
+                print("⚠️ CV parsing with Gemini Flash 2.5 timed out; continuing without structured CV data.")
+                parsed_cv = None
             except Exception as e:
                 print(f"⚠️ Failed to parse CV with AI: {e}")
                 parsed_cv = None
