@@ -2,6 +2,7 @@
 
 import API_BASE_URL from "../apiConfig";
 const CURRENT_USER_KEY = 'recrubotx_current_user';
+const AUTH_TOKEN_KEY = 'recrubotx_auth_token';
 
 // No longer need to initialize dummy users - they're in MongoDB
 export const initializeDummyUsers = () => {
@@ -55,8 +56,11 @@ export const registerUser = async (userData) => {
       };
     }
 
-    // Store logged in user (without password)
+    // Store logged in user (without password) and JWT token
     localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(data.user));
+    if (data.access_token) {
+      localStorage.setItem(AUTH_TOKEN_KEY, data.access_token);
+    }
 
     return {
       success: true,
@@ -94,8 +98,11 @@ export const loginUser = async (email, password) => {
       };
     }
 
-    // Store logged in user (without password)
+    // Store logged in user (without password) and JWT token
     localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(data.user));
+    if (data.access_token) {
+      localStorage.setItem(AUTH_TOKEN_KEY, data.access_token);
+    }
 
     return {
       success: true,
@@ -113,6 +120,12 @@ export const loginUser = async (email, password) => {
 // Logout user
 export const logoutUser = () => {
   localStorage.removeItem(CURRENT_USER_KEY);
+  localStorage.removeItem(AUTH_TOKEN_KEY);
+};
+
+// Get the stored JWT access token
+export const getAuthToken = () => {
+  return localStorage.getItem(AUTH_TOKEN_KEY);
 };
 
 // Get current logged in user

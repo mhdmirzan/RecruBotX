@@ -25,6 +25,7 @@ from pydantic import BaseModel
 from bson import ObjectId
 
 from database.connection import get_database
+from api.auth_utils import get_current_user_id
 
 # ── LangChain ──────────────────────────────────────────────────────────────
 from langchain_google_genai import ChatGoogleGenerativeAI
@@ -76,7 +77,6 @@ AD_SIZE = (W, H)
 # ══════════════════════════════════════════════════════════════════════════
 
 class AdvertisementRequest(BaseModel):
-    recruiterId: str
     jobTitle: str
     companyName: str
     companyDescription: str = ""
@@ -672,7 +672,11 @@ def compose_text_overlay(bg: Image.Image, refined: dict, input_data: dict, prima
 # ══════════════════════════════════════════════════════════════════════════
 
 @router.post("/generate")
-async def generate_advertisement(request: AdvertisementRequest, db=Depends(get_database)):
+async def generate_advertisement(
+    request: AdvertisementRequest,
+    db=Depends(get_database),
+    recruiter_id: str = Depends(get_current_user_id),
+):
     """
     Generate a LinkedIn job advertisement (1080×1350, portrait).
 
@@ -740,7 +744,7 @@ async def generate_advertisement(request: AdvertisementRequest, db=Depends(get_d
 
     # ── Stage 4: Save to MongoDB ───────────────────────────────────────
     ad_document = {
-        "recruiterId":      request.recruiterId,
+        "recruiterId":      recruiter_id,
         "refined":          refined,
         "inputData":        input_data,
         "imageBase64":      image_base64,
@@ -767,8 +771,14 @@ async def generate_advertisement(request: AdvertisementRequest, db=Depends(get_d
 # ── History endpoints ───────────────────────────────────────────────────────
 
 @router.get("/recruiter/{recruiter_id}")
-async def get_recruiter_advertisements(recruiter_id: str, db=Depends(get_database)):
+async def get_recruiter_advertisements(
+    recruiter_id: str,
+    db=Depends(get_database),
+    token_user_id: str = Depends(get_current_user_id),
+):
     """Get all advertisements for a recruiter (WITH images for history display)."""
+    if recruiter_id != token_user_id:
+        raise HTTPException(status_code=403, detail="Access forbidden")
     cursor = db["advertisements"].find(
         {"recruiterId": recruiter_id}
     ).sort("createdAt", -1)
@@ -794,13 +804,20 @@ async def get_advertisement(ad_id: str, db=Depends(get_database)):
 
 
 @router.delete("/{ad_id}")
-async def delete_advertisement(ad_id: str, db=Depends(get_database)):
-    """Delete an advertisement."""
+async def delete_advertisement(
+    ad_id: str,
+    db=Depends(get_database),
+    recruiter_id: str = Depends(get_current_user_id),
+):
+    """Delete an advertisement (only the owning recruiter may delete it)."""
     try:
         oid = ObjectId(ad_id)
     except Exception:
         raise HTTPException(status_code=400, detail="Invalid advertisement ID")
-    result = await db["advertisements"].delete_one({"_id": oid})
-    if result.deleted_count == 0:
+    ad = await db["advertisements"].find_one({"_id": oid}, {"recruiterId": 1})
+    if not ad:
         raise HTTPException(status_code=404, detail="Advertisement not found")
+    if ad.get("recruiterId") != recruiter_id:
+        raise HTTPException(status_code=403, detail="Access forbidden")
+    await db["advertisements"].delete_one({"_id": oid})
     return {"success": True, "message": "Advertisement deleted"}

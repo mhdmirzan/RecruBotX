@@ -23,6 +23,7 @@ import {
     Zap,
 } from "lucide-react";
 import API_BASE_URL from "./apiConfig";
+import { getAuthToken } from "./utils/userDatabase";
 
 const Advertisement = () => {
     const navigate = useNavigate();
@@ -70,9 +71,22 @@ const Advertisement = () => {
         }
     }, [navigate]);
 
+    const getTokenOrRedirect = () => {
+        const token = getAuthToken();
+        if (!token) {
+            navigate("/recruiter/signin");
+            return null;
+        }
+        return token;
+    };
+
     const fetchPastAds = async (recruiterId) => {
         try {
-            const response = await fetch(`${API_BASE_URL}/advertisements/recruiter/${recruiterId}`);
+            const token = getAuthToken();
+            if (!token) return;
+            const response = await fetch(`${API_BASE_URL}/advertisements/recruiter/${recruiterId}`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
             if (response.ok) {
                 const data = await response.json();
                 setPastAds(data.advertisements || []);
@@ -134,19 +148,23 @@ const Advertisement = () => {
         setGeneratedAd(null);
 
         try {
-            // Filter out empty list items
+            // Filter out empty list items; recruiterId is derived server-side from the JWT token
             const cleanedData = {
                 ...formData,
-                recruiterId: recruiterData.id,
                 responsibilities: formData.responsibilities.filter((r) => r.trim()),
                 requirements: formData.requirements.filter((r) => r.trim()),
                 benefits: formData.benefits.filter((b) => b.trim()),
                 certifications: formData.certifications.filter((c) => c.trim()),
             };
 
+            const token = getTokenOrRedirect();
+            if (!token) return;
             const response = await fetch(`${API_BASE_URL}/advertisements/generate`, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
                 body: JSON.stringify(cleanedData),
             });
 
@@ -170,8 +188,11 @@ const Advertisement = () => {
     const handleDeleteAd = async (adId) => {
         if (!window.confirm("Delete this advertisement?")) return;
         try {
+            const token = getTokenOrRedirect();
+            if (!token) return;
             const response = await fetch(`${API_BASE_URL}/advertisements/${adId}`, {
                 method: "DELETE",
+                headers: { Authorization: `Bearer ${token}` },
             });
             if (response.ok) {
                 fetchPastAds(recruiterData.id);

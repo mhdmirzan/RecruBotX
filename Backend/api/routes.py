@@ -19,6 +19,7 @@ from vc_agent.api_routes import router as voice_router
 from api.job_posting_routes import router as job_posting_router
 from api.ranking_routes import router as ranking_router
 from api.advertisement_routes import router as advertisement_router
+from api.auth_utils import create_access_token
 
 router = APIRouter()
 
@@ -490,9 +491,12 @@ async def register_user(
     # Get created user
     user = await crud.get_user_by_id(db, user_id)
     
+    access_token = create_access_token(user["_id"], user["email"])
     return {
         "success": True,
         "message": "User registered successfully",
+        "access_token": access_token,
+        "token_type": "bearer",
         "user": {
             "id": user["_id"],
             "firstName": user["first_name"],
@@ -540,9 +544,12 @@ async def login_user(
             detail="User account is inactive"
         )
     
+    access_token = create_access_token(user["_id"], user["email"])
     return {
         "success": True,
         "message": "Login successful",
+        "access_token": access_token,
+        "token_type": "bearer",
         "user": {
             "id": user["_id"],
             "firstName": user["first_name"],
