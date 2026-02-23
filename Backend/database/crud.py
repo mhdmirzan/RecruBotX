@@ -348,6 +348,7 @@ async def create_interview_cv(
         "job_id": cv_data.get("job_id"),
         "interview_field": cv_data.get("interview_field"),
         "position_level": cv_data.get("position_level"),
+        "parsed_cv": cv_data.get("parsed_cv"),
         "created_at": datetime.utcnow()
     }
     result = await db.interview_cvs.insert_one(interview_cv)

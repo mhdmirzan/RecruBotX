@@ -4,8 +4,6 @@ import {
     LayoutDashboard,
     LogOut,
     PlusCircle,
-    TrendingUp,
-    BarChart3,
     Upload,
     FileText,
     Settings,
@@ -15,7 +13,8 @@ import {
     Loader2,
     Users,
     Trash2,
-    Eye
+    Eye,
+    Megaphone
 } from "lucide-react";
 import API_BASE_URL from "./apiConfig";
 
@@ -240,23 +239,13 @@ const RecruiterCVScreening = () => {
                     </NavLink>
 
                     <NavLink
-                        to="/recruiter/ranking"
+                        to="/recruiter/advertisement"
                         className={({ isActive }) =>
                             `font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 ${isActive ? "bg-[#0a2a5e]/10 text-[#0a2a5e]" : "text-gray-700 hover:bg-[#0a2a5e]/5 hover:text-[#0a2a5e]"
                             }`
                         }
                     >
-                        <TrendingUp className="w-5 h-5" /> Ranking
-                    </NavLink>
-
-                    <NavLink
-                        to="/recruiter/evaluation"
-                        className={({ isActive }) =>
-                            `font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 ${isActive ? "bg-[#0a2a5e]/10 text-[#0a2a5e]" : "text-gray-700 hover:bg-[#0a2a5e]/5 hover:text-[#0a2a5e]"
-                            }`
-                        }
-                    >
-                        <BarChart3 className="w-5 h-5" /> Evaluation
+                        <Megaphone className="w-5 h-5" /> Advertisement
                     </NavLink>
 
                     <NavLink
@@ -464,7 +453,7 @@ const RecruiterCVScreening = () => {
                                 <div className="border border-gray-200 rounded-xl overflow-hidden">
                                     <div className="bg-gradient-to-r from-[#0a2a5e] to-[#0d3b82] px-6 py-4">
                                         <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                                            <TrendingUp className="w-5 h-5" />
+                                            <Users className="w-5 h-5" />
                                             Candidate Rankings
                                         </h3>
                                         <p className="text-blue-200 text-sm mt-1">

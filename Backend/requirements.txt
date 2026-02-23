@@ -21,6 +21,18 @@ requests>=2.31.0
 
 # Google Generative AI (stable version)
 google-genai
+
+# LangChain + LangSmith (advertisement agent)
+langchain>=0.3.0
+langchain-google-genai>=2.0.0
+langsmith>=0.1.0
+
+# Hugging Face (AI image generation)
+huggingface_hub>=0.24.0
+
+# Image processing (text overlay on AI image)
+Pillow>=10.0.0
+
 reportlab>=3.6.12
 
 opencv-python
