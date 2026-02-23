@@ -21,7 +21,9 @@ from datetime import datetime
 from pathlib import Path
 
 from fastapi import APIRouter, HTTPException, Depends
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+from pydantic import StringConstraints
+from typing import Annotated, List
 from bson import ObjectId
 
 from database.connection import get_database
@@ -70,6 +72,13 @@ router = APIRouter(prefix="/advertisements", tags=["advertisements"])
 W, H = 1080, 1350
 AD_SIZE = (W, H)
 
+# ── List field constraints ────────────────────────────────────────────────
+MAX_LIST_ITEMS = 10
+MAX_ITEM_CHARS = 500
+
+_ListItem = Annotated[str, StringConstraints(max_length=MAX_ITEM_CHARS)]
+_BoundedList = Annotated[List[_ListItem], Field(max_length=MAX_LIST_ITEMS)]
+
 
 # ══════════════════════════════════════════════════════════════════════════
 # REQUEST MODEL
@@ -84,12 +93,12 @@ class AdvertisementRequest(BaseModel):
     employmentType: str = ""
     workMode: str = ""
     urgentHiring: bool = False
-    responsibilities: list = []
-    requirements: list = []
+    responsibilities: _BoundedList = []
+    requirements: _BoundedList = []
     salaryRange: str = ""
     salaryConfidential: bool = False
-    benefits: list = []
-    certifications: list = []
+    benefits: _BoundedList = []
+    certifications: _BoundedList = []
     deadline: str = ""
     contactEmail: str = ""
     applicationLink: str = ""
