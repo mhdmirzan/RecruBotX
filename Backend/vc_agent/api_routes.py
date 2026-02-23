@@ -108,6 +108,17 @@ async def initiate_interview(
             print(f"⚠️ Failed to parse CV text: {e}")
             cv_text = ""
 
+        # Parse CV using Gemini Flash 2.5 for structured extraction
+        parsed_cv = None
+        if cv_text:
+            try:
+                print(f"[INFO] Parsing CV with Gemini Flash 2.5...")
+                parsed_cv = extract_cv_information(cv_text)
+                print(f"[INFO] CV parsed successfully: {len(parsed_cv.get('skills', []))} skills, {len(parsed_cv.get('education', []))} education entries")
+            except Exception as e:
+                print(f"⚠️ Failed to parse CV with AI: {e}")
+                parsed_cv = None
+
         # Store CV in Database (job_cv_files) and Link to Job
         try:
             with open(file_path, "rb") as f:
@@ -128,8 +139,7 @@ async def initiate_interview(
             print(f"⚠️ Failed to store CV in database: {e}")
             cv_file_id = None
 
-        # 3. Store Candidate/Application Data (simplified for now)
-        # In a real app, you'd create an 'Application' record here linking Job + Candidate + CV
+        # 3. Store Candidate/Application Data with parsed CV
         cv_data = {
             "candidate_name": candidate_name,
             "email_address": email_address,
@@ -137,7 +147,8 @@ async def initiate_interview(
             "linkedin": linkedin_profile,
             "cv_file_path": str(file_path),
             "job_id": job_id,
-            "cv_text": cv_text[:2000] # Store snippet
+            "cv_text": cv_text[:2000],  # Store snippet
+            "parsed_cv": parsed_cv  # Structured CV data from Gemini
         }
         
         cv_id = await create_interview_cv(db, session_id, cv_data)

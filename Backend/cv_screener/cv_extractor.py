@@ -102,7 +102,7 @@ JSON Output:
         print(f"[DEBUG] Sending {len(cv_text)} characters to Gemini for extraction...")
         
         # Primary model
-        target_model = "gemini-1.5-flash"
+        target_model = "gemini-2.5-flash"
         
         try:
             response = client.models.generate_content(
@@ -117,7 +117,7 @@ JSON Output:
                 print(f"[WARNING] 404 for {target_model}. Trying fallback...")
                 # Try fallback (Gemini 2.0 Flash)
                 response = client.models.generate_content(
-                    model="gemini-2.0-flash-exp",
+                    model="gemini-2.0-flash",
                     contents=prompt,
                     config=types.GenerateContentConfig(
                         temperature=0.1,

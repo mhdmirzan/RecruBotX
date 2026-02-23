@@ -40,8 +40,7 @@ import RecruiterSigninPage from "./RecruiterSigninPage";
 import RecruiterDashboard from "./RecruiterDashboard";
 import JobPosting from "./JobPosting";
 import RecruiterCVScreening from "./RecruiterCVScreening";
-import Evaluation from "./Evaluation";
-import Ranking from "./Ranking";
+import Advertisement from "./Advertisement";
 import CandidateReport from "./CandidateReport";
 import RecruiterInterviewReports from "./RecruiterInterviewReports";
 import InterviewReportDetail from "./InterviewReportDetail";
@@ -66,8 +65,7 @@ const ConditionalNavbar = () => {
     "/recruiter/dashboard",
     "/recruiter/job-posting",
     "/recruiter/cv-screening",
-    "/recruiter/ranking",
-    "/recruiter/evaluation",
+    "/recruiter/advertisement",
     "/recruiter/settings",
     "/recruiter/report",
     "/recruiter/all-jobs",
@@ -144,8 +142,7 @@ function App() {
         <Route path="/recruiter/dashboard" element={<RecruiterDashboard />} />
         <Route path="/recruiter/job-posting" element={<JobPosting />} />
         <Route path="/recruiter/cv-screening" element={<RecruiterCVScreening />} />
-        <Route path="/recruiter/evaluation" element={<Evaluation />} />
-        <Route path="/recruiter/ranking" element={<Ranking />} />
+        <Route path="/recruiter/advertisement" element={<Advertisement />} />
         <Route path="/recruiter/reports/:jobId" element={<RecruiterInterviewReports />} />
         <Route path="/recruiter/interview-report/:reportId" element={<InterviewReportDetail />} />
         <Route path="/recruiter/report/:rankingId" element={<CandidateReport />} />

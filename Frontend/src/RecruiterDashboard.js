@@ -5,16 +5,15 @@ import {
   Users,
   Briefcase,
   Video,
-  BarChart3,
   PlusCircle,
   FileText,
   LayoutDashboard,
-  TrendingUp,
   Settings,
   LogOut,
   X,
   Trash2,
-  Search
+  Search,
+  Megaphone
 } from "lucide-react";
 import API_BASE_URL from "./apiConfig";
 
@@ -151,23 +150,13 @@ const RecruiterDashboard = () => {
           </NavLink>
 
           <NavLink
-            to="/recruiter/ranking"
+            to="/recruiter/advertisement"
             className={({ isActive }) =>
               `font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 ${isActive ? "bg-[#0a2a5e]/10 text-[#0a2a5e]" : "text-gray-700 hover:bg-[#0a2a5e]/5 hover:text-[#0a2a5e]"
               }`
             }
           >
-            <TrendingUp className="w-5 h-5" /> Ranking
-          </NavLink>
-
-          <NavLink
-            to="/recruiter/evaluation"
-            className={({ isActive }) =>
-              `font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 ${isActive ? "bg-[#0a2a5e]/10 text-[#0a2a5e]" : "text-gray-700 hover:bg-[#0a2a5e]/5 hover:text-[#0a2a5e]"
-              }`
-            }
-          >
-            <BarChart3 className="w-5 h-5" /> Evaluation
+            <Megaphone className="w-5 h-5" /> Advertisement
           </NavLink>
 
           <NavLink
@@ -455,26 +444,6 @@ const RecruiterDashboard = () => {
 
               {/* Action Buttons - Right Aligned */}
               <div className="flex justify-end gap-3">
-                <button
-                  onClick={() => {
-                    navigate('/recruiter/ranking');
-                    closeModal();
-                  }}
-                  className="bg-blue-600 text-white px-6 py-2.5 rounded-xl font-semibold hover:bg-blue-700 transition-all shadow-md flex items-center gap-2"
-                >
-                  <TrendingUp className="w-4 h-4" />
-                  View Rankings
-                </button>
-                <button
-                  onClick={() => {
-                    navigate('/recruiter/evaluation');
-                    closeModal();
-                  }}
-                  className="bg-[#0a2a5e] text-white px-6 py-2.5 rounded-xl font-semibold hover:bg-[#061a3d] transition-all shadow-md flex items-center gap-2"
-                >
-                  <BarChart3 className="w-4 h-4" />
-                  View Evaluations
-                </button>
                 <button
                   onClick={() => {
                     navigate(`/recruiter/reports/${selectedJob.id || selectedJob._id}`);

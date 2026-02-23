@@ -18,6 +18,7 @@ from database.ranking_crud import create_candidate_ranking
 from vc_agent.api_routes import router as voice_router
 from api.job_posting_routes import router as job_posting_router
 from api.ranking_routes import router as ranking_router
+from api.advertisement_routes import router as advertisement_router
 
 router = APIRouter()
 
@@ -25,6 +26,7 @@ router = APIRouter()
 router.include_router(voice_router)
 router.include_router(job_posting_router)
 router.include_router(ranking_router)
+router.include_router(advertisement_router)
 
 # Initialize the Gemini screener
 screener = GeminiCVScreener()
