@@ -794,13 +794,16 @@ async def get_advertisement(ad_id: str, db=Depends(get_database)):
 
 
 @router.delete("/{ad_id}")
-async def delete_advertisement(ad_id: str, db=Depends(get_database)):
-    """Delete an advertisement."""
+async def delete_advertisement(ad_id: str, recruiter_id: str, db=Depends(get_database)):
+    """Delete an advertisement. Only the owning recruiter may delete it."""
     try:
         oid = ObjectId(ad_id)
     except Exception:
         raise HTTPException(status_code=400, detail="Invalid advertisement ID")
-    result = await db["advertisements"].delete_one({"_id": oid})
-    if result.deleted_count == 0:
+    ad = await db["advertisements"].find_one({"_id": oid})
+    if not ad:
         raise HTTPException(status_code=404, detail="Advertisement not found")
+    if ad.get("recruiterId") != recruiter_id:
+        raise HTTPException(status_code=403, detail="Not authorized to delete this advertisement")
+    await db["advertisements"].delete_one({"_id": oid})
     return {"success": True, "message": "Advertisement deleted"}
