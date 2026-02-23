@@ -20,8 +20,10 @@ import textwrap
 from datetime import datetime
 from pathlib import Path
 
+import re
+
 from fastapi import APIRouter, HTTPException, Depends
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 from bson import ObjectId
 
 from database.connection import get_database
@@ -97,6 +99,13 @@ class AdvertisementRequest(BaseModel):
     primaryColor: str = "#0a2a5e"
     secondaryColor: str = "#2b4c8c"
     adSize: str = "linkedin_post"
+
+    @field_validator("primaryColor", "secondaryColor")
+    @classmethod
+    def validate_hex_color(cls, v: str) -> str:
+        if not re.fullmatch(r"#[0-9A-Fa-f]{6}", v):
+            raise ValueError("Color must be a valid hex color in the format #RRGGBB")
+        return v
 
 
 # ══════════════════════════════════════════════════════════════════════════
@@ -419,7 +428,7 @@ def compose_text_overlay(bg: Image.Image, refined: dict, input_data: dict, prima
     """
     img = bg.copy().convert("RGBA")
 
-    # ── Helper: hex to RGBA tuple ────────────────────────────────────────
+    # ── Helper: hex to RGBA tuple (assumes validated #RRGGBB input) ──────────
     def hex_rgba(h, a=255):
         h = h.lstrip("#")
         return (int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16), a)
