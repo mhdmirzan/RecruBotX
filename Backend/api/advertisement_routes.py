@@ -14,6 +14,7 @@ LinkedIn Portrait: 1080 × 1350 px
 
 import os
 import io
+import re
 import json
 import base64
 import textwrap
@@ -21,7 +22,7 @@ from datetime import datetime
 from pathlib import Path
 
 from fastapi import APIRouter, HTTPException, Depends
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 from bson import ObjectId
 
 from database.connection import get_database
@@ -97,6 +98,13 @@ class AdvertisementRequest(BaseModel):
     primaryColor: str = "#0a2a5e"
     secondaryColor: str = "#2b4c8c"
     adSize: str = "linkedin_post"
+
+    @field_validator("primaryColor", "secondaryColor")
+    @classmethod
+    def validate_hex_color(cls, v: str) -> str:
+        if not re.fullmatch(r"#[0-9A-Fa-f]{6}", v):
+            raise ValueError("Color must be a valid hex color in the format #RRGGBB")
+        return v
 
 
 # ══════════════════════════════════════════════════════════════════════════
