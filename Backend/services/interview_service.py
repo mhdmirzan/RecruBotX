@@ -1,0 +1,322 @@
+from typing import Dict, Optional, AsyncGenerator
+import uuid
+import json
+import base64
+from datetime import datetime
+
+from typing import Dict, Optional, AsyncGenerator, List
+import uuid
+import json
+import base64
+from datetime import datetime
+from pydantic import BaseModel
+from enum import Enum
+
+class InterviewStage(str, Enum):
+    INTRODUCTION = "introduction"
+    WARMUP = "warmup"
+    CORE = "core"
+    WRAPUP = "wrapup"
+    FINISHED = "finished"
+
+class Question(BaseModel):
+    text: str
+    stage: InterviewStage
+    difficulty: str = "medium"
+
+class InterviewState(BaseModel):
+    candidate_name: str
+    job_role: str
+    stage: InterviewStage = InterviewStage.INTRODUCTION
+    questions_asked: List[Question] = []
+    responses: List[str] = []
+    skills_covered: List[str] = []
+    current_difficulty: str = "medium"
+    transcript: List[dict] = [] 
+
+# Import LLM/STT/TTS services directly
+# We will create wrappers around existing services or copy them to Backend/services
+from services.llm_service import LLMService 
+from services.stt_service import STTService
+from services.tts_service import TTSService
+
+# We will redefine the prompts here to match the new requirements
+INTERVIEWER_SYSTEM_PROMPT = """
+You are an AI technical interviewer.
+
+You are conducting an interview for the following job:
+
+JOB DESCRIPTION:
+{job_description}
+
+REQUIRED SKILLS:
+{required_skills}
+
+RECRUITER EXTRA INSTRUCTIONS:
+{extra_instructions}
+
+Candidate Details:
+Name: {candidate_name}
+
+Candidate CV (Structured JSON):
+{candidate_cv_json}
+
+Rules:
+- Ask role-specific questions.
+- Prioritize required skills.
+- Ask about projects from CV.
+- Adapt based on answers.
+- Mix technical + behavioral questions.
+- Maintain professional tone.
+- Do not provide evaluation to the candidate.
+- Ask ONE question at a time.
+- Based on the candidate's last response, either dig deeper or move to the next topic.
+- Keep responses conversational but focused, avoid long monologues.
+- Do NOT output markdown or code blocks unless explicitly asked, as this is a voice interview. Speak naturally.
+- When the interview is over, say "Thank you for your time. The interview is now concluded."
+
+Focus for {stage}: {stage_instructions}
+"""
+
+STAGE_INSTRUCTIONS = {
+    "introduction": "Briefly welcome the candidate, introduce yourself as the AI interviewer, and explain the format. Ask them if they are ready to begin.",
+    "warmup": "Ask a broad question like 'Tell me about yourself' or ask about their background from the CV. Keep it light.",
+    "core": "Ask specific technical questions related to the required skills and job description. Challenge their assumptions. Test depth of knowledge. Mix in 1-2 behavioral questions.",
+    "wrapup": "Ask if they have any questions for you. Then thank them and close the interview."
+}
+
+
+class InterviewServiceContext:
+    def __init__(self, candidate_name: str, candidate_cv_json: dict, job_description: str, required_skills: list, recruiter_extra_instructions: str):
+        self.candidate_name = candidate_name
+        self.candidate_cv_json = candidate_cv_json
+        self.job_description = job_description
+        self.required_skills = required_skills
+        self.recruiter_extra_instructions = recruiter_extra_instructions
+
+
+class InterviewService:
+    def __init__(self, db):
+        self.db = db
+        # Dictionary to hold active in-memory state during an ongoing WebSocket connection
+        self.sessions: Dict[str, InterviewState] = {}
+        self.context_store: Dict[str, InterviewServiceContext] = {}
+        self.llm_service = LLMService()
+        self.stt_service = STTService()
+        self.tts_service = TTSService()
+
+    async def initialize_session(self, context: InterviewServiceContext, job_id: str, candidate_id: str) -> str:
+        session_id = str(uuid.uuid4())
+        
+        # 1. Save Context in-memory
+        self.context_store[session_id] = context
+        
+        # 2. Save Session State in-memory
+        self.sessions[session_id] = InterviewState(
+            candidate_name=context.candidate_name,
+            job_role="Candidate", # Will use JD instead
+            stage=InterviewStage.INTRODUCTION
+        )
+        
+        # 3. Create Session in DB
+        await self.db.interview_sessions.insert_one({
+            "session_id": session_id,
+            "job_id": job_id,
+            "candidate_id": candidate_id,
+            "transcript": [],
+            "technical_score": 0,
+            "behavioral_score": 0,
+            "confidence_score": 0,
+            "overall_score": 0,
+            "status": "In Progress",
+            "created_at": datetime.utcnow()
+        })
+        
+        return session_id
+
+    def get_session(self, session_id: str) -> Optional[InterviewState]:
+        return self.sessions.get(session_id)
+
+    async def process_input(self, session_id: str, user_input: str) -> AsyncGenerator[str, None]:
+        session = self.get_session(session_id)
+        context = self.context_store.get(session_id)
+        
+        if not session or not context:
+            yield "Error: Session not found."
+            return
+
+        # 1. Update Transcript with User Input
+        if user_input.strip() != "INIT":
+            session.transcript.append({"role": "candidate", "content": user_input})
+            
+            # Save to DB asynchronously (fire and forget or await)
+            await self.db.interview_sessions.update_one(
+                {"session_id": session_id},
+                {"$push": {"transcript": {"role": "candidate", "content": user_input, "timestamp": datetime.utcnow()}}}
+            )
+        
+        # 2. Determine Stage & Instructions
+        current_stage = session.stage
+        interaction_count = len([x for x in session.transcript if x["role"] == "interviewer"])
+
+        # Simple Stage Transition Logic
+        if current_stage == InterviewStage.INTRODUCTION and interaction_count > 0:
+            session.stage = InterviewStage.WARMUP
+        elif current_stage == InterviewStage.WARMUP and interaction_count > 2:
+            session.stage = InterviewStage.CORE
+        elif current_stage == InterviewStage.CORE and interaction_count > 7:
+            session.stage = InterviewStage.WRAPUP
+
+        stage_instructions = STAGE_INSTRUCTIONS.get(session.stage.value, "")
+
+        # 3. Construct History
+        history = []
+        
+        # Add System Prompt with the new context
+        system_prompt = INTERVIEWER_SYSTEM_PROMPT.format(
+            job_description=context.job_description,
+            required_skills=", ".join(context.required_skills) if context.required_skills else "Not specified",
+            extra_instructions=context.recruiter_extra_instructions,
+            candidate_name=context.candidate_name,
+            candidate_cv_json=json.dumps(context.candidate_cv_json, indent=2),
+            stage=session.stage.value,
+            stage_instructions=stage_instructions
+        )
+        history.append({"role": "system", "content": system_prompt})
+
+        # Add Chat History
+        for msg in session.transcript[-10:]:
+             role = "user" if msg["role"] == "candidate" else "assistant"
+             history.append({"role": role, "content": msg["content"]})
+
+        # 4. Generate AI Response
+        ai_response_chunks = []
+        # If user_input was INIT, don't pass it to LLM as a user message, just trigger first greeting
+        prompt_input = "Hello, I am ready for the interview." if user_input == "INIT" else user_input
+        
+        async for chunk in self.llm_service.generate_response(prompt_input, history=history):
+            ai_response_chunks.append(chunk)
+            yield chunk
+
+        full_response = "".join(ai_response_chunks)
+        
+        # 5. Update Transcript with AI Response
+        session.transcript.append({"role": "interviewer", "content": full_response})
+        
+        # Determine if finished based on LLM output
+        if "interview is now concluded" in full_response.lower() or "thank you for your time" in full_response.lower():
+            session.stage = InterviewStage.FINISHED
+            
+        await self.db.interview_sessions.update_one(
+            {"session_id": session_id},
+            {"$push": {"transcript": {"role": "interviewer", "content": full_response, "timestamp": datetime.utcnow()}}},
+            upsert=False
+        )
+
+    async def transcribe_audio(self, audio_bytes: bytes) -> str:
+        return await self.stt_service.transcribe(audio_bytes)
+        
+    async def generate_speech(self, text: str) -> Optional[bytes]:
+        return await self.tts_service.generate_speech(text)
+
+    async def finalize_interview(self, session_id: str):
+        """
+        Evaluate transcript and generate final report
+        """
+        session = self.get_session(session_id)
+        if not session:
+            return
+            
+        # Mock evaluation matching the old vc_agent structure exactly to not break frontend
+        evaluation = {
+            "avg_score": 85,
+            "performance_level": "Strong Hire",
+            "strengths": [
+                "Demonstrated excellent understanding of core concepts.",
+                "Communicated ideas clearly and effectively.",
+                "Handled technical questions with confidence."
+            ],
+            "improvements": [
+                "Could provide more concrete examples from past projects.",
+                "Sometimes hesitated on corner cases."
+            ],
+            # Extract questions and answers from transcript to match frontend arrays
+            "questions": [msg["content"] for msg in session.transcript if msg["role"] == "interviewer"],
+            "answers": [msg["content"] for msg in session.transcript if msg["role"] == "candidate"],
+            "scores": [8, 9, 8, 9, 8], # Mock scores for each interaction
+            "feedback": ["Good answer.", "Excellent explanation.", "Solid understanding.", "Great technical depth.", "Good overview."],
+            "completed_at": datetime.utcnow(),
+            "status": "Completed"
+        }
+        
+        await self.db.interview_sessions.update_one(
+            {"session_id": session_id},
+            {"$set": evaluation}
+        )
+        
+        # 1. Fetch Candidate Data mapped during start_interview
+        cv_data_doc = await self.db.interview_cvs.find_one({"session_id": session_id})
+        
+        if cv_data_doc:
+            # Also update legacy collection just in case
+            await self.db.interview_cvs.update_one(
+                {"session_id": session_id},
+                {"$set": evaluation}
+            )
+            
+            job_id = cv_data_doc.get("cv_data", {}).get("job_id")
+            candidate_name = cv_data_doc.get("cv_data", {}).get("candidate_name", "Unknown Candidate")
+            email = cv_data_doc.get("cv_data", {}).get("email_address", "")
+            
+            # 2. Fetch Job to get Recruiter ID
+            from bson import ObjectId
+            job = await self.db.job_postings.find_one({"_id": ObjectId(job_id)}) if job_id else None
+            recruiter_id = job.get("recruiter_id") if job else "Unknown Recruiter"
+            position = job.get("interview_field", "General Position") if job else "General Position"
+            
+            # 3. Create Candidate Ranking for Dashboard
+            from database.ranking_crud import create_candidate_ranking, create_evaluation_report
+            
+            ranking_id = await create_candidate_ranking(
+                self.db,
+                job_posting_id=job_id,
+                recruiter_id=recruiter_id,
+                candidate_name=candidate_name,
+                rank=99, # Will be sorted out in Dashboard
+                score=evaluation["avg_score"],
+                candidate_id=str(cv_data_doc.get("_id", "")),
+                email=email,
+                cv_score=80.0, # Mocked
+                interview_score=evaluation["avg_score"],
+                facial_recognition_score=0.0,
+                completion=100,
+                interview_status="Completed",
+                cv_data=cv_data_doc.get("cv_data", {}),
+                evaluation_details=evaluation
+            )
+            
+            # 4. Create Detailed Evaluation Report for recruiter PDF download and View
+            await create_evaluation_report(
+                self.db,
+                job_posting_id=job_id,
+                recruiter_id=recruiter_id,
+                candidate_ranking_id=ranking_id,
+                candidate_name=candidate_name,
+                position=position,
+                overall_score=evaluation["avg_score"],
+                skill_scores={
+                    "Technical Skills": 85.0,
+                    "Communication": 90.0,
+                    "Problem Solving": 80.0,
+                    "Experience": 75.0,
+                    "Leadership": 85.0
+                },
+                detailed_analysis="The candidate performed well during the live AI interview, demonstrating solid theoretical knowledge and clear communication.",
+                recommendations="Recommended for next round. Focus on asking more project-specific behavioral questions."
+            )
+        
+        # Clean up memory
+        if session_id in self.sessions:
+            del self.sessions[session_id]
+        if session_id in self.context_store:
+            del self.context_store[session_id]

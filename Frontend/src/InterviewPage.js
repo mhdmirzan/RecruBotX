@@ -78,7 +78,7 @@ const InterviewPage = () => {
             }
             submitData.append("cv_file", formData.cvFile);
 
-            const response = await fetch(`${API_BASE_URL}/voice-interview/initiate`, {
+            const response = await fetch(`${API_BASE_URL}/interview/start-interview/${jobId}`, {
                 method: "POST",
                 body: submitData
             });
@@ -91,13 +91,11 @@ const InterviewPage = () => {
 
             // Navigate to Voice Interview with Session ID
             navigate("/candidate/interview-room", {
+                replace: true,
                 state: {
                     sessionId: data.session_id,
                     candidateName: formData.candidateName,
-                    jobTitle: jobDetails?.interviewField || "Interview",
-                    question: data.question,
-                    currentQuestionNum: data.current_question,
-                    totalQuestions: data.total_questions
+                    jobTitle: jobDetails?.interviewField || "Interview Position"
                 }
             });
 

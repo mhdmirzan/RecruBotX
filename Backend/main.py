@@ -50,6 +50,9 @@ app.add_middleware(
 # Include API routes
 app.include_router(api_router, prefix="/api")
 
+# Include WebSocket routes
+from api.websocket_routes import router as ws_router
+app.include_router(ws_router)
 
 @app.on_event("startup")
 async def startup_event():
@@ -79,6 +82,15 @@ async def shutdown_event():
     """Close database connection on shutdown."""
     await db_manager.disconnect()
 
+# Singleton service for interview orchestration
+from services.interview_service import InterviewService
+_interview_service = None
+
+def get_interview_service() -> InterviewService:
+    global _interview_service
+    if _interview_service is None:
+        _interview_service = InterviewService(db_manager.db)
+    return _interview_service
 
 @app.get("/")
 async def root():

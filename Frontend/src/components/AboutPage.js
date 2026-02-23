@@ -372,7 +372,7 @@ const AboutPage = () => {
                         </p>
                         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
                             <Link
-                                to="/recruiter"
+                                to="/recruiter/signin"
                                 className="inline-flex items-center justify-center gap-2 bg-[#0a2a5e] text-white px-8 py-3 rounded-xl font-medium hover:bg-[#0a1f44] transition-colors"
                             >
                                 Get Started
