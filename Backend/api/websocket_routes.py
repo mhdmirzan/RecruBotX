@@ -67,9 +67,11 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str):
                         
                     # After text finishes streaming, we capture the full response generated
                     # and synthesize it into Audio
-                    session = service.get_session(session_id)
-                    if session and session.transcript:
-                        last_interviewer_msg = session.transcript[-1]["content"]
+                    session_data = await service.get_session(session_id)
+                    if session_data:
+                        session, _ = session_data
+                        if session.transcript:
+                            last_interviewer_msg = session.transcript[-1]["content"]
                         audio_bytes = await service.tts_service.generate_speech(last_interviewer_msg)
                         import base64
                         if audio_bytes:
@@ -101,8 +103,9 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str):
                             })
                             
                         # Generate TTS for the completed phrase
-                        session = service.get_session(session_id)
-                        if session:
+                        session_data = await service.get_session(session_id)
+                        if session_data:
+                            session, _ = session_data
                             last_interviewer_msg = session.transcript[-1]["content"]
                             tts_bytes = await service.tts_service.generate_speech(last_interviewer_msg)
                             if tts_bytes:
