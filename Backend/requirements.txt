@@ -26,7 +26,7 @@ google-genai
 # Groq LLM
 groq
 
-# LangChain + LangSmith (advertisement agent)
+# LangChain + LangSmith
 langchain>=0.3.0
 langchain-google-genai>=2.0.0
 langsmith>=0.1.0

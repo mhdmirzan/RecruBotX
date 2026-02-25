@@ -41,7 +41,6 @@ import RecruiterSigninPage from "./RecruiterSigninPage";
 import RecruiterDashboard from "./RecruiterDashboard";
 import JobPosting from "./JobPosting";
 import RecruiterCVScreening from "./RecruiterCVScreening";
-import Advertisement from "./Advertisement";
 import CandidateReport from "./CandidateReport";
 import RecruiterInterviewReports from "./RecruiterInterviewReports";
 import InterviewReportDetail from "./InterviewReportDetail";
@@ -67,7 +66,6 @@ const ConditionalNavbar = () => {
     "/recruiter/dashboard",
     "/recruiter/job-posting",
     "/recruiter/cv-screening",
-    "/recruiter/advertisement",
     "/recruiter/settings",
     "/recruiter/report",
     "/recruiter/all-jobs",
@@ -146,15 +144,14 @@ function App() {
         <Route path="/recruiter/dashboard" element={<RecruiterDashboard />} />
         <Route path="/recruiter/job-posting" element={<JobPosting />} />
         <Route path="/recruiter/cv-screening" element={<RecruiterCVScreening />} />
-        <Route path="/recruiter/advertisement" element={<Advertisement />} />
         <Route path="/recruiter/reports/:jobId" element={<RecruiterInterviewReports />} />
         <Route path="/recruiter/interview-report/:reportId" element={<InterviewReportDetail />} />
         <Route path="/recruiter/report/:rankingId" element={<CandidateReport />} />
         <Route path="/recruiter/all-jobs" element={<RecruiterAllJobs />} />
         <Route path="/recruiter/all-screenings" element={<RecruiterAllScreenings />} />
         <Route path="/recruiter/settings" element={<RecruiterSettings />} />
-        <Route path="/recruiter/ranking" element={<Navigate to="/recruiter/advertisement" replace />} />
-        <Route path="/recruiter/evaluation" element={<Navigate to="/recruiter/advertisement" replace />} />
+        <Route path="/recruiter/ranking" element={<Navigate to="/recruiter/dashboard" replace />} />
+        <Route path="/recruiter/evaluation" element={<Navigate to="/recruiter/dashboard" replace />} />
       </Routes>
     </Router>
   );

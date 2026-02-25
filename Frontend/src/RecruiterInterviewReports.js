@@ -12,8 +12,7 @@ import {
     CheckCircle,
     XCircle,
     Download,
-    Play,
-    Megaphone
+    Play
 } from "lucide-react";
 import API_BASE_URL from "./apiConfig";
 
@@ -87,9 +86,6 @@ const RecruiterInterviewReports = () => {
                     </NavLink>
                     <NavLink to="/recruiter/cv-screening" className="font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 hover:bg-[#0a2a5e]/5 hover:text-[#0a2a5e]">
                         <Search className="w-5 h-5" /> CV Screening
-                    </NavLink>
-                    <NavLink to="/recruiter/advertisement" className="font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 hover:bg-[#0a2a5e]/5 hover:text-[#0a2a5e]">
-                        <Megaphone className="w-5 h-5" /> Advertisement
                     </NavLink>
                     <NavLink to="/recruiter/settings" className="font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 hover:bg-[#0a2a5e]/5 hover:text-[#0a2a5e]">
                         <Settings className="w-5 h-5" /> Settings
