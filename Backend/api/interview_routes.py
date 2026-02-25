@@ -168,9 +168,11 @@ async def next_question(
     from main import get_interview_service
     service = get_interview_service()
     
-    session = service.get_session(session_id)
-    if not session:
+    session_data = await service.get_session(session_id)
+    if not session_data:
         raise HTTPException(status_code=404, detail="Session not found")
+        
+    session, context = session_data
         
     # Process empty or continue prompt
     full_response = ""
@@ -195,9 +197,11 @@ async def submit_answer(
     from main import get_interview_service
     service = get_interview_service()
     
-    session = service.get_session(session_id)
-    if not session:
+    session_data = await service.get_session(session_id)
+    if not session_data:
         raise HTTPException(status_code=404, detail="Session not found")
+        
+    session, context = session_data
         
     answer_text = None
     

@@ -28,9 +28,6 @@ class InterviewServiceContext:
 class InterviewService:
     def __init__(self, db):
         self.db = db
-        # Dictionary to hold active in-memory state during an ongoing WebSocket connection
-        self.sessions: Dict[str, InterviewState] = {}
-        self.context_store: Dict[str, InterviewServiceContext] = {}
         self.llm_service = LLMService()
         self.stt_service = STTService()
         self.tts_service = TTSService()
@@ -38,17 +35,13 @@ class InterviewService:
     async def initialize_session(self, context: InterviewServiceContext, job_id: str, candidate_id: str) -> str:
         session_id = str(uuid.uuid4())
         
-        # 1. Save Context in-memory
-        self.context_store[session_id] = context
-        
-        # 2. Save Session State in-memory
-        self.sessions[session_id] = InterviewState(
+        session_state = InterviewState(
             candidate_name=context.candidate_name,
             job_role="Candidate", # Will use JD instead
             stage=InterviewStage.INTRODUCTION
         )
         
-        # 3. Create Session in DB
+        # 3. Create Session in DB with context and state
         await self.db.interview_sessions.insert_one({
             "session_id": session_id,
             "job_id": job_id,
@@ -59,21 +52,59 @@ class InterviewService:
             "confidence_score": 0,
             "overall_score": 0,
             "status": "In Progress",
-            "created_at": datetime.utcnow()
+            "created_at": datetime.utcnow(),
+            "context": {
+                "candidate_name": context.candidate_name,
+                "candidate_cv_json": context.candidate_cv_json,
+                "job_description": context.job_description,
+                "required_skills": context.required_skills,
+                "recruiter_extra_instructions": context.recruiter_extra_instructions
+            },
+            "state_overrides": {
+                "stage": session_state.stage.value,
+                "current_difficulty": session_state.current_difficulty,
+                "skills_covered": session_state.skills_covered
+            }
         })
         
         return session_id
 
-    def get_session(self, session_id: str) -> Optional[InterviewState]:
-        return self.sessions.get(session_id)
+    async def get_session(self, session_id: str) -> Optional[tuple[InterviewState, InterviewServiceContext]]:
+        doc = await self.db.interview_sessions.find_one({"session_id": session_id})
+        if not doc:
+            return None
+            
+        context_data = doc.get("context", {})
+        state_overrides = doc.get("state_overrides", {})
+        transcript = doc.get("transcript", [])
+        
+        context = InterviewServiceContext(
+            candidate_name=context_data.get("candidate_name", "Unknown"),
+            candidate_cv_json=context_data.get("candidate_cv_json", {}),
+            job_description=context_data.get("job_description", ""),
+            required_skills=context_data.get("required_skills", []),
+            recruiter_extra_instructions=context_data.get("recruiter_extra_instructions", "")
+        )
+        
+        session = InterviewState(
+            candidate_name=context.candidate_name,
+            job_role="Candidate",
+            stage=InterviewStage(state_overrides.get("stage", "introduction")),
+            transcript=transcript,
+            skills_covered=state_overrides.get("skills_covered", []),
+            current_difficulty=state_overrides.get("current_difficulty", "medium")
+        )
+        
+        return session, context
 
     async def process_input(self, session_id: str, user_input: str) -> AsyncGenerator[str, None]:
-        session = self.get_session(session_id)
-        context = self.context_store.get(session_id)
+        session_data = await self.get_session(session_id)
         
-        if not session or not context:
+        if not session_data:
             yield "Error: Session not found."
             return
+            
+        session, context = session_data
 
         # 1. Update Transcript with User Input
         if user_input.strip() != "INIT":
@@ -139,7 +170,12 @@ class InterviewService:
             
         await self.db.interview_sessions.update_one(
             {"session_id": session_id},
-            {"$push": {"transcript": {"role": "interviewer", "content": full_response, "timestamp": datetime.utcnow()}}},
+            {
+                "$push": {"transcript": {"role": "interviewer", "content": full_response, "timestamp": datetime.utcnow()}},
+                "$set": {
+                    "state_overrides.stage": session.stage.value
+                }
+            },
             upsert=False
         )
 
@@ -153,9 +189,10 @@ class InterviewService:
         """
         Evaluate transcript and generate final report
         """
-        session = self.get_session(session_id)
-        if not session:
+        session_data = await self.get_session(session_id)
+        if not session_data:
             return
+        session, context = session_data
             
         # Mock evaluation matching the old vc_agent structure exactly to not break frontend
         evaluation = {
@@ -245,8 +282,5 @@ class InterviewService:
                 recommendations="Recommended for next round. Focus on asking more project-specific behavioral questions."
             )
         
-        # Clean up memory
-        if session_id in self.sessions:
-            del self.sessions[session_id]
-        if session_id in self.context_store:
-            del self.context_store[session_id]
+        # Memory cleanup is no longer strictly needed but keeping space
+        pass
