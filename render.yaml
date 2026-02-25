@@ -13,7 +13,7 @@ services:
       - key: DEEPGRAM_API_KEY
         sync: false # Set manually in Render dashboard
       - key: ALLOWED_ORIGINS
-        value: https://recrubotx.onrender.com # Change this after frontend is deployed
+        value: https://recrubotx.vercel.app,https://recrubotx.onrender.com
       - key: PORT
         value: 10000
 
