@@ -4,9 +4,7 @@ import {
     MicOff,
     Video,
     VideoOff,
-    PhoneOff, // Keep unused import if needed for future or remove
     MessageSquare,
-    MoreHorizontal, // Keep unused import if needed
     User,
     Clock,
     ChevronRight,
@@ -37,7 +35,8 @@ const LiveInterviewSession = ({
     candidateName,
     jobRole,
     onInterrupt,
-    liveCaption /* Accept liveCaption from App parent */
+    liveCaption, /* Accept liveCaption from App parent */
+    onEndInterview
 }) => {
     // State
     const [isTranscriptVisible, setIsTranscriptVisible] = useState(true);
@@ -183,7 +182,13 @@ const LiveInterviewSession = ({
 
                         <button
                             className="bg-red-500 hover:bg-red-600 text-white px-6 py-2.5 rounded-xl font-medium transition-colors text-sm"
-                            onClick={() => window.location.reload()} // Mock end
+                            onClick={() => {
+                                if (onEndInterview) {
+                                    onEndInterview();
+                                } else {
+                                    window.location.reload();
+                                }
+                            }}
                         >
                             End Interview
                         </button>

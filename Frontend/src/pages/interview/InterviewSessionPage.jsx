@@ -283,6 +283,16 @@ function App() {
     // setMessages(prev => [...prev, { role: 'candidate', content: "(Audio sent...)" }]);
   };
 
+  const handleEndInterview = () => {
+    if (window.confirm("Are you sure you want to end the interview?")) {
+      if (ws.current?.readyState === WebSocket.OPEN) {
+        ws.current.close();
+      }
+      setSessionActive(false);
+      window.location.reload();
+    }
+  };
+
   // --- Render ---
 
   // 1. Setup Screen (New Dashboard)
@@ -310,7 +320,8 @@ function App() {
         candidateName={config.candidate_name}
         jobRole={config.job_role}
         onInterrupt={handleInterrupt}
-        liveCaption={liveCaption} /* Pass liveCaption */
+        liveCaption={liveCaption}
+        onEndInterview={handleEndInterview}
       />
 
       <AudioRecorder

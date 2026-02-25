@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { LogOut, FileText, Mic, Search, LayoutDashboard, Cog, Briefcase, Calendar, MapPin, CheckCircle, Clock, Send, ArrowRight, ChevronRight, Zap, DollarSign, Home, X, BarChart3 } from "lucide-react";
+import { LogOut, FileText, Search, LayoutDashboard, Cog, Briefcase, Calendar, MapPin, CheckCircle, Clock, Send, ArrowRight, ChevronRight, Zap, DollarSign, Home, X, BarChart3 } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { getCurrentUser, logoutUser } from "./utils/userDatabase";
 import API_BASE_URL from "./apiConfig";
@@ -70,7 +70,6 @@ const CandidateDashboard = () => {
           location: job.location,
           salaryRange: job.salaryRange,
           appliedDate: new Date(job.createdAt),
-          isActive: job.isActive,
           isActive: job.isActive,
           jobDescription: job.jobDescription, // Added jobDescription
           experienceRange: job.experienceRange,
