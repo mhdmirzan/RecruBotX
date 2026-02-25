@@ -4,9 +4,7 @@ import {
     MicOff,
     Video,
     VideoOff,
-    PhoneOff, // Keep unused import if needed for future or remove
     MessageSquare,
-    MoreHorizontal, // Keep unused import if needed
     User,
     Clock,
     ChevronRight,
@@ -37,7 +35,8 @@ const LiveInterviewSession = ({
     candidateName,
     jobRole,
     onInterrupt,
-    liveCaption /* Accept liveCaption from App parent */
+    liveCaption, /* Accept liveCaption from App parent */
+    onEndInterview
 }) => {
     // State
     const [isTranscriptVisible, setIsTranscriptVisible] = useState(true);
