@@ -122,6 +122,44 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str):
                                     "type": "report",
                                     "payload": {"status": "Complete"}
                                 })
+                                
+                elif msg_type == "text_data":
+                    transcription = payload
+                    if transcription and transcription.strip():
+                        # Echo back transcription to UI
+                        await manager.send_json(session_id, {
+                            "type": "transcription",
+                            "payload": transcription
+                        })
+                        
+                        # Send transcription to LLM and stream response back
+                        async for chunk in service.process_input(session_id, transcription):
+                            await manager.send_json(session_id, {
+                                "type": "text_chunk",
+                                "payload": chunk
+                            })
+                            
+                        # Generate TTS for the completed phrase
+                        session_data = await service.get_session(session_id)
+                        if session_data:
+                            session, _ = session_data
+                            last_interviewer_msg = session.transcript[-1]["content"]
+                            tts_bytes = await service.tts_service.generate_speech(last_interviewer_msg)
+                            import base64
+                            if tts_bytes:
+                                b64 = base64.b64encode(tts_bytes).decode('utf-8')
+                                await manager.send_json(session_id, {
+                                    "type": "audio_output",
+                                    "payload": b64
+                                })
+
+                            if session.stage.value == "finished":
+                                # Handle interview end
+                                await service.finalize_interview(session_id)
+                                await manager.send_json(session_id, {
+                                    "type": "report",
+                                    "payload": {"status": "Complete"}
+                                })
                                     
                 elif msg_type == "interrupt":
                     # Handled natively by wiping the current audio play queue on frontend

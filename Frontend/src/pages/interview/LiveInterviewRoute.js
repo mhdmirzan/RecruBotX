@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, AlertTriangle } from "lucide-react";
 
 import LiveInterviewSession from "../../components/interview/LiveInterviewSession";
 import AudioRecorder from "../../components/interview/AudioRecorder";
@@ -18,6 +18,7 @@ const LiveInterviewRoute = () => {
     const [isConnected, setIsConnected] = useState(false);
     const [messages, setMessages] = useState([]);
     const [liveCaption, setLiveCaption] = useState("");
+    const [isEndModalOpen, setIsEndModalOpen] = useState(false);
 
     const wordBufferRef = useRef([]);
     const captionIntervalRef = useRef(null);
@@ -229,12 +230,16 @@ const LiveInterviewRoute = () => {
     };
 
     const handleEndInterview = () => {
-        if (window.confirm("Are you sure you want to end the interview?")) {
-            if (ws.current?.readyState === WebSocket.OPEN) {
-                ws.current.close();
-            }
-            navigate("/candidate/interview-complete", { state: { sessionId, candidateName, jobTitle, aborted: true } });
+        // Show the premium confirmation modal instead of directly dropping the websocket or sending text
+        setIsEndModalOpen(true);
+    };
+
+    const confirmEndInterview = () => {
+        setIsEndModalOpen(false);
+        if (ws.current?.readyState === WebSocket.OPEN) {
+            ws.current.close();
         }
+        navigate("/candidate/interview-complete", { state: { sessionId, candidateName, jobTitle, aborted: true } });
     };
 
     if (!sessionId) return null;
@@ -287,6 +292,40 @@ const LiveInterviewRoute = () => {
                     isDetectingInterrupt={currentState === ConversationState.AI_SPEAKING}
                 />
             </div>
+
+            {/* Premium End Interview Confirmation Modal */}
+            {isEndModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm transition-opacity">
+                    <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-100 animate-in fade-in zoom-in duration-200">
+                        <div className="bg-red-50 p-6 flex flex-col items-center justify-center border-b border-red-100">
+                            <div className="bg-white p-3 rounded-full shadow-sm mb-4">
+                                <AlertTriangle className="w-10 h-10 text-red-500" />
+                            </div>
+                            <h2 className="text-xl font-bold text-slate-800 text-center">Terminate Interview Early?</h2>
+                        </div>
+                        <div className="p-6 text-center">
+                            <p className="text-slate-600 mb-6">
+                                We are just getting started! Ending the interview now before completing all questions will <span className="font-semibold text-red-600">negatively impact your evaluation</span>.
+                                <br /><br />Are you sure you want to conclude?
+                            </p>
+                            <div className="flex flex-col sm:flex-row gap-3">
+                                <button
+                                    onClick={() => setIsEndModalOpen(false)}
+                                    className="flex-1 py-3 px-4 bg-slate-100 text-slate-700 font-semibold rounded-xl hover:bg-slate-200 transition-colors"
+                                >
+                                    No, Continue Interview
+                                </button>
+                                <button
+                                    onClick={confirmEndInterview}
+                                    className="flex-1 py-3 px-4 bg-red-600 text-white font-semibold rounded-xl hover:bg-red-700 shadow-md hover:shadow-lg transition-all"
+                                >
+                                    Yes, End Now
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
