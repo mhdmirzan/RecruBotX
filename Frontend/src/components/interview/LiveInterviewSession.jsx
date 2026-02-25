@@ -64,18 +64,41 @@ const LiveInterviewSession = ({
     // Video Preview
     const videoRef = useRef(null);
     useEffect(() => {
-        let stream = null;
+        let activeStream = null;
+        let isMounted = true;
+
         const startVideo = async () => {
-            if (!isCamOn) return;
+            if (!isCamOn) {
+                if (videoRef.current) videoRef.current.srcObject = null;
+                return;
+            }
             try {
-                stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+                if (!isMounted) {
+                    // Stop it immediately if the component unmounted while waiting for user permission
+                    stream.getTracks().forEach(track => track.stop());
+                    return;
+                }
+                activeStream = stream;
                 if (videoRef.current) videoRef.current.srcObject = stream;
             } catch (err) {
                 console.error("Video access denied:", err);
             }
         };
+
         startVideo();
-        return () => stream?.getTracks().forEach(track => track.stop());
+
+        return () => {
+            isMounted = false;
+            if (activeStream) {
+                activeStream.getTracks().forEach(track => track.stop());
+            }
+            if (videoRef.current && videoRef.current.srcObject) {
+                const tracks = videoRef.current.srcObject.getTracks();
+                tracks.forEach(track => track.stop());
+                videoRef.current.srcObject = null;
+            }
+        };
     }, [isCamOn]);
 
     // Auto-scroll Transcript
