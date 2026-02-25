@@ -1,6 +1,6 @@
-from app.models.interview import InterviewState, InterviewConfig, InterviewStage
-from app.services.llm_service import LLMService
-from app.core.prompts import INTERVIEWER_SYSTEM_PROMPT, STAGE_INSTRUCTIONS
+from agents.interview_agent.models import InterviewState, InterviewConfig, InterviewStage
+from services.llm_service import LLMService
+from agents.interview_agent.prompts import INTERVIEWER_SYSTEM_PROMPT, STAGE_INSTRUCTIONS
 from typing import Dict, Optional
 import uuid
 

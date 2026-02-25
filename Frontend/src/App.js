@@ -30,7 +30,7 @@ import CandidateSignupPage from "./CandidateSignupPage";
 import CandidateDashboard from "./CandidateDashboard";
 import CandidateSettings from "./CandidateSettings";
 import AnalyzeResume from "./analyze_resume";
-import LiveInterviewRoute from "./LiveInterviewRoute";
+import LiveInterviewRoute from "./pages/interview/LiveInterviewRoute";
 import InterviewPage from "./InterviewPage";
 import CandidateJobs from "./CandidateJobs";
 import InterviewComplete from "./InterviewComplete";

@@ -22,9 +22,9 @@ class InterviewState(BaseModel):
     responses: List[str] = []
     skills_covered: List[str] = []
     current_difficulty: str = "medium"
-    transcript: List[dict] = [] # {"role": "interviewer"|"candidate", "text": "..."}
+    transcript: List[dict] = [] 
 
 class InterviewConfig(BaseModel):
     candidate_name: str
     job_role: str
-    experience_level: str = "junior" # junior, mid, senior
+    experience_level: str = "junior"
