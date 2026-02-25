@@ -5,6 +5,7 @@ import { ArrowLeft } from "lucide-react";
 import LiveInterviewSession from "../../components/interview/LiveInterviewSession";
 import AudioRecorder from "../../components/interview/AudioRecorder";
 import { conversationStateMachine, ConversationState } from "../../services/ConversationStateMachine";
+import API_BASE_URL from "../../apiConfig";
 
 const LiveInterviewRoute = () => {
     const location = useLocation();
@@ -76,8 +77,9 @@ const LiveInterviewRoute = () => {
             if (ws.current || isConnecting.current) return;
             isConnecting.current = true;
 
-            const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
-            const wsUrl = `${baseUrl.replace(/^http/, 'ws')}/ws/interview/${sessionId}`;
+            // Derive WebSocket URL from API_BASE_URL by stripping '/api' proxy path if present
+            const rootUrl = API_BASE_URL.replace(/\/api\/?$/, "");
+            const wsUrl = `${rootUrl.replace(/^http/, 'ws')}/ws/interview/${sessionId}`;
             const socket = new WebSocket(wsUrl);
 
             socket.onopen = () => {
