@@ -11,8 +11,7 @@ import {
     CheckCircle,
     XCircle,
     Download,
-    Search,
-    Megaphone
+    Search
 } from "lucide-react";
 import { motion } from "framer-motion";
 import API_BASE_URL from "./apiConfig";
@@ -67,7 +66,6 @@ const CandidateReport = () => {
                     <NavLink to="/recruiter/dashboard" className={({ isActive }) => `font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 ${isActive ? "bg-blue-50 text-blue-600" : "text-gray-700 hover:bg-gray-50 hover:text-blue-600"}`}><LayoutDashboard className="w-5 h-5" /> Dashboard</NavLink>
                     <NavLink to="/recruiter/job-posting" className={({ isActive }) => `font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 ${isActive ? "bg-blue-50 text-blue-600" : "text-gray-700 hover:bg-gray-50 hover:text-blue-600"}`}><PlusCircle className="w-5 h-5" /> Job Posting</NavLink>
                     <NavLink to="/recruiter/cv-screening" className={({ isActive }) => `font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 ${isActive ? "bg-blue-50 text-blue-600" : "text-gray-700 hover:bg-gray-50 hover:text-blue-600"}`}><Search className="w-5 h-5" /> CV Screening</NavLink>
-                    <NavLink to="/recruiter/advertisement" className={({ isActive }) => `font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 ${isActive ? "bg-blue-50 text-blue-600" : "text-gray-700 hover:bg-gray-50 hover:text-blue-600"}`}><Megaphone className="w-5 h-5" /> Advertisement</NavLink>
                     <NavLink to="/recruiter/settings" className={({ isActive }) => `font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 ${isActive ? "bg-blue-50 text-blue-600" : "text-gray-700 hover:bg-gray-50 hover:text-blue-600"}`}><Cog className="w-5 h-5" /> Settings</NavLink>
                 </nav>
 

@@ -17,7 +17,7 @@ const Navbar = () => {
     "/candidate/resume",
     "/recruiter/dashboard",
     "/recruiter/job-posting",
-    "/recruiter/advertisement",
+    "/recruiter/cv-screening",
     "/recruiter/settings",
     "/recruiter/report",
     "/template/",
