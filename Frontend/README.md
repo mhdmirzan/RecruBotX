@@ -66,9 +66,10 @@ REACT_APP_API_URL=http://localhost:8000
 ---
 
 ## 🗄️ Authentication & Data
-- **Candidate Auth**: Managed via API at `/signin/candidate` (stored in localStorage).
-- **Recruiter Auth**: Managed via API at `/signin/recruiter`.
-- **User Session**: Handled through `src/utils/userDatabase.js`.
+- **Candidate Auth**: Managed via API at `POST /api/auth/register` and `POST /api/auth/login`.
+- **Recruiter Auth**: Managed via API at `POST /api/auth/login`.
+- **User Session**: Handled through `src/utils/userDatabase.js`. Current user session is stored in browser `localStorage`.
+- **Database Architecture**: Uses MongoDB. Collections include `candidate_users`, `recruiter_users`, `job_postings`, etc.
 
 ---
 
