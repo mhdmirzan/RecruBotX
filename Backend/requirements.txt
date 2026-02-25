@@ -44,3 +44,7 @@ numpy
 mediapipe
 deepface
 tensorflow
+
+websockets
+pydantic
+python-multipart
