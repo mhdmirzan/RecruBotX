@@ -48,13 +48,21 @@ const AudioRecorder = ({
 
   // Initialize Microphone once
   useEffect(() => {
-    initMicrophone();
-    return () => cleanupMicrophone();
+    let isMounted = true;
+    initMicrophone(isMounted);
+    return () => {
+      isMounted = false;
+      cleanupMicrophone();
+    };
   }, []); // Run once on mount
 
-  const initMicrophone = async () => {
+  const initMicrophone = async (isMounted) => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      if (!isMounted) {
+        stream.getTracks().forEach(track => track.stop());
+        return;
+      }
       streamRef.current = stream;
 
       // Get Mic Label
