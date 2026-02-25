@@ -98,12 +98,20 @@ The RecruBotX Backend is a FastAPI-powered service that handles the heavy liftin
 ---
 
 ## 📝 Maintenance & Troubleshooting
+
+### MongoDB Connection Issues (DNS Fix)
+If you encounter `The resolution lifetime expired` or DNS errors with MongoDB Atlas:
+1. **Google DNS (Recommended)**: Set your system DNS to `8.8.8.8` and `8.8.4.4`.
+2. **Standard String**: Use the "Standard Connection String" (starts with `mongodb://`) from Atlas instead of the SRV string.
+3. **Local Dev**: Use `MONGODB_URL=mongodb://localhost:27017` for local development.
+
+### Initialization & Data
 - **Clear Data**: Use `DELETE /api/clear-all` to reset for testing.
+- **Dummy Data**: Run `python -m database.init_dummy_users` to populate the DB for testing.
 - **Health Check**: `GET /health` returns system and DB status.
-- **DNS Issues**: If MongoDB Atlas connection fails with SRV error, use the standard `mongodb://` string or update DNS to `8.8.8.8`.
 
 ---
 
-**Version:** 2.1.0  
-**Last Updated:** Dec 2025  
+**Version:** 2.2.0  
+**Last Updated:** February 2026  
 **Developer:** Team RecruBotX  
