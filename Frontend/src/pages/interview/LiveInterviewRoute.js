@@ -2,9 +2,9 @@ import React, { useState, useEffect, useRef } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 
-import LiveInterviewSession from "./components/LiveInterview/LiveInterviewSession";
-import AudioRecorder from "./components/LiveInterview/AudioRecorder";
-import { conversationStateMachine, ConversationState } from "./services/ConversationStateMachine";
+import LiveInterviewSession from "../../components/interview/LiveInterviewSession";
+import AudioRecorder from "../../components/interview/AudioRecorder";
+import { conversationStateMachine, ConversationState } from "../../services/ConversationStateMachine";
 
 const LiveInterviewRoute = () => {
     const location = useLocation();
@@ -76,9 +76,8 @@ const LiveInterviewRoute = () => {
             if (ws.current || isConnecting.current) return;
             isConnecting.current = true;
 
-            // Connect using the specific sessionId endpoint we will build in FastAPI
-            // Assuming FastAPI runs on 8000
-            const wsUrl = `ws://localhost:8000/ws/interview/${sessionId}`;
+            const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
+            const wsUrl = `${baseUrl.replace(/^http/, 'ws')}/ws/interview/${sessionId}`;
             const socket = new WebSocket(wsUrl);
 
             socket.onopen = () => {

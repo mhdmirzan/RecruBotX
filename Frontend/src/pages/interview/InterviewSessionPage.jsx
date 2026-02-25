@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
-import LiveInterviewSession from './components/LiveInterviewSession';
-import InterviewReport from './components/InterviewReport';
-import AudioRecorder from './components/AudioRecorder';
-import DebugPanel from './components/DebugPanel';
-import { conversationStateMachine, ConversationState } from './services/ConversationStateMachine';
-import CandidateDashboard from './components/CandidateDashboard';
+import LiveInterviewSession from '../../components/interview/LiveInterviewSession';
+import InterviewReport from '../../components/interview/InterviewReport';
+import AudioRecorder from '../../components/interview/AudioRecorder';
+import DebugPanel from '../../components/interview/DebugPanel';
+import { conversationStateMachine, ConversationState } from '../../services/ConversationStateMachine';
+import CandidateDashboard from '../../components/interview/CandidateDashboard';
 
 function App() {
   // State
@@ -98,7 +98,9 @@ function App() {
       isConnecting.current = true;
       logDebug('🔌 Connecting...');
 
-      const socket = new WebSocket('ws://127.0.0.1:8000/ws/interview');
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
+      const wsUrl = baseUrl.replace(/^http/, 'ws') + '/ws/interview';
+      const socket = new WebSocket(wsUrl);
 
       socket.onopen = () => {
         logDebug('✅ Connected');

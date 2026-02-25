@@ -1,9 +1,3 @@
-from typing import Dict, Optional, AsyncGenerator
-import uuid
-import json
-import base64
-from datetime import datetime
-
 from typing import Dict, Optional, AsyncGenerator, List
 import uuid
 import json
@@ -12,78 +6,14 @@ from datetime import datetime
 from pydantic import BaseModel
 from enum import Enum
 
-class InterviewStage(str, Enum):
-    INTRODUCTION = "introduction"
-    WARMUP = "warmup"
-    CORE = "core"
-    WRAPUP = "wrapup"
-    FINISHED = "finished"
-
-class Question(BaseModel):
-    text: str
-    stage: InterviewStage
-    difficulty: str = "medium"
-
-class InterviewState(BaseModel):
-    candidate_name: str
-    job_role: str
-    stage: InterviewStage = InterviewStage.INTRODUCTION
-    questions_asked: List[Question] = []
-    responses: List[str] = []
-    skills_covered: List[str] = []
-    current_difficulty: str = "medium"
-    transcript: List[dict] = [] 
+from agents.interview_agent.models import InterviewStage, Question, InterviewState
+from agents.interview_agent.prompts import INTERVIEWER_SYSTEM_PROMPT, STAGE_INSTRUCTIONS
 
 # Import LLM/STT/TTS services directly
 # We will create wrappers around existing services or copy them to Backend/services
 from services.llm_service import LLMService 
 from services.stt_service import STTService
 from services.tts_service import TTSService
-
-# We will redefine the prompts here to match the new requirements
-INTERVIEWER_SYSTEM_PROMPT = """
-You are an AI technical interviewer.
-
-You are conducting an interview for the following job:
-
-JOB DESCRIPTION:
-{job_description}
-
-REQUIRED SKILLS:
-{required_skills}
-
-RECRUITER EXTRA INSTRUCTIONS:
-{extra_instructions}
-
-Candidate Details:
-Name: {candidate_name}
-
-Candidate CV (Structured JSON):
-{candidate_cv_json}
-
-Rules:
-- Ask role-specific questions.
-- Prioritize required skills.
-- Ask about projects from CV.
-- Adapt based on answers.
-- Mix technical + behavioral questions.
-- Maintain professional tone.
-- Do not provide evaluation to the candidate.
-- Ask ONE question at a time.
-- Based on the candidate's last response, either dig deeper or move to the next topic.
-- Keep responses conversational but focused, avoid long monologues.
-- Do NOT output markdown or code blocks unless explicitly asked, as this is a voice interview. Speak naturally.
-- When the interview is over, say "Thank you for your time. The interview is now concluded."
-
-Focus for {stage}: {stage_instructions}
-"""
-
-STAGE_INSTRUCTIONS = {
-    "introduction": "Briefly welcome the candidate, introduce yourself as the AI interviewer, and explain the format. Ask them if they are ready to begin.",
-    "warmup": "Ask a broad question like 'Tell me about yourself' or ask about their background from the CV. Keep it light.",
-    "core": "Ask specific technical questions related to the required skills and job description. Challenge their assumptions. Test depth of knowledge. Mix in 1-2 behavioral questions.",
-    "wrapup": "Ask if they have any questions for you. Then thank them and close the interview."
-}
 
 
 class InterviewServiceContext:
