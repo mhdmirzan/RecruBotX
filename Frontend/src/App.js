@@ -47,6 +47,7 @@ import RecruiterInterviewReports from "./RecruiterInterviewReports";
 import InterviewReportDetail from "./InterviewReportDetail";
 import RecruiterSettings from "./RecruiterSettings";
 import RecruiterAllJobs from "./RecruiterAllJobs";
+import RecruiterAllScreenings from "./RecruiterAllScreenings";
 
 // Resume Builder Pages
 import TemplateSelect from "./pages/TemplateSelect";
@@ -70,6 +71,7 @@ const ConditionalNavbar = () => {
     "/recruiter/settings",
     "/recruiter/report",
     "/recruiter/all-jobs",
+    "/recruiter/all-screenings",
     "/candidate/dashboard",
     "/candidate/jobs",
     "/candidate/apply",
@@ -149,6 +151,7 @@ function App() {
         <Route path="/recruiter/interview-report/:reportId" element={<InterviewReportDetail />} />
         <Route path="/recruiter/report/:rankingId" element={<CandidateReport />} />
         <Route path="/recruiter/all-jobs" element={<RecruiterAllJobs />} />
+        <Route path="/recruiter/all-screenings" element={<RecruiterAllScreenings />} />
         <Route path="/recruiter/settings" element={<RecruiterSettings />} />
         <Route path="/recruiter/ranking" element={<Navigate to="/recruiter/advertisement" replace />} />
         <Route path="/recruiter/evaluation" element={<Navigate to="/recruiter/advertisement" replace />} />

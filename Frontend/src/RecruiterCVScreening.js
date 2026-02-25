@@ -278,20 +278,25 @@ const RecruiterCVScreening = () => {
                         <h2 className="text-3xl font-bold text-gray-800">CV Screening</h2>
                         <p className="text-gray-500 text-md mt-1 py-4">AI-powered resume analysis and candidate shortlisting.</p>
                     </div>
-                    {/* User Profile - Top Right */}
-                    <div className="flex items-center gap-3">
-                        <div className="text-right">
-                            <h3 className="font-bold text-gray-800">
-                                {recruiterData.firstName} {recruiterData.lastName}
-                            </h3>
-                            <p className="text-sm text-gray-500">{recruiterData.email}</p>
-                        </div>
-                        <div className="w-12 h-12 bg-gradient-to-br from-[#0a2a5e] to-[#2b4c8c] rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg overflow-hidden">
-                            {recruiterData.profileImage ? (
-                                <img src={recruiterData.profileImage} alt="Profile" className="w-full h-full object-cover" />
-                            ) : (
-                                <>{recruiterData.firstName?.charAt(0)}{recruiterData.lastName?.charAt(0)}</>
-                            )}
+                    {/* View All Screenings + User Profile - Top Right */}
+                    <div className="flex items-center gap-4">
+                        <NavLink to="/recruiter/all-screenings" className="px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 flex items-center gap-2 shadow-sm">
+                            <Eye className="w-4 h-4" /> View All Screenings
+                        </NavLink>
+                        <div className="flex items-center gap-3">
+                            <div className="text-right">
+                                <h3 className="font-bold text-gray-800">
+                                    {recruiterData.firstName} {recruiterData.lastName}
+                                </h3>
+                                <p className="text-sm text-gray-500">{recruiterData.email}</p>
+                            </div>
+                            <div className="w-12 h-12 bg-gradient-to-br from-[#0a2a5e] to-[#2b4c8c] rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg overflow-hidden">
+                                {recruiterData.profileImage ? (
+                                    <img src={recruiterData.profileImage} alt="Profile" className="w-full h-full object-cover" />
+                                ) : (
+                                    <>{recruiterData.firstName?.charAt(0)}{recruiterData.lastName?.charAt(0)}</>
+                                )}
+                            </div>
                         </div>
                     </div>
                 </div>
