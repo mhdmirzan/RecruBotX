@@ -120,6 +120,11 @@ async def get_recruiter_jobs(
     db=Depends(get_database)
 ):
     """Get all job postings by a specific recruiter."""
+    if db is None:
+        raise HTTPException(
+            status_code=503,
+            detail="Database connection unavailable. MongoDB is not connected."
+        )
     jobs = await get_job_postings_by_recruiter(db, recruiter_id)
     return [
         {
@@ -152,6 +157,11 @@ async def get_all_jobs(
     db=Depends(get_database)
 ):
     """Get all job postings from all recruiters."""
+    if db is None:
+        raise HTTPException(
+            status_code=503,
+            detail="Database connection unavailable. MongoDB is not connected."
+        )
     jobs = await get_all_job_postings(db)
     return [
         {

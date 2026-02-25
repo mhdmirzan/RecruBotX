@@ -147,7 +147,7 @@ async def add_cv_to_job(
     """Add a CV file ID to the job posting's cv_file_ids list."""
     result = await db.job_postings.update_one(
         {"_id": ObjectId(job_id)},
-        {"$push": {"cv_file_ids": cv_file_id}}
+        {"$push": {"cv_file_ids": ObjectId(cv_file_id)}}
     )
     return result.modified_count > 0
 

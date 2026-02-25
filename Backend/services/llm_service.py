@@ -1,6 +1,10 @@
 import os
 from groq import AsyncGroq
 from typing import List, Dict, AsyncGenerator
+from dotenv import load_dotenv
+
+# Ensure environment variables are loaded
+load_dotenv()
 
 class LLMService:
     def __init__(self):
