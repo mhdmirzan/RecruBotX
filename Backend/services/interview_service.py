@@ -152,8 +152,8 @@ class InterviewService:
 
         # 4. Generate AI Response
         ai_response_chunks = []
-        # If user_input was INIT, don't pass it to LLM as a user message, just trigger first greeting
-        prompt_input = "Hello, I am ready for the interview." if user_input == "INIT" else user_input
+        # If user_input was INIT, request the AI to initiate the intro instead of simulating candidate readiness.
+        prompt_input = "Please initiate the interview. Welcome me and follow your introduction instructions." if user_input == "INIT" else user_input
         
         async for chunk in self.llm_service.generate_response(prompt_input, history=history):
             ai_response_chunks.append(chunk)
