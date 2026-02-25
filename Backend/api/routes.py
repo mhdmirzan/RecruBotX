@@ -573,30 +573,18 @@ async def get_all_users(db=Depends(get_database)):
 @router.post("/candidate/analyze-resume", response_model=dict)
 async def candidate_analyze_resume(
     file: UploadFile = File(...),
-    job_description: Optional[str] = Form(None),
+    job_description: str = Form(...),
     db=Depends(get_database)
 ):
     """
     Candidate endpoint for analyzing their resume against a job description.
-    Provides detailed AI-powered feedback on compatibility.
-    
-    Args:
-        file: CV/Resume file (PDF, DOCX, or TXT)
-        job_description: Optional job description text. If not provided, uses active JD.
-        db: Database connection
-    
-    Returns:
-        Dictionary containing formatted analysis with:
-        - candidate_name: Extracted name
-        - overall_score: Overall match percentage
-        - professional_summary: AI summary of candidate
-        - core_strengths: Key matching strengths
-        - role_recommendations: Recommended roles
-        - skill_gaps: Areas for improvement
-        - next_steps: Actionable recommendations
-        - formatted_analysis: HTML-formatted analysis
+    Job description is REQUIRED for meaningful analysis.
     """
     try:
+        # Validate job description
+        if not job_description or not job_description.strip():
+            raise HTTPException(status_code=400, detail="Job description is required for CV analysis.")
+        
         # Parse CV file
         content = await file.read()
         if not content:
@@ -617,20 +605,9 @@ async def candidate_analyze_resume(
             if os.path.exists(temp_path):
                 os.remove(temp_path)
         
-        # Get job description
-        jd_content = job_description
-        
-        if not jd_content or not jd_content.strip():
-            # Try to get active JD from database
-            active_jd = await crud.get_active_job_description(db)
-            if active_jd:
-                jd_content = active_jd["content"]
-            else:
-                jd_content = "No specific job description provided. Analyzing resume content and potential career paths."
-        
-        # Screen CV
-        analysis_result = await screener.screen_cv(
-            job_description=jd_content,
+        # Screen CV using the detailed candidate analysis prompt
+        analysis_result = await screener.screen_cv_candidate(
+            job_description=job_description.strip(),
             cv_content=cv_content,
             file_name=file.filename
         )
@@ -650,14 +627,16 @@ async def candidate_analyze_resume(
             "weaknesses": analysis_result.get("weaknesses", []),
             "recommendation": analysis_result.get("recommendation", "Not Evaluated"),
             "summary": analysis_result.get("summary", ""),
-            "professional_summary": formatted_analysis.get("professional_summary", ""),
+            "professional_summary": analysis_result.get("professional_summary", "") or formatted_analysis.get("professional_summary", ""),
             "core_strengths": formatted_analysis.get("core_strengths", ""),
             "role_recommendations": formatted_analysis.get("role_recommendations", ""),
             "skill_gaps": formatted_analysis.get("skill_gaps", ""),
             "next_steps": formatted_analysis.get("next_steps", ""),
+            "next_steps_list": formatted_analysis.get("next_steps_list", []),
             "formatted_analysis": formatted_analysis.get("full_analysis", ""),
             "analysis": formatted_analysis
         }
+
         
     except HTTPException:
         raise
@@ -673,7 +652,8 @@ async def candidate_analyze_resume(
 def format_candidate_analysis(analysis_data: dict) -> dict:
     """
     Format the raw AI analysis into structured sections for frontend display.
-    Converts the raw analysis JSON into organized, readable sections.
+    Handles both the enhanced candidate analysis prompt (list-based next_steps)
+    and the original prompt format.
     """
     formatted = {
         "professional_summary": "",
@@ -681,11 +661,14 @@ def format_candidate_analysis(analysis_data: dict) -> dict:
         "role_recommendations": "",
         "skill_gaps": "",
         "next_steps": "",
+        "next_steps_list": [],
         "full_analysis": ""
     }
     
-    # Use structured analysis if available, otherwise use raw
-    if isinstance(analysis_data.get("summary"), str) and analysis_data["summary"]:
+    # Professional summary — prefer the dedicated field from the enhanced prompt
+    if isinstance(analysis_data.get("professional_summary"), str) and analysis_data["professional_summary"]:
+        formatted["professional_summary"] = analysis_data["professional_summary"]
+    elif isinstance(analysis_data.get("summary"), str) and analysis_data["summary"]:
         formatted["professional_summary"] = analysis_data["summary"]
     
     # Format strengths
@@ -704,35 +687,42 @@ def format_candidate_analysis(analysis_data: dict) -> dict:
         else:
             formatted["skill_gaps"] = str(weaknesses)
     
-    # Generate dynamic next steps based on recommendation and score
-    recommendation = analysis_data.get("recommendation", "")
-    overall_score = analysis_data.get("overall_score", 0)
-    
-    if recommendation:
-        if recommendation == "Strongly Recommend":
-            formatted["next_steps"] = (
-                f"Excellent match with {overall_score}% compatibility! You're a strong candidate for this position. "
-                "We recommend applying immediately and preparing for technical interviews. "
-                "Highlight your key strengths during the interview process."
-            )
-        elif recommendation == "Recommend":
-            formatted["next_steps"] = (
-                f"Good match with {overall_score}% compatibility. You meet most of the core requirements. "
-                "Focus on addressing the development areas identified above before your interview. "
-                "Consider taking courses or gaining hands-on experience in the gap areas."
-            )
-        elif recommendation == "Consider":
-            formatted["next_steps"] = (
-                f"Moderate match with {overall_score}% compatibility. While you have relevant experience, "
-                "there are some significant gaps to address. We recommend upskilling in the identified areas "
-                "and gaining more targeted experience before applying for similar roles."
-            )
-        else:
-            formatted["next_steps"] = (
-                f"Current compatibility is {overall_score}%. This role may require skills beyond your current profile. "
-                "Consider exploring roles that better align with your existing strengths, or invest in "
-                "substantial training in the key requirement areas before pursuing similar positions."
-            )
+    # Next steps — handle list-based (from enhanced prompt) or generate from recommendation
+    next_steps_raw = analysis_data.get("next_steps", [])
+    if isinstance(next_steps_raw, list) and len(next_steps_raw) > 0:
+        # Enhanced prompt returns a list of actionable steps
+        formatted["next_steps_list"] = next_steps_raw
+        formatted["next_steps"] = "\n".join([f"• {s}" for s in next_steps_raw])
+    else:
+        # Fallback: generate dynamic next steps based on recommendation and score
+        recommendation = analysis_data.get("recommendation", "")
+        overall_score = analysis_data.get("overall_score", 0)
+        
+        if recommendation:
+            if recommendation == "Strongly Recommend":
+                formatted["next_steps"] = (
+                    f"Excellent match with {overall_score}% compatibility! You're a strong candidate for this position. "
+                    "We recommend applying immediately and preparing for technical interviews. "
+                    "Highlight your key strengths during the interview process."
+                )
+            elif recommendation == "Recommend":
+                formatted["next_steps"] = (
+                    f"Good match with {overall_score}% compatibility. You meet most of the core requirements. "
+                    "Focus on addressing the development areas identified above before your interview. "
+                    "Consider taking courses or gaining hands-on experience in the gap areas."
+                )
+            elif recommendation == "Consider":
+                formatted["next_steps"] = (
+                    f"Moderate match with {overall_score}% compatibility. While you have relevant experience, "
+                    "there are some significant gaps to address. We recommend upskilling in the identified areas "
+                    "and gaining more targeted experience before applying for similar roles."
+                )
+            else:
+                formatted["next_steps"] = (
+                    f"Current compatibility is {overall_score}%. This role may require skills beyond your current profile. "
+                    "Consider exploring roles that better align with your existing strengths, or invest in "
+                    "substantial training in the key requirement areas before pursuing similar positions."
+                )
     
     # Combine all for full analysis
     full = []

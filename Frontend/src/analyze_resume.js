@@ -17,6 +17,20 @@ const AnalyzeResume = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  // Helper function to render text with bold formatting (**text**)
+  const renderTextWithBold = (text) => {
+    if (!text) return "";
+    if (typeof text !== 'string') return text;
+
+    const parts = text.split(/(\*\*.*?\*\*)/g);
+    return parts.map((part, index) => {
+      if (part.startsWith('**') && part.endsWith('**')) {
+        return <strong key={index}>{part.slice(2, -2)}</strong>;
+      }
+      return part;
+    });
+  };
+
   // Custom animation styles for border and badge pulse
   const animationStyles = `
     @keyframes borderPulseGreen {
@@ -63,10 +77,9 @@ const AnalyzeResume = () => {
       return;
     }
 
-    // If job description empty, confirm
     if (!jobDesc.trim()) {
-      const ok = window.confirm("No job description provided. Continue with resume-only analysis?");
-      if (!ok) return;
+      setError("Please paste the Job Description. It is required for CV analysis.");
+      return;
     }
 
     setLoading(true);
@@ -74,9 +87,7 @@ const AnalyzeResume = () => {
     try {
       const fd = new FormData();
       fd.append("file", file);
-      if (jobDesc.trim()) {
-        fd.append("job_description", jobDesc);
-      }
+      fd.append("job_description", jobDesc);
 
       const res = await fetch(`${API_BASE_URL}/candidate/analyze-resume`, {
         method: "POST",
@@ -102,6 +113,7 @@ const AnalyzeResume = () => {
         role_recommendations: payload.recommendation || "",
         skill_gaps: payload.skill_gaps || (payload.weaknesses ? payload.weaknesses.join("\n• ") : ""),
         next_steps: payload.next_steps || "",
+        next_steps_list: payload.next_steps_list || [],
         raw_analysis: payload.analysis?.full_analysis || "",
         overall_score: payload.overall_score || 0,
         skills_match: payload.skills_match || 0,
@@ -111,7 +123,7 @@ const AnalyzeResume = () => {
         strengths: payload.strengths || [],
         weaknesses: payload.weaknesses || [],
         recommendation: payload.recommendation || "",
-        hasJobDescription: jobDesc.trim() !== "" // Track if JD was provided
+        hasJobDescription: true // JD is always provided now
       };
 
       setAnalysis(analysisData);
@@ -131,6 +143,84 @@ const AnalyzeResume = () => {
     const margin = 20;
     const contentWidth = pageWidth - (2 * margin);
     let yPosition = margin;
+
+    // Helper to draw text with bold parts (**text**)
+    const drawStyledText = (text, x, y, maxWidth) => {
+      const parts = text.split(/(\*\*.*?\*\*)/g);
+      let currentX = x;
+
+      parts.forEach(part => {
+        if (part.startsWith('**') && part.endsWith('**')) {
+          doc.setFont(undefined, 'bold');
+          const boldText = part.slice(2, -2);
+          doc.text(boldText, currentX, y);
+          currentX += doc.getTextWidth(boldText);
+          doc.setFont(undefined, 'normal');
+        } else if (part) {
+          doc.text(part, currentX, y);
+          currentX += doc.getTextWidth(part);
+        }
+      });
+    };
+
+    // Helper to split and draw text with bold support across multiple lines
+    const drawWrappedStyledText = (text, x, y, maxWidth, lineHeight = 5) => {
+      // Split text into lines while respecting bold markers (complex in jsPDF)
+      // Simpler approach: split by space, but that loses precision.
+      // Better: Use a simple line wrapping logic that treats bold parts as units.
+
+      const words = text.split(/(\*\*.*?\*\*|\s+)/g).filter(w => w !== undefined && w !== '');
+      let currentLine = "";
+      let tempY = y;
+      let lineSegments = [];
+      let currentLineWidth = 0;
+
+      words.forEach(word => {
+        let cleanWord = word;
+        let isBold = false;
+        if (word.startsWith('**') && word.endsWith('**')) {
+          cleanWord = word.slice(2, -2);
+          isBold = true;
+          doc.setFont(undefined, 'bold');
+        } else {
+          doc.setFont(undefined, 'normal');
+        }
+
+        const wordWidth = doc.getTextWidth(cleanWord);
+
+        if (currentLineWidth + wordWidth > maxWidth - 5) { // 5mm safety buffer
+          // Draw current line
+          let segmentX = x;
+          lineSegments.forEach(seg => {
+            doc.setFont(undefined, seg.bold ? 'bold' : 'normal');
+            doc.text(seg.text, segmentX, tempY);
+            segmentX += doc.getTextWidth(seg.text);
+          });
+
+          tempY += lineHeight;
+          if (tempY > pageHeight - 20) {
+            doc.addPage();
+            tempY = margin;
+          }
+
+          lineSegments = [{ text: cleanWord, bold: isBold }];
+          currentLineWidth = wordWidth;
+        } else {
+          lineSegments.push({ text: cleanWord, bold: isBold });
+          currentLineWidth += wordWidth;
+        }
+      });
+
+      // Draw last line
+      let segmentX = x;
+      lineSegments.forEach(seg => {
+        doc.setFont(undefined, seg.bold ? 'bold' : 'normal');
+        doc.text(seg.text, segmentX, tempY);
+        segmentX += doc.getTextWidth(seg.text);
+      });
+
+      return tempY + lineHeight;
+    };
 
     // Blue theme color
     const primaryBlue = [30, 74, 142]; // #1e4a8e
@@ -177,10 +267,7 @@ const AnalyzeResume = () => {
       doc.setFontSize(12);
       doc.setFont(undefined, 'bold');
       const recText = `Recommendation: ${analysis.recommendation}`;
-      const recColor = analysis.recommendation === 'Strongly Recommend' ? [34, 197, 94] :
-        analysis.recommendation === 'Recommend' ? [59, 130, 246] :
-          analysis.recommendation === 'Consider' ? [250, 204, 21] : [239, 68, 68];
-      doc.setTextColor(...recColor);
+      doc.setTextColor(...primaryBlue);
       doc.text(recText, margin, yPosition);
       yPosition += 10;
     }
@@ -232,15 +319,8 @@ const AnalyzeResume = () => {
       doc.setTextColor(...textGray);
       doc.setFontSize(10);
       doc.setFont(undefined, 'normal');
-      const summaryLines = doc.splitTextToSize(analysis.summary, contentWidth - 10);
-      summaryLines.forEach(line => {
-        if (yPosition > pageHeight - 20) {
-          doc.addPage();
-          yPosition = margin;
-        }
-        doc.text(line, margin + 5, yPosition);
-        yPosition += 5;
-      });
+
+      yPosition = drawWrappedStyledText(analysis.professional_summary, margin + 5, yPosition, contentWidth - 10);
       yPosition += 5;
     }
 
@@ -262,15 +342,7 @@ const AnalyzeResume = () => {
       doc.setFontSize(10);
       doc.setFont(undefined, 'normal');
       analysis.strengths.forEach(strength => {
-        if (yPosition > pageHeight - 20) {
-          doc.addPage();
-          yPosition = margin;
-        }
-        const strengthLines = doc.splitTextToSize(`• ${strength}`, contentWidth - 10);
-        strengthLines.forEach(line => {
-          doc.text(line, margin + 5, yPosition);
-          yPosition += 5;
-        });
+        yPosition = drawWrappedStyledText(`• ${strength}`, margin + 5, yPosition, contentWidth - 10);
         yPosition += 1;
       });
       yPosition += 5;
@@ -294,15 +366,7 @@ const AnalyzeResume = () => {
       doc.setFontSize(10);
       doc.setFont(undefined, 'normal');
       analysis.weaknesses.forEach(weakness => {
-        if (yPosition > pageHeight - 20) {
-          doc.addPage();
-          yPosition = margin;
-        }
-        const weaknessLines = doc.splitTextToSize(`• ${weakness}`, contentWidth - 10);
-        weaknessLines.forEach(line => {
-          doc.text(line, margin + 5, yPosition);
-          yPosition += 5;
-        });
+        yPosition = drawWrappedStyledText(`• ${weakness}`, margin + 5, yPosition, contentWidth - 10);
         yPosition += 1;
       });
       yPosition += 5;
@@ -325,18 +389,15 @@ const AnalyzeResume = () => {
       doc.setTextColor(...textGray);
       doc.setFontSize(10);
       doc.setFont(undefined, 'normal');
-      const steps = analysis.next_steps.split(/[.!]\s+/).filter(s => s.trim());
+      const steps = analysis.next_steps_list?.length > 0
+        ? analysis.next_steps_list
+        : analysis.next_steps.split(/[.!]\s+/).filter(s => s.trim());
+
       steps.forEach(step => {
-        if (yPosition > pageHeight - 20) {
-          doc.addPage();
-          yPosition = margin;
-        }
-        const stepText = step.trim() + (step.trim().match(/[.!]$/) ? '' : '.');
-        const stepLines = doc.splitTextToSize(`• ${stepText}`, contentWidth - 10);
-        stepLines.forEach(line => {
-          doc.text(line, margin + 5, yPosition);
-          yPosition += 5;
-        });
+        const stepText = typeof step === 'string'
+          ? (step.trim() + (step.trim().match(/[.!]$/) ? '' : '.'))
+          : step;
+        yPosition = drawWrappedStyledText(`• ${stepText}`, margin + 5, yPosition, contentWidth - 10);
         yPosition += 1;
       });
     }
@@ -417,7 +478,7 @@ const AnalyzeResume = () => {
 
               {/* Job Description Section */}
               <div>
-                <h3 className="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2"><FileText className="w-5 h-5" /> Job Description (Optional)</h3>
+                <h3 className="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2"><FileText className="w-5 h-5" /> Job Description <span className="text-red-500">*</span> <span className="text-sm font-normal text-gray-500">(Required)</span></h3>
                 <textarea
                   value={jobDesc}
                   onChange={(e) => setJobDesc(e.target.value)}
@@ -431,8 +492,8 @@ const AnalyzeResume = () => {
             <div className="mb-6 flex justify-center">
               <button
                 onClick={handleAnalyze}
-                disabled={loading}
-                className="w-1/4 bg-gradient-to-r from-[#0a2a5e] to-[#0d3b82] text-white py-4 rounded-lg font-semibold hover:from-[#061a3d] hover:to-[#0a2a5e] transition flex items-center justify-center gap-2 shadow-lg disabled:bg-gray-400 disabled:cursor-not-allowed"
+                disabled={loading || !file || !jobDesc.trim()}
+                className={`w-1/4 py-4 rounded-lg font-semibold transition flex items-center justify-center gap-2 shadow-lg ${loading || !file || !jobDesc.trim() ? 'bg-gray-400 cursor-not-allowed text-gray-200' : 'bg-gradient-to-r from-[#0a2a5e] to-[#0d3b82] text-white hover:from-[#061a3d] hover:to-[#0a2a5e]'}`}
               >
                 {loading ? (
                   <>
@@ -472,11 +533,7 @@ const AnalyzeResume = () => {
                     </div>
                     {/* Recommendation Badge on Right Side (Only show when JD is provided) */}
                     {analysis.recommendation && analysis.hasJobDescription && (
-                      <div className={`px-6 py-3 rounded-xl text-base font-semibold shadow-lg border-2 transition-all duration-300 hover:shadow-2xl hover:scale-105 animation-pulse ${analysis.recommendation === 'Strongly Recommend' ? 'bg-gradient-to-br from-green-400 to-green-600 text-white border-green-500 hover:from-green-500 hover:to-green-700 border-pulse-green' :
-                        analysis.recommendation === 'Recommend' ? 'bg-gradient-to-br from-blue-400 to-blue-600 text-white border-blue-500 hover:from-blue-500 hover:to-blue-700 border-pulse-blue' :
-                          analysis.recommendation === 'Consider' ? 'bg-gradient-to-br from-yellow-300 to-yellow-500 text-yellow-900 border-yellow-400 hover:from-yellow-400 hover:to-yellow-600 border-pulse-yellow' :
-                            'bg-gradient-to-br from-red-300 to-red-500 text-white border-red-400 hover:from-red-400 hover:to-red-600 border-pulse-red'
-                        }`}>
+                      <div className="px-6 py-3 rounded-xl text-base font-semibold shadow-lg border-2 transition-all duration-300 hover:shadow-2xl hover:scale-105 animation-pulse bg-gradient-to-br from-[#0a2a5e] to-[#0d3b82] text-white border-[#0a2a5e]/50 border-pulse-blue">
                         <div className="flex items-center gap-2">
                           {analysis.recommendation === 'Strongly Recommend' && <CheckCircle className="w-5 h-5" />}
                           {analysis.recommendation === 'Recommend' && <ThumbsUp className="w-5 h-5" />}
@@ -532,7 +589,7 @@ const AnalyzeResume = () => {
                       {analysis.professional_summary.split(/[.!]\s+/).filter(s => s.trim()).map((point, index) => (
                         <li key={index} className="flex items-start gap-3 text-gray-700">
                           <span className="w-6 h-6 rounded-full flex items-center justify-center text-[#0a2a5e] font-bold text-xs flex-shrink-0 mt-0.5">✓</span>
-                          <span className="leading-relaxed">{point.trim()}{point.trim().match(/[.!]$/) ? '' : '.'}</span>
+                          <span className="leading-relaxed">{renderTextWithBold(point.trim())}{point.trim().match(/[.!]$/) ? '' : '.'}</span>
                         </li>
                       ))}
                     </ul>
@@ -552,7 +609,7 @@ const AnalyzeResume = () => {
                       {analysis.strengths.map((strength, index) => (
                         <li key={index} className="flex items-start gap-3 text-gray-700">
                           <span className="w-6 h-6 rounded-full flex items-center justify-center text-[#0a2a5e] font-bold text-xs flex-shrink-0 mt-0.5">✓</span>
-                          <span className="leading-relaxed">{strength}</span>
+                          <span className="leading-relaxed">{renderTextWithBold(strength)}</span>
                         </li>
                       ))}
                     </ul>
@@ -573,7 +630,7 @@ const AnalyzeResume = () => {
                       {analysis.weaknesses.map((weakness, index) => (
                         <li key={index} className="flex items-start gap-3 text-gray-700">
                           <span className="w-6 h-6 rounded-full flex items-center justify-center text-[#0a2a5e] font-bold text-xs flex-shrink-0 mt-0.5">✓</span>
-                          <span className="leading-relaxed">{weakness}</span>
+                          <span className="leading-relaxed">{renderTextWithBold(weakness)}</span>
                         </li>
                       ))}
                     </ul>
@@ -581,7 +638,7 @@ const AnalyzeResume = () => {
                 )}
 
                 {/* Next Steps - Blue Theme */}
-                {analysis.next_steps && (
+                {(analysis.next_steps_list?.length > 0 || analysis.next_steps) && (
                   <div className="bg-white p-6 rounded-xl border-l-4 border-[#0a2a5e] shadow-lg hover:shadow-xl transition">
                     <h3 className="text-lg font-bold text-[#0a2a5e] mb-4 flex items-center gap-2">
                       <span className="w-8 h-8 bg-white rounded-full flex items-center justify-center text-[#0a2a5e] border-2 border-[#0a2a5e]/30">
@@ -590,10 +647,13 @@ const AnalyzeResume = () => {
                       Recommended Next Steps
                     </h3>
                     <ul className="space-y-3">
-                      {analysis.next_steps.split(/[.!]\s+/).filter(s => s.trim()).map((step, index) => (
+                      {(analysis.next_steps_list?.length > 0
+                        ? analysis.next_steps_list
+                        : analysis.next_steps.split(/[.!]\s+/).filter(s => s.trim())
+                      ).map((step, index) => (
                         <li key={index} className="flex items-start gap-3 text-gray-700">
                           <span className="w-6 h-6 rounded-full flex items-center justify-center text-[#0a2a5e] font-bold text-xs flex-shrink-0 mt-0.5">✓</span>
-                          <span className="leading-relaxed">{step.trim()}{step.trim().match(/[.!]$/) ? '' : '.'}</span>
+                          <span className="leading-relaxed">{renderTextWithBold(typeof step === 'string' ? (step.trim().match(/[.!]$/) ? step.trim() : step.trim() + '.') : step)}</span>
                         </li>
                       ))}
                     </ul>
@@ -613,9 +673,9 @@ const AnalyzeResume = () => {
               </div>
             )}
           </div>
-        </div>
-      </main>
-    </div>
+        </div >
+      </main >
+    </div >
   );
 };
 
