@@ -4,7 +4,7 @@ API Routes for CV Screening with MongoDB Integration
 
 import os
 from typing import List, Optional
-from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Depends
+from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Depends, Request
 from pydantic import BaseModel
 
 from cv_screener.gemini_screener import GeminiCVScreener
@@ -27,6 +27,9 @@ router.include_router(new_interview_router)
 
 # Initialize the Gemini screener
 screener = GeminiCVScreener()
+
+# Import activity logger
+from services.activity_logger import log_activity
 
 
 class JobDescriptionRequest(BaseModel):
@@ -537,6 +540,19 @@ async def login_user(
             detail="User account is inactive"
         )
     
+    # Log the login activity
+    try:
+        await log_activity(
+            db=db,
+            user_id=str(user["_id"]),
+            user_email=user["email"],
+            user_role="candidate",
+            action_type="user_login",
+            action_detail={"method": "email_password"},
+        )
+    except Exception:
+        pass  # Don't block login if logging fails
+
     return {
         "success": True,
         "message": "Login successful",

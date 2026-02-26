@@ -54,6 +54,14 @@ app.include_router(api_router, prefix="/api")
 from api.websocket_routes import router as ws_router
 app.include_router(ws_router)
 
+# Include Superuser routes
+from api.superuser_routes import router as superuser_router
+app.include_router(superuser_router, prefix="/api")
+
+# Include Superuser WebSocket routes
+from api.superuser_ws import router as superuser_ws_router
+app.include_router(superuser_ws_router)
+
 @app.on_event("startup")
 async def startup_event():
     """Initialize database connection on startup."""
@@ -66,6 +74,13 @@ async def startup_event():
     }
     try:
         await db_manager.connect()
+        
+        # Seed default superuser account
+        try:
+            from database.init_superuser import init_superuser
+            await init_superuser(db_manager.db)
+        except Exception as e:
+            print(f"⚠ Superuser initialization failed: {e}")
     except Exception as e:
         print(f"⚠ MongoDB connection failed: {e}")
         if strict_startup:
