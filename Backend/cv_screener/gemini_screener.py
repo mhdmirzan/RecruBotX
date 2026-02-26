@@ -103,9 +103,9 @@ Return ONLY a valid JSON object.
 
 ## INSTRUCTIONS:
 1. **Professional Summary**: Write a detailed, multi-paragraph professional summary (at least 5-6 sentences) that evaluates the candidate holistically against the JD. Mention specific skills, years of experience, education, and how they align or misalign with the role. This summary should be easy for the candidate to read and understand exactly where they stand.
-2. **Key Strengths**: Provide AT LEAST 8 specific strengths. Each strength MUST reference a requirement from the JD and explain how the candidate meets or exceeds it. Be specific — cite exact skills, technologies, or experiences from the CV that match the JD.
-3. **Areas for Development**: Provide AT LEAST 8 specific areas where the candidate falls short relative to the JD. Each point MUST reference a specific JD requirement that is missing, weak, or under-represented in the CV. Offer constructive phrasing.
-4. **Recommended Next Steps**: Provide AT LEAST 8 actionable, specific recommendations. Each recommendation should be tied to a gap identified in the analysis and reference the JD. Include suggestions like courses, certifications, projects, or experience to gain.
+2. **Key Strengths**: Provide AT LEAST 6 specific strengths. Each strength MUST reference a requirement from the JD and explain how the candidate meets or exceeds it. Be specific — cite exact skills, technologies, or experiences from the CV that match the JD.
+3. **Areas for Development**: Provide AT LEAST 6 specific areas where the candidate falls short relative to the JD. Each point MUST reference a specific JD requirement that is missing, weak, or under-represented in the CV. Offer constructive phrasing.
+4. **Recommended Next Steps**: Provide AT LEAST 6 actionable, specific recommendations. Each recommendation should be tied to a gap identified in the analysis and reference the JD. Include suggestions like courses, certifications, projects, or experience to gain.
 5. **Scores**: Provide percentage-based match scores comparing the CV to the JD.
 6. **Recommendation**: Based on the overall analysis, classify as one of: "Strongly Recommend", "Recommend", "Consider", or "Not Recommended".
 
@@ -117,9 +117,9 @@ Return ONLY a valid JSON object.
     "experience_match": 0-100,
     "education_match": 0-100,
     "professional_summary": "Detailed multi-paragraph professional summary comparing CV to JD (at least 5-6 sentences)",
-    "strengths": ["strength 1 referencing JD", "strength 2 referencing JD", "...at least 8 items"],
-    "weaknesses": ["area for development 1 referencing JD", "area 2 referencing JD", "...at least 8 items"],
-    "next_steps": ["specific actionable step 1 tied to JD gap", "step 2", "...at least 8 items"],
+    "strengths": ["strength 1 referencing JD", "strength 2 referencing JD", "...at least 6 items"],
+    "weaknesses": ["area for development 1 referencing JD", "area 2 referencing JD", "...at least 6 items"],
+    "next_steps": ["specific actionable step 1 tied to JD gap", "step 2", "...at least 6 items"],
     "recommendation": "Strongly Recommend / Recommend / Consider / Not Recommended",
     "summary": "2-3 sentence executive summary for quick reference"
 }}

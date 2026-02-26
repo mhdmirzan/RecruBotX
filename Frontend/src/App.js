@@ -52,6 +52,14 @@ import RecruiterAllScreenings from "./RecruiterAllScreenings";
 import TemplateSelect from "./pages/TemplateSelect";
 import ResumeBuilder from "./pages/ResumeBuilder";
 
+// Superuser
+import SuperuserLoginPage from "./SuperuserLoginPage";
+import SuperuserDashboard from "./SuperuserDashboard";
+import SuperuserActivityLogs from "./SuperuserActivityLogs";
+import SuperuserUsers from "./SuperuserUsers";
+import SuperuserAdmins from "./SuperuserAdmins";
+import SuperuserProtectedRoute from "./components/SuperuserProtectedRoute";
+
 // Initialize user database
 import { initializeDummyUsers } from "./utils/userDatabase";
 
@@ -61,7 +69,7 @@ initializeDummyUsers();
 // Helper component to conditionally render Navbar
 const ConditionalNavbar = () => {
   const location = useLocation();
-  // Hide Navbar on specific recruiter pages where full-screen dashboard is used
+  // Hide Navbar on specific pages where full-screen dashboard is used
   const hiddenPaths = [
     "/recruiter/dashboard",
     "/recruiter/job-posting",
@@ -75,7 +83,8 @@ const ConditionalNavbar = () => {
     "/candidate/apply",
     "/candidate/interview",
     "/candidate/analyze-resume",
-    "/candidate/settings"
+    "/candidate/settings",
+    "/superuser"
   ];
 
   const shouldHide = hiddenPaths.some(path => location.pathname.startsWith(path));
@@ -152,6 +161,15 @@ function App() {
         <Route path="/recruiter/settings" element={<RecruiterSettings />} />
         <Route path="/recruiter/ranking" element={<Navigate to="/recruiter/dashboard" replace />} />
         <Route path="/recruiter/evaluation" element={<Navigate to="/recruiter/dashboard" replace />} />
+
+        {/* ===== SUPERUSER ===== */}
+        <Route path="/superuser/signin" element={<SuperuserLoginPage />} />
+        <Route path="/superuser/dashboard" element={<SuperuserProtectedRoute><SuperuserDashboard /></SuperuserProtectedRoute>} />
+        <Route path="/superuser/activity-logs" element={<SuperuserProtectedRoute><SuperuserActivityLogs /></SuperuserProtectedRoute>} />
+        <Route path="/superuser/candidates" element={<SuperuserProtectedRoute><SuperuserUsers endpoint="candidates" title="Candidates" roleLabel="candidate" /></SuperuserProtectedRoute>} />
+        <Route path="/superuser/recruiters" element={<SuperuserProtectedRoute><SuperuserUsers endpoint="recruiters" title="Recruiters" roleLabel="recruiter" /></SuperuserProtectedRoute>} />
+        <Route path="/superuser/admins" element={<SuperuserProtectedRoute><SuperuserAdmins /></SuperuserProtectedRoute>} />
+        <Route path="/superuser/users" element={<Navigate to="/superuser/candidates" replace />} />
       </Routes>
     </Router>
   );

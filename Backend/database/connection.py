@@ -130,6 +130,22 @@ class DatabaseManager:
                 background=True
             )
             
+            # Superuser indexes
+            await self.db.superusers.create_index(
+                "email", unique=True, background=True
+            )
+
+            # Activity log indexes
+            await self.db.activity_logs.create_index(
+                [("timestamp", -1)], background=True
+            )
+            await self.db.activity_logs.create_index(
+                [("user_id", 1), ("timestamp", -1)], background=True
+            )
+            await self.db.activity_logs.create_index(
+                [("action_type", 1), ("timestamp", -1)], background=True
+            )
+
             print("✓ Database indexes created successfully")
         except Exception as e:
             print(f"⚠ Warning: Could not create some indexes: {e}")
