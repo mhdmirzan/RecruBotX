@@ -3,7 +3,7 @@ import { useNavigate, NavLink } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
     ShieldCheck, LayoutDashboard, Activity, Users, Briefcase,
-    LogOut, UserPlus, Clock, Mail, X
+    LogOut, UserPlus, Clock, Mail, X, Trash2, AlertTriangle
 } from "lucide-react";
 import API_BASE_URL from "./apiConfig";
 
@@ -27,6 +27,8 @@ const SuperuserAdmins = () => {
     const [formError, setFormError] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [successMsg, setSuccessMsg] = useState("");
+    const [deleteTarget, setDeleteTarget] = useState(null);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     const fetchAdmins = async () => {
         try {
@@ -58,6 +60,26 @@ const SuperuserAdmins = () => {
             setTimeout(() => setSuccessMsg(""), 4000);
         } catch (err) { setFormError("Network error"); }
         setIsSubmitting(false);
+    };
+
+    const handleDeleteSuperuser = async (adminId) => {
+        setIsDeleting(true);
+        try {
+            const res = await fetch(`${API_BASE_URL}/superuser/admins/${adminId}`, {
+                method: "DELETE",
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            if (res.ok) {
+                setSuccessMsg("Admin account deleted successfully");
+                fetchAdmins();
+                setDeleteTarget(null);
+                setTimeout(() => setSuccessMsg(""), 4000);
+            } else {
+                const data = await res.json();
+                alert(data.detail || "Failed to delete admin");
+            }
+        } catch (err) { alert("Network error"); }
+        setIsDeleting(false);
     };
 
     const handleLogout = () => {
@@ -139,9 +161,18 @@ const SuperuserAdmins = () => {
                                             <p className="text-gray-900 font-semibold truncate">{admin.firstName} {admin.lastName}</p>
                                             <p className="text-gray-500 text-xs truncate flex items-center gap-1"><Mail className="w-3 h-3" />{admin.email}</p>
                                         </div>
-                                        <span className={`text-xs px-2 py-1 rounded-full font-medium ${admin.isActive ? "bg-green-50 text-green-600 border border-green-200" : "bg-red-50 text-red-600 border border-red-200"}`}>
-                                            {admin.isActive ? "Active" : "Inactive"}
-                                        </span>
+                                        <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
+                                            <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${admin.isActive ? "bg-green-50 text-green-600 border border-green-200" : "bg-red-50 text-red-600 border border-red-200"}`}>
+                                                {admin.isActive ? "Active" : "Inactive"}
+                                            </span>
+                                            {isRoot && !admin.isRoot && (
+                                                <button onClick={() => setDeleteTarget(admin)}
+                                                    className="p-1.5 rounded-lg text-gray-300 hover:text-red-500 hover:bg-red-50 transition-all"
+                                                    title="Delete Admin">
+                                                    <Trash2 className="w-3.5 h-3.5" />
+                                                </button>
+                                            )}
+                                        </div>
                                     </div>
                                     <div className="flex items-center gap-4 text-xs text-gray-400 border-t border-gray-50 pt-3 flex-wrap">
                                         <span className="flex items-center gap-1"><Clock className="w-3 h-3" />Added {new Date(admin.createdAt).toLocaleDateString()}</span>
@@ -221,6 +252,42 @@ const SuperuserAdmins = () => {
                                 )}
                             </button>
                         </form>
+                    </motion.div>
+                </div>
+            )}
+
+            {/* Delete Admin Modal */}
+            {deleteTarget && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
+                    <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
+                        className="bg-white rounded-2xl shadow-2xl border border-gray-100 w-full max-w-sm mx-4 p-6">
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="w-11 h-11 rounded-xl bg-red-50 flex items-center justify-center flex-shrink-0">
+                                <AlertTriangle className="w-6 h-6 text-red-500" />
+                            </div>
+                            <div>
+                                <h3 className="font-bold text-gray-900">Delete Admin Account?</h3>
+                                <p className="text-xs text-gray-500">This action cannot be undone.</p>
+                            </div>
+                        </div>
+                        <p className="text-sm text-gray-600 mb-5">
+                            You are about to permanently delete the admin account for <strong>{deleteTarget.firstName} {deleteTarget.lastName}</strong> ({deleteTarget.email}).
+                        </p>
+                        <div className="flex gap-3">
+                            <button onClick={() => setDeleteTarget(null)}
+                                className="flex-1 py-2.5 rounded-xl border border-gray-200 text-gray-600 text-sm font-medium hover:bg-gray-50 transition-colors">
+                                Cancel
+                            </button>
+                            <button onClick={() => handleDeleteSuperuser(deleteTarget.id)} disabled={isDeleting}
+                                className="flex-1 py-2.5 rounded-xl bg-red-500 hover:bg-red-600 text-white text-sm font-semibold transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
+                                {isDeleting ? (
+                                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                ) : (
+                                    <Trash2 className="w-4 h-4" />
+                                )}
+                                Delete Permanent
+                            </button>
+                        </div>
                     </motion.div>
                 </div>
             )}

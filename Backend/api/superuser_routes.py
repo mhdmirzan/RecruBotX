@@ -32,6 +32,7 @@ from database.superuser_crud import (
     get_all_users_with_activity,
     delete_candidate_by_id,
     delete_recruiter_by_id,
+    delete_superuser_by_id,
 )
 from services.activity_logger import log_activity
 
@@ -500,7 +501,45 @@ async def add_superuser(
     )
 
     return {
-        "success": True,
-        "message": f"Superuser {data.email} created successfully",
         "id": new_id,
     }
+
+@router.delete("/admins/{admin_id}")
+async def delete_admin(
+    admin_id: str,
+    db=Depends(get_database),
+    current_user=Depends(require_superuser),
+):
+    """
+    Delete an admin account.
+    Only the root superuser (created_by=None) can perform this action.
+    """
+    # Check if caller is root
+    caller = await get_superuser_by_id(db, current_user.get("sub"))
+    if not caller:
+        raise HTTPException(status_code=404, detail="Current superuser not found")
+        
+    if caller.get("created_by") is not None:
+        raise HTTPException(
+            status_code=403,
+            detail="Only the root superuser can delete admin accounts."
+        )
+
+    success = await delete_superuser_by_id(db, admin_id)
+    if not success:
+        raise HTTPException(
+            status_code=404,
+            detail="Admin not found or cannot be deleted (Root accounts are protected)."
+        )
+
+    # Log the action
+    await log_activity(
+        db=db,
+        user_id=current_user.get("sub"),
+        user_email=current_user.get("email"),
+        user_role="superuser",
+        action_type="superuser_delete",
+        action_detail={"deleted_admin_id": admin_id},
+    )
+
+    return {"success": True, "message": "Admin account deleted successfully"}
