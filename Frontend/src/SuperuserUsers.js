@@ -3,7 +3,7 @@ import { useNavigate, NavLink } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
     ShieldCheck, LayoutDashboard, Activity, Users, Briefcase, LogOut,
-    Search, User, Clock, BarChart3, ChevronRight, DollarSign, Cpu
+    Search, User, Clock, BarChart3, ChevronRight, DollarSign, Cpu, Trash2, AlertTriangle
 } from "lucide-react";
 import API_BASE_URL from "./apiConfig";
 
@@ -39,6 +39,8 @@ const SuperuserUsers = ({ endpoint = "candidates", title = "Candidates", roleLab
     const [selected, setSelected] = useState(null);
     const [userLogs, setUserLogs] = useState([]);
     const [loadingLogs, setLoadingLogs] = useState(false);
+    const [deleteTarget, setDeleteTarget] = useState(null);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     useEffect(() => {
         if (!token) return;
@@ -70,6 +72,24 @@ const SuperuserUsers = ({ endpoint = "candidates", title = "Candidates", roleLab
     };
 
     const handleSelect = (u) => { setSelected(u); fetchUserActivity(u.id); };
+
+    const handleDelete = async (u) => {
+        setIsDeleting(true);
+        try {
+            const res = await window.fetch(`${API_BASE_URL}/superuser/${endpoint}/${u.id}`, {
+                method: "DELETE",
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            if (res.ok) {
+                setUsers(prev => prev.filter(x => x.id !== u.id));
+                setFiltered(prev => prev.filter(x => x.id !== u.id));
+                if (selected?.id === u.id) { setSelected(null); setUserLogs([]); }
+            }
+        } catch { }
+        setIsDeleting(false);
+        setDeleteTarget(null);
+    };
+
     const handleLogout = () => { localStorage.removeItem("superuserToken"); localStorage.removeItem("superuserUser"); navigate("/superuser/signin"); };
 
     const costBadgeColor = (cost) => cost > 0.01 ? "#b45309" : cost > 0.001 ? "#2563eb" : "#6b7280";
@@ -158,6 +178,13 @@ const SuperuserUsers = ({ endpoint = "candidates", title = "Candidates", roleLab
                                     )}
                                 </div>
                                 <ChevronRight className="w-4 h-4 text-gray-300 flex-shrink-0" />
+                                {/* Delete button — stops propagation so it doesn't open activity panel */}
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); setDeleteTarget(u); }}
+                                    className="flex-shrink-0 p-1.5 rounded-lg text-gray-300 hover:text-red-500 hover:bg-red-50 transition-all"
+                                    title={`Delete ${roleLabel}`}>
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                </button>
                             </motion.div>
                         ))}
                     </div>
@@ -241,6 +268,41 @@ const SuperuserUsers = ({ endpoint = "candidates", title = "Candidates", roleLab
                     </motion.div>
                 )}
             </main>
+
+            {/* Delete Confirmation Modal */}
+            {deleteTarget && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
+                    <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
+                        className="bg-white rounded-2xl shadow-2xl border border-gray-100 w-full max-w-sm mx-4 p-6">
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="w-11 h-11 rounded-xl bg-red-50 flex items-center justify-center flex-shrink-0">
+                                <AlertTriangle className="w-6 h-6 text-red-500" />
+                            </div>
+                            <div>
+                                <h3 className="font-bold text-gray-900">Delete {roleLabel === "candidate" ? "Candidate" : "Recruiter"}?</h3>
+                                <p className="text-xs text-gray-500">This action cannot be undone.</p>
+                            </div>
+                        </div>
+                        <p className="text-sm text-gray-600 mb-5">
+                            You are about to permanently delete <strong>{deleteTarget.firstName} {deleteTarget.lastName}</strong>{" "}
+                            ({deleteTarget.email}).
+                            {roleLabel === "recruiter" && " All their job postings will also be removed."}
+                        </p>
+                        <div className="flex gap-3">
+                            <button onClick={() => setDeleteTarget(null)}
+                                className="flex-1 py-2.5 rounded-xl border border-gray-200 text-gray-600 text-sm font-medium hover:bg-gray-50 transition-colors">
+                                Cancel
+                            </button>
+                            <button onClick={() => handleDelete(deleteTarget)} disabled={isDeleting}
+                                className="flex-1 py-2.5 rounded-xl bg-red-500 hover:bg-red-600 text-white text-sm font-semibold transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
+                                {isDeleting
+                                    ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                    : <><Trash2 className="w-4 h-4" /> Delete Permanently</>}
+                            </button>
+                        </div>
+                    </motion.div>
+                </div>
+            )}
         </div>
     );
 };
