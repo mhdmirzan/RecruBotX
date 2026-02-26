@@ -352,3 +352,20 @@ async def delete_recruiter_by_id(db, recruiter_id: str) -> bool:
         return True
     except Exception:
         return False
+
+
+async def delete_superuser_by_id(db, user_id: str) -> bool:
+    """Delete a superuser admin. Root superuser cannot be deleted."""
+    try:
+        user = await db.superusers.find_one({"_id": ObjectId(user_id)})
+        if not user:
+            return False
+        
+        # Protect root superuser (created_by is None)
+        if user.get("created_by") is None:
+            return False
+            
+        result = await db.superusers.delete_one({"_id": ObjectId(user_id)})
+        return result.deleted_count > 0
+    except Exception:
+        return False
