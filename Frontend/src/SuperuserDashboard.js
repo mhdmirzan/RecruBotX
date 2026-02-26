@@ -85,12 +85,12 @@ const SuperuserDashboard = () => {
     if (!user) return <div className="h-screen flex items-center justify-center bg-gray-50"><div className="w-8 h-8 border-2 border-[#0a2a5e] border-t-transparent rounded-full animate-spin" /></div>;
 
     const statCards = stats ? [
+        { label: "Total API Cost", value: `$${(stats.total_api_cost_usd || 0).toFixed(4)}`, icon: DollarSign, color: "#0a2a5e", badge: `${(stats.total_tokens_used || 0).toLocaleString()} tokens` },
         { label: "Total Candidates", value: stats.total_candidates, icon: Users, color: "#0a2a5e" },
-        { label: "Total Recruiters", value: stats.total_recruiters, icon: Briefcase, color: "#143d7a" },
-        { label: "Job Postings", value: stats.total_job_postings, icon: FileText, color: "#1e5098" },
-        { label: "CVs Screened", value: stats.total_screenings, icon: Search, color: "#2563eb" },
+        { label: "Total Recruiters", value: stats.total_recruiters, icon: Briefcase, color: "#0a2a5e" },
+        { label: "Job Postings", value: stats.total_job_postings, icon: FileText, color: "#0a2a5e" },
+        { label: "CVs Screened", value: stats.total_screenings, icon: Search, color: "#0a2a5e" },
         { label: "Logins Today", value: stats.logins_today, icon: UserCheck, color: "#0a2a5e" },
-        { label: "Total API Cost", value: `$${(stats.total_api_cost_usd || 0).toFixed(4)}`, icon: DollarSign, color: "#b45309", badge: `${(stats.total_tokens_used || 0).toLocaleString()} tokens` },
     ] : [];
 
     return (

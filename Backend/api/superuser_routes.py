@@ -21,6 +21,7 @@ from database.connection import get_database
 from database.superuser_crud import (
     create_superuser,
     get_superuser_by_email,
+    get_superuser_by_id,
     get_all_superusers,
     verify_superuser_password,
     get_activity_logs,
@@ -29,6 +30,8 @@ from database.superuser_crud import (
     get_all_candidates_with_activity,
     get_all_recruiters_with_activity,
     get_all_users_with_activity,
+    delete_candidate_by_id,
+    delete_recruiter_by_id,
 )
 from services.activity_logger import log_activity
 
@@ -183,6 +186,30 @@ async def user_activity_history(
     logs = await get_activity_logs(db, user_id=user_id, page=page, limit=limit)
     total = await get_activity_logs_count(db, user_id=user_id)
     return {"user_id": user_id, "logs": logs, "total": total, "page": page, "limit": limit}
+
+@router.delete("/candidates/{user_id}")
+async def delete_candidate(
+    user_id: str,
+    db=Depends(get_database),
+    _user=Depends(require_superuser),
+):
+    """Permanently delete a candidate user and all their activity logs."""
+    success = await delete_candidate_by_id(db, user_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Candidate not found or could not be deleted")
+    return {"success": True, "message": "Candidate deleted successfully"}
+
+@router.delete("/recruiters/{recruiter_id}")
+async def delete_recruiter(
+    recruiter_id: str,
+    db=Depends(get_database),
+    _user=Depends(require_superuser),
+):
+    """Permanently delete a recruiter, their job postings, and activity logs."""
+    success = await delete_recruiter_by_id(db, recruiter_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Recruiter not found or could not be deleted")
+    return {"success": True, "message": "Recruiter and all associated job postings deleted"}
 
 
 # ==================== Superuser (Admin) Management ====================
