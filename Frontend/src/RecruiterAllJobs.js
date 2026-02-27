@@ -15,7 +15,10 @@ import {
     ChevronRight,
     Loader2,
     Award,
-    Eye
+    Eye,
+    Clock,
+    AlertTriangle,
+    XCircle
 } from "lucide-react";
 import API_BASE_URL from "./apiConfig";
 
@@ -256,6 +259,43 @@ const RecruiterAllJobs = () => {
                                                     </div>
                                                     <ChevronRight className={`w-6 h-6 text-gray-400 transition-transform duration-200 ${selectedJob?.id === job.id ? "rotate-90" : ""}`} />
                                                 </div>
+                                            </div>
+
+                                            {/* Deadline & Status Badges */}
+                                            <div className="flex items-center gap-3 mt-3 pt-3 border-t border-gray-100">
+                                                {/* Active/Closed Badge */}
+                                                {job.isActive ? (
+                                                    <span className="px-3 py-1 bg-green-50 text-green-700 text-xs font-bold rounded-full">Active</span>
+                                                ) : (
+                                                    <span className="px-3 py-1 bg-red-50 text-red-700 text-xs font-bold rounded-full flex items-center gap-1">
+                                                        <XCircle className="w-3.5 h-3.5" /> Closed
+                                                    </span>
+                                                )}
+
+                                                {/* Deadline */}
+                                                {job.deadline ? (() => {
+                                                    const dl = new Date(job.deadline);
+                                                    const now = new Date();
+                                                    const diff = dl - now;
+                                                    const daysLeft = Math.ceil(diff / (1000 * 60 * 60 * 24));
+                                                    const expired = daysLeft < 0;
+                                                    const urgent = daysLeft >= 0 && daysLeft <= 3;
+
+                                                    return (
+                                                        <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${expired ? 'bg-red-100 text-red-700' :
+                                                                urgent ? 'bg-orange-100 text-orange-700 animate-pulse' :
+                                                                    'bg-blue-50 text-blue-700'
+                                                            }`}>
+                                                            {expired ? <XCircle className="w-3.5 h-3.5" /> : urgent ? <AlertTriangle className="w-3.5 h-3.5" /> : <Clock className="w-3.5 h-3.5" />}
+                                                            {expired ? 'Deadline Passed' :
+                                                                daysLeft === 0 ? 'Closes Today!' :
+                                                                    daysLeft <= 7 ? `${daysLeft} day${daysLeft > 1 ? 's' : ''} left` :
+                                                                        `Deadline: ${dl.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`}
+                                                        </div>
+                                                    );
+                                                })() : (
+                                                    <span className="text-xs text-gray-400">No deadline</span>
+                                                )}
                                             </div>
                                         </div>
 

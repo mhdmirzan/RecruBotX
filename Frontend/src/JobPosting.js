@@ -15,7 +15,8 @@ import {
     X,
     FileText,
     HelpCircle,
-    Briefcase
+    Briefcase,
+    Clock
 } from "lucide-react";
 import API_BASE_URL from "./apiConfig";
 
@@ -40,7 +41,8 @@ const JobPosting = () => {
         industryDomain: "",
         jobDescription: "",
         questions: [], // Array of { text, type, difficulty }
-        specificInstruction: ""
+        specificInstruction: "",
+        deadline: "" // YYYY-MM-DD string
     };
 
     const [formData, setFormData] = useState(initialFormState);
@@ -95,7 +97,8 @@ const JobPosting = () => {
                     industryDomain: selectedJob.industryDomain || "",
                     jobDescription: selectedJob.jobDescription || "",
                     questions: selectedJob.questions || [],
-                    specificInstruction: selectedJob.specificInstruction || ""
+                    specificInstruction: selectedJob.specificInstruction || "",
+                    deadline: selectedJob.deadline ? selectedJob.deadline.slice(0, 10) : ""
                 });
             }
         } else {
@@ -149,8 +152,14 @@ const JobPosting = () => {
 
     const validateStep = (step) => {
         if (step === 1) {
-            if (!formData.interviewField || !formData.positionLevel || !formData.workModel || !formData.status || !formData.location || !formData.salaryRange || !formData.experienceRange || !formData.industryDomain) {
-                setErrorMessage("Please fill in all required fields in Job Details.");
+            if (!formData.interviewField || !formData.positionLevel || !formData.workModel || !formData.status || !formData.location || !formData.salaryRange || !formData.experienceRange || !formData.industryDomain || !formData.deadline) {
+                setErrorMessage("Please fill in all required fields in Job Details (including Deadline).");
+                return false;
+            }
+            // Validate deadline is in the future
+            const deadlineDate = new Date(formData.deadline);
+            if (deadlineDate <= new Date()) {
+                setErrorMessage("Deadline must be a future date.");
                 return false;
             }
         } else if (step === 2) {
@@ -404,6 +413,23 @@ const JobPosting = () => {
                                         <input type="text" name="experienceRange" value={formData.experienceRange} onChange={handleInputChange} placeholder="e.g. 3-5 Years" className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#0a2a5e] outline-none" required />
                                     </div>
                                 </div>
+
+                                {/* Deadline Field - Prominent */}
+                                <div className="mt-6 p-5 bg-gradient-to-r from-red-50 to-orange-50 border-2 border-red-200 rounded-2xl">
+                                    <label className="block font-bold text-red-700 mb-2 flex items-center gap-2">
+                                        <Clock className="w-5 h-5" /> Application Deadline <span className="text-red-500">*</span>
+                                    </label>
+                                    <p className="text-sm text-red-500 mb-3">After this date, the job will automatically close and candidates cannot apply.</p>
+                                    <input
+                                        type="date"
+                                        name="deadline"
+                                        value={formData.deadline}
+                                        onChange={handleInputChange}
+                                        min={new Date().toISOString().split('T')[0]}
+                                        className="w-full px-4 py-3 border-2 border-red-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none bg-white text-lg font-semibold"
+                                        required
+                                    />
+                                </div>
                             </div>
                         )}
 
@@ -537,8 +563,14 @@ const JobPosting = () => {
                                         </div>
                                     </div>
                                     <div>
-                                        <h4 className="font-semibold text-gray-500 mb-2 uppercase tracking-wide">Interview Config</h4>
+                                        <h4 className="font-semibold text-gray-500 mb-2 uppercase tracking-wide">Deadline & Interview</h4>
                                         <div className="space-y-2">
+                                            <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-xl">
+                                                <Clock className="w-5 h-5 text-red-600" />
+                                                <span className="font-bold text-red-700">
+                                                    {formData.deadline ? new Date(formData.deadline).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }) : "Not set"}
+                                                </span>
+                                            </div>
                                             <p><span className="font-medium text-gray-900">Total Questions:</span> {formData.questions.length}</p>
                                             <p><span className="font-medium text-gray-900">Specific Instruction:</span> {formData.specificInstruction || "None"}</p>
                                         </div>

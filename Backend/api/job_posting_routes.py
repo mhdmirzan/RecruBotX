@@ -5,6 +5,7 @@ Job Posting API Routes
 from fastapi import APIRouter, HTTPException, Depends, UploadFile, File
 from pydantic import BaseModel
 from typing import Optional, List
+from datetime import datetime
 from database.connection import get_database
 from database.job_posting_crud import (
     create_job_posting,
@@ -15,7 +16,11 @@ from database.job_posting_crud import (
     delete_job_posting,
     create_job_cv_file,
     get_cv_files_by_ids,
-    count_cv_files_for_job
+    count_cv_files_for_job,
+    record_application,
+    has_candidate_applied,
+    get_candidate_applications,
+    close_expired_jobs
 )
 
 router = APIRouter(prefix="/jobs", tags=["Job Postings"])
@@ -40,6 +45,7 @@ class JobPostingRequest(BaseModel):
     questions: Optional[List[JobQuestion]] = []
     specificInstruction: Optional[str] = None
     jobDescription: Optional[str] = None
+    deadline: Optional[str] = None  # ISO date string e.g. "2026-03-15"
 
 
 class JobPostingUpdateRequest(BaseModel):
@@ -54,6 +60,7 @@ class JobPostingUpdateRequest(BaseModel):
     questions: Optional[List[JobQuestion]] = None
     specificInstruction: Optional[str] = None
     jobDescription: Optional[str] = None
+    deadline: Optional[str] = None
 
 
 @router.post("/create", response_model=dict)
@@ -76,6 +83,20 @@ async def create_job(
             detail="Database connection unavailable. MongoDB is not connected."
         )
     
+    # Parse deadline if provided
+    parsed_deadline = None
+    if job_data.deadline:
+        try:
+            parsed_deadline = datetime.fromisoformat(job_data.deadline.replace("Z", "+00:00"))
+        except ValueError:
+            try:
+                parsed_deadline = datetime.strptime(job_data.deadline, "%Y-%m-%d")
+            except ValueError:
+                raise HTTPException(status_code=400, detail="Invalid deadline format. Use YYYY-MM-DD.")
+
+    # Close any already-expired jobs first
+    await close_expired_jobs(db)
+
     # Create job posting
     job_id = await create_job_posting(
         db,
@@ -90,7 +111,8 @@ async def create_job(
         job_data.industryDomain,
         [q.dict() for q in job_data.questions],
         job_data.specificInstruction,
-        job_data.jobDescription
+        job_data.jobDescription,
+        parsed_deadline
     )
     
     job = await get_job_posting_by_id(db, job_id)
@@ -108,6 +130,7 @@ async def create_job(
             "industryDomain": job.get("industry_domain"),
             "questions": job.get("questions", []),
             "specificInstruction": job.get("specific_instruction"),
+            "deadline": job.get("deadline").isoformat() if job.get("deadline") else None,
             "createdAt": job["created_at"].isoformat(),
             "isActive": job["is_active"]
         }
@@ -125,6 +148,8 @@ async def get_recruiter_jobs(
             status_code=503,
             detail="Database connection unavailable. MongoDB is not connected."
         )
+    # Auto-close expired jobs
+    await close_expired_jobs(db)
     jobs = await get_job_postings_by_recruiter(db, recruiter_id)
     return [
         {
@@ -145,6 +170,7 @@ async def get_recruiter_jobs(
             "industryDomain": job.get("industry_domain"),
             "questions": job.get("questions", []),
             "specificInstruction": job.get("specific_instruction"),
+            "deadline": job.get("deadline").isoformat() if job.get("deadline") else None,
             "createdAt": job["created_at"].isoformat(),
             "isActive": job["is_active"]
         }
@@ -162,6 +188,8 @@ async def get_all_jobs(
             status_code=503,
             detail="Database connection unavailable. MongoDB is not connected."
         )
+    # Auto-close expired jobs
+    await close_expired_jobs(db)
     jobs = await get_all_job_postings(db)
     return [
         {
@@ -182,6 +210,7 @@ async def get_all_jobs(
             "industryDomain": job.get("industry_domain"),
             "questions": job.get("questions", []),
             "specificInstruction": job.get("specific_instruction"),
+            "deadline": job.get("deadline").isoformat() if job.get("deadline") else None,
             "createdAt": job["created_at"].isoformat(),
             "isActive": job["is_active"]
         }
@@ -210,6 +239,7 @@ async def get_job(
         "industryDomain": job.get("industry_domain"),
         "questions": job.get("questions", []),
         "specificInstruction": job.get("specific_instruction"),
+        "deadline": job.get("deadline").isoformat() if job.get("deadline") else None,
         "createdAt": job["created_at"].isoformat(),
         "isActive": job["is_active"]
     }
@@ -253,6 +283,14 @@ async def update_job(
         
     if update_data.jobDescription is not None:
         update_fields["job_description"] = update_data.jobDescription
+    if update_data.deadline is not None:
+        try:
+            update_fields["deadline"] = datetime.fromisoformat(update_data.deadline.replace("Z", "+00:00"))
+        except ValueError:
+            try:
+                update_fields["deadline"] = datetime.strptime(update_data.deadline, "%Y-%m-%d")
+            except ValueError:
+                raise HTTPException(status_code=400, detail="Invalid deadline format.")
     
     success = await update_job_posting(db, job_id, update_fields)
     
@@ -274,6 +312,7 @@ async def update_job(
             "industryDomain": updated_job.get("industry_domain"),
             "questions": updated_job.get("questions", []),
             "specificInstruction": updated_job.get("specific_instruction"),
+            "deadline": updated_job.get("deadline").isoformat() if updated_job.get("deadline") else None,
             "createdAt": updated_job["created_at"].isoformat(),
             "isActive": updated_job["is_active"]
         }
@@ -299,3 +338,68 @@ async def delete_job(
         "success": True,
         "message": "Job posting deleted successfully"
     }
+
+
+# ==================== Application Tracking ====================
+
+class ApplyRequest(BaseModel):
+    candidateId: str
+    candidateEmail: str
+
+
+@router.post("/{job_id}/apply", response_model=dict)
+async def apply_to_job(
+    job_id: str,
+    data: ApplyRequest,
+    db=Depends(get_database)
+):
+    """Record a candidate's application to a job. One application per candidate per job."""
+    if db is None:
+        raise HTTPException(status_code=503, detail="Database unavailable")
+
+    # Check if job exists and is active
+    job = await get_job_posting_by_id(db, job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job posting not found")
+    if not job.get("is_active", True):
+        raise HTTPException(status_code=400, detail="This job is closed and no longer accepting applications.")
+
+    # Check deadline
+    if job.get("deadline"):
+        if datetime.utcnow() > job["deadline"]:
+            # Auto-close the job
+            await update_job_posting(db, job_id, {"is_active": False})
+            raise HTTPException(status_code=400, detail="The deadline for this job has passed.")
+
+    # Check if already applied
+    already = await has_candidate_applied(db, job_id, data.candidateId)
+    if already:
+        raise HTTPException(status_code=409, detail="You have already applied to this job.")
+
+    app_id = await record_application(db, job_id, data.candidateId, data.candidateEmail)
+    return {"success": True, "message": "Application recorded successfully", "applicationId": app_id}
+
+
+@router.get("/{job_id}/has-applied/{candidate_id}", response_model=dict)
+async def check_application(
+    job_id: str,
+    candidate_id: str,
+    db=Depends(get_database)
+):
+    """Check if a candidate has already applied to a job."""
+    if db is None:
+        raise HTTPException(status_code=503, detail="Database unavailable")
+    applied = await has_candidate_applied(db, job_id, candidate_id)
+    return {"hasApplied": applied}
+
+
+@router.get("/candidate/{candidate_id}/applied-jobs", response_model=dict)
+async def get_applied_jobs(
+    candidate_id: str,
+    db=Depends(get_database)
+):
+    """Get all job IDs a candidate has applied to."""
+    if db is None:
+        raise HTTPException(status_code=503, detail="Database unavailable")
+    job_ids = await get_candidate_applications(db, candidate_id)
+    return {"appliedJobIds": job_ids}

@@ -16,6 +16,24 @@ services:
         value: https://recrubotx.vercel.app,https://recrubotx.onrender.com
       - key: PORT
         value: 10000
+      - key: APP_ENV
+        value: production
+
+      # Email OTP (API-based, no SMTP)
+      - key: EMAIL_PROVIDER
+        value: brevo
+      - key: BREVO_API_KEY
+        sync: false # Set manually in Render dashboard
+      - key: EMAIL_FROM_EMAIL
+        sync: false # Set manually in Render dashboard
+      - key: EMAIL_FROM_NAME
+        value: RecruBotX
+
+      # Optional alternative provider
+      - key: RESEND_API_KEY
+        sync: false # Set manually in Render dashboard
+      - key: RESEND_FROM
+        value: RecruBotX <onboarding@resend.dev>
 
   # Frontend: React Static Site
   - type: web

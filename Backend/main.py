@@ -23,7 +23,7 @@ UPLOAD_DIRS = [
 ]
 for upload_dir in UPLOAD_DIRS:
     upload_dir.mkdir(parents=True, exist_ok=True)
-    print(f"✅ Upload directory ready: {upload_dir}")
+    print(f"Upload directory ready: {upload_dir}")
 
 # Create FastAPI app
 app = FastAPI(
@@ -80,11 +80,20 @@ async def startup_event():
             from database.init_superuser import init_superuser
             await init_superuser(db_manager.db)
         except Exception as e:
-            print(f"⚠ Superuser initialization failed: {e}")
+            print(f"Superuser initialization failed: {e}")
+
+        # Auto-close expired job postings
+        try:
+            from database.job_posting_crud import close_expired_jobs
+            closed = await close_expired_jobs(db_manager.db)
+            if closed > 0:
+                print(f"Auto-closed {closed} expired job posting(s)")
+        except Exception as e:
+            print(f"Expired jobs check failed: {e}")
     except Exception as e:
-        print(f"⚠ MongoDB connection failed: {e}")
+        print(f"MongoDB connection failed: {e}")
         if strict_startup:
-            print("❌ MONGODB_STRICT_STARTUP=true, shutting down...")
+            print("MONGODB_STRICT_STARTUP=true, shutting down...")
             raise
         # Allow app to boot so /health can report the failure.
         print("✓ Continuing without MongoDB (MONGODB_STRICT_STARTUP=false)")

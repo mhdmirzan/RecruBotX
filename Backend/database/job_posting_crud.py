@@ -21,7 +21,8 @@ async def create_job_posting(
     industry_domain: str,
     questions: List[Dict[str, Any]],
     specific_instruction: Optional[str] = None,
-    job_description: Optional[str] = None
+    job_description: Optional[str] = None,
+    deadline: Optional[datetime] = None
 ) -> str:
     """Create a new job posting."""
     job_posting = {
@@ -38,6 +39,7 @@ async def create_job_posting(
         "specific_instruction": specific_instruction,
         "cv_file_ids": [],
         "job_description": job_description,
+        "deadline": deadline,
         "created_at": datetime.utcnow(),
         "updated_at": datetime.utcnow(),
         "is_active": True
@@ -197,3 +199,80 @@ async def count_cv_files_for_job(
     """Count the number of CV files for a job posting."""
     return await db.job_cv_files.count_documents({"job_posting_id": job_posting_id})
 
+
+# ==================== Job Applications (One-Per-Candidate) ====================
+
+async def record_application(
+    db: AsyncIOMotorDatabase,
+    job_id: str,
+    candidate_id: str,
+    candidate_email: str
+) -> str:
+    """Record that a candidate has applied to a job. Prevents duplicates."""
+    existing = await db.job_applications.find_one({
+        "job_id": job_id,
+        "candidate_id": candidate_id
+    })
+    if existing:
+        return str(existing["_id"])
+    doc = {
+        "job_id": job_id,
+        "candidate_id": candidate_id,
+        "candidate_email": candidate_email,
+        "applied_at": datetime.utcnow()
+    }
+    result = await db.job_applications.insert_one(doc)
+    return str(result.inserted_id)
+
+
+async def has_candidate_applied(
+    db: AsyncIOMotorDatabase,
+    job_id: str,
+    candidate_id: str
+) -> bool:
+    """Check if a candidate has already applied to a job."""
+    existing = await db.job_applications.find_one({
+        "job_id": job_id,
+        "candidate_id": candidate_id
+    })
+    return existing is not None
+
+
+async def get_applications_for_job(
+    db: AsyncIOMotorDatabase,
+    job_id: str
+) -> List[Dict[str, Any]]:
+    """Get all applications for a job."""
+    apps = []
+    cursor = db.job_applications.find({"job_id": job_id})
+    async for app in cursor:
+        app["_id"] = str(app["_id"])
+        apps.append(app)
+    return apps
+
+
+async def get_candidate_applications(
+    db: AsyncIOMotorDatabase,
+    candidate_id: str
+) -> List[str]:
+    """Get all job IDs a candidate has applied to."""
+    job_ids = []
+    cursor = db.job_applications.find({"candidate_id": candidate_id}, {"job_id": 1})
+    async for app in cursor:
+        job_ids.append(app["job_id"])
+    return job_ids
+
+
+# ==================== Auto-Close Expired Jobs ====================
+
+async def close_expired_jobs(db: AsyncIOMotorDatabase) -> int:
+    """Close all jobs whose deadline has passed. Returns count of closed jobs."""
+    now = datetime.utcnow()
+    result = await db.job_postings.update_many(
+        {
+            "deadline": {"$lte": now, "$ne": None},
+            "is_active": True
+        },
+        {"$set": {"is_active": False, "updated_at": now}}
+    )
+    return result.modified_count
