@@ -197,7 +197,13 @@ const VoiceInterview = () => {
 
   const startRecording = async (isAutomatic = false) => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true
+        }
+      });
       audioStreamRef.current = stream;
       audioChunksRef.current = [];
 
