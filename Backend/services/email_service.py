@@ -1,33 +1,22 @@
-"""
-Email Verification Service
-===========================
+"""Email Verification Service
 
-Sends OTP verification codes via email for account registration.
-Uses Gmail SMTP with App Password for secure delivery.
+Sends OTP verification codes via an email API provider (no SMTP).
+
+Why API (MVP-friendly):
+- Works reliably on common hosts (Render/Vercel) where SMTP ports can be blocked.
+- Free-tier providers exist (e.g., Brevo has a generous free daily limit).
+
 OTPs are stored in MongoDB with expiry timestamps.
 """
 
 import os
 import random
-import smtplib
 from datetime import datetime, timedelta
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
-from typing import Optional
 
+import httpx
 from dotenv import load_dotenv
 
 load_dotenv()
-
-# SMTP configuration will be fetched at runtime to ensure updated .env values are used
-def get_smtp_config():
-    load_dotenv(override=True)
-    return {
-        "host": os.getenv("SMTP_HOST", "smtp.gmail.com"),
-        "port": int(os.getenv("SMTP_PORT", 587)),
-        "email": os.getenv("SMTP_EMAIL", ""),
-        "password": os.getenv("SMTP_PASSWORD", ""),
-    }
 
 OTP_EXPIRY_MINUTES = 10
 OTP_LENGTH = 6
@@ -84,63 +73,126 @@ async def cleanup_expired_otps(db):
     })
 
 
-def send_otp_email(to_email: str, otp: str) -> bool:
-    """Send OTP verification email via SMTP."""
-    config = get_smtp_config()
-    smtp_email = config["email"]
-    smtp_password = config["password"]
-    
-    # Check if credentials exist
-    if not smtp_email or not smtp_password:
-        print(f"[WARNING] SMTP credentials MISSING in .env. Falling back to console log.")
-        print(f"[DEBUG] OTP for {to_email}: {otp}")
-        return True
+def _is_production() -> bool:
+    env = (
+        os.getenv("APP_ENV")
+        or os.getenv("ENV")
+        or os.getenv("ENVIRONMENT")
+        or ""
+    ).strip().lower()
+    return env in {"prod", "production"}
 
-    try:
-        msg = MIMEMultipart("alternative")
-        # Simplify From header to avoid being flagged as spoofing/spam
-        msg["From"] = smtp_email 
-        msg["To"] = to_email
-        msg["Subject"] = f"RecruBotX - Your Verification Code: {otp}"
 
-        html_body = f"""
-        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 500px; margin: 0 auto; background: #ffffff; border-radius: 16px; overflow: hidden; border: 1px solid #e5e7eb;">
-            <div style="background: linear-gradient(135deg, #0a2a5e 0%, #143d7a 100%); padding: 32px; text-align: center;">
-                <h1 style="color: #ffffff; font-size: 24px; margin: 0;">RecruBotX</h1>
-                <p style="color: #93c5fd; font-size: 14px; margin: 8px 0 0;">Email Verification</p>
-            </div>
-            <div style="padding: 32px;">
-                <p style="color: #374151; font-size: 16px; margin: 0 0 8px;">Hi there,</p>
-                <p style="color: #6b7280; font-size: 14px; margin: 0 0 24px;">
-                    Please use the following code to verify your email address. This code expires in {OTP_EXPIRY_MINUTES} minutes.
-                </p>
-                <div style="background: #f3f4f6; border-radius: 12px; padding: 24px; text-align: center; margin: 0 0 24px;">
-                    <span style="font-size: 36px; font-weight: 700; letter-spacing: 8px; color: #0a2a5e;">{otp}</span>
-                </div>
-                <p style="color: #9ca3af; font-size: 12px; margin: 0; text-align: center;">
-                    If you didn't request this code, please ignore this email. Do not share this code with anyone.
-                </p>
-            </div>
-            <div style="background: #f9fafb; padding: 16px; text-align: center; border-top: 1px solid #e5e7eb;">
-                <p style="color: #9ca3af; font-size: 11px; margin: 0;">© 2026 RecruBotX. All rights reserved.</p>
-            </div>
+def _otp_html(otp: str) -> str:
+    return f"""
+    <div style="font-family: sans-serif; max-width: 500px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 16px; overflow: hidden;">
+        <div style="background: #0a2a5e; padding: 32px; text-align: center; color: white;">
+            <h1>RecruBotX</h1>
         </div>
-        """
+        <div style="padding: 32px; text-align: center;">
+            <p>Your verification code is:</p>
+            <h2 style="font-size: 36px; letter-spacing: 8px; color: #0a2a5e;">{otp}</h2>
+            <p style="color: #6b7280;">Expires in 10 minutes.</p>
+        </div>
+    </div>
+    """
 
-        msg.attach(MIMEText(html_body, "html"))
 
-        # Add timeout to avoid hanging if network issues occur
-        with smtplib.SMTP(config["host"], config["port"], timeout=10) as server:
-            # server.set_debuglevel(1) # Keep enabled locally for debug if needed
-            server.starttls()
-            server.login(smtp_email, smtp_password)
-            server.sendmail(smtp_email, to_email, msg.as_string())
+async def _send_via_brevo(to_email: str, otp: str) -> bool:
+    api_key = os.getenv("BREVO_API_KEY", "").strip()
+    from_email = os.getenv("EMAIL_FROM_EMAIL", "").strip()
+    from_name = os.getenv("EMAIL_FROM_NAME", "RecruBotX").strip() or "RecruBotX"
+    if not api_key or not from_email:
+        return False
 
-        print(f"[SUCCESS] OTP email successfully sent to {to_email}")
+    url = "https://api.brevo.com/v3/smtp/email"
+    headers = {
+        "api-key": api_key,
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+    }
+    payload = {
+        "sender": {"name": from_name, "email": from_email},
+        "to": [{"email": to_email}],
+        "subject": f"RecruBotX - Your Verification Code: {otp}",
+        "htmlContent": _otp_html(otp),
+    }
+
+    async with httpx.AsyncClient(timeout=10.0) as client:
+        response = await client.post(url, headers=headers, json=payload)
+
+    if response.status_code in {200, 201, 202}:
+        print(f"[SUCCESS] OTP sent via Brevo to {to_email}")
         return True
 
-    except Exception as e:
-        # Avoid emojis here too to prevent encoding crashes
-        print(f"[ERROR] SMTP Error for {to_email}: {str(e)}")
-        print(f"[FALLBACK] OTP for {to_email}: {otp}")
+    print(f"[ERROR] Brevo API failed: {response.status_code} {response.text}")
+    return False
+
+
+async def _send_via_resend(to_email: str, otp: str) -> bool:
+    api_key = os.getenv("RESEND_API_KEY", "").strip()
+    resend_from = os.getenv("RESEND_FROM", "RecruBotX <onboarding@resend.dev>").strip()
+    if not api_key:
         return False
+
+    url = "https://api.resend.com/emails"
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+    }
+    payload = {
+        "from": resend_from,
+        "to": [to_email],
+        "subject": f"RecruBotX - Your Verification Code: {otp}",
+        "html": _otp_html(otp),
+    }
+
+    async with httpx.AsyncClient(timeout=10.0) as client:
+        response = await client.post(url, headers=headers, json=payload)
+
+    if response.status_code in {200, 201}:
+        print(f"[SUCCESS] OTP sent via Resend to {to_email}")
+        return True
+
+    print(f"[ERROR] Resend API failed: {response.status_code} {response.text}")
+    return False
+
+
+async def send_otp_email(to_email: str, otp: str) -> bool:
+    """Send OTP verification email via an email API provider.
+
+    Provider selection order:
+    1) EMAIL_PROVIDER if set ("brevo" or "resend")
+    2) If BREVO_API_KEY is present -> Brevo
+    3) If RESEND_API_KEY is present -> Resend
+    4) Development fallback (prints OTP) ONLY when not production
+    """
+
+    provider = (os.getenv("EMAIL_PROVIDER") or "").strip().lower()
+
+    try_order: list[str]
+    if provider:
+        try_order = [provider]
+    else:
+        try_order = []
+        if os.getenv("BREVO_API_KEY"):
+            try_order.append("brevo")
+        if os.getenv("RESEND_API_KEY"):
+            try_order.append("resend")
+
+    for p in try_order:
+        if p == "brevo":
+            if await _send_via_brevo(to_email, otp):
+                return True
+        elif p == "resend":
+            if await _send_via_resend(to_email, otp):
+                return True
+
+    if _is_production():
+        print("[ERROR] No email provider configured for OTP sending.")
+        return False
+
+    print(f"[WARNING] No email provider configured. OTP for {to_email}: {otp}")
+    return True
+

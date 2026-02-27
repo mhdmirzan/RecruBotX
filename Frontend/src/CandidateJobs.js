@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Search, Briefcase, MapPin, DollarSign, Calendar, ChevronRight, Send, Filter, X } from "lucide-react";
+import { Search, Briefcase, MapPin, DollarSign, Calendar, ChevronRight, Send, Filter, X, Clock, CheckCircle2, XCircle, AlertTriangle } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { getCurrentUser, logoutUser } from "./utils/userDatabase";
 import API_BASE_URL from "./apiConfig";
@@ -21,6 +21,7 @@ const CandidateJobs = () => {
     const [isLoadingJobs, setIsLoadingJobs] = useState(true);
     const [selectedJob, setSelectedJob] = useState(null);
     const [showJobModal, setShowJobModal] = useState(false);
+    const [appliedJobIds, setAppliedJobIds] = useState([]);
 
     useEffect(() => {
         const currentUser = getCurrentUser();
@@ -29,6 +30,7 @@ const CandidateJobs = () => {
         } else {
             setUser(currentUser);
             fetchJobPostings();
+            fetchAppliedJobs(currentUser.id);
         }
     }, [navigate]);
 
@@ -38,10 +40,9 @@ const CandidateJobs = () => {
             const response = await fetch(`${API_BASE_URL}/jobs/all`);
             if (response.ok) {
                 const data = await response.json();
-                // Transform data
                 const transformed = data.map(job => ({
                     id: job._id || job.id,
-                    company: `${job.interviewField} Position`, // Using field as company name proxy for now
+                    company: `${job.interviewField} Position`,
                     title: job.interviewField,
                     position: job.positionLevel,
                     interviewField: job.interviewField,
@@ -52,6 +53,7 @@ const CandidateJobs = () => {
                     experienceRange: job.experienceRange,
                     industryDomain: job.industryDomain,
                     jobDescription: job.jobDescription,
+                    deadline: job.deadline ? new Date(job.deadline) : null,
                     appliedDate: new Date(job.createdAt),
                     isActive: job.isActive
                 }));
@@ -61,6 +63,18 @@ const CandidateJobs = () => {
             console.error("Error fetching jobs:", error);
         } finally {
             setIsLoadingJobs(false);
+        }
+    };
+
+    const fetchAppliedJobs = async (candidateId) => {
+        try {
+            const response = await fetch(`${API_BASE_URL}/jobs/candidate/${candidateId}/applied-jobs`);
+            if (response.ok) {
+                const data = await response.json();
+                setAppliedJobIds(data.appliedJobIds || []);
+            }
+        } catch (error) {
+            console.error("Error fetching applied jobs:", error);
         }
     };
 
@@ -97,6 +111,11 @@ const CandidateJobs = () => {
         filtered.sort((a, b) => {
             if (sortBy === "name") return a.title.localeCompare(b.title);
             if (sortBy === "date-asc") return a.appliedDate - b.appliedDate;
+            if (sortBy === "deadline") {
+                if (!a.deadline) return 1;
+                if (!b.deadline) return -1;
+                return a.deadline - b.deadline;
+            }
             return b.appliedDate - a.appliedDate;
         });
 
@@ -111,6 +130,26 @@ const CandidateJobs = () => {
             default: return "bg-gray-100 text-gray-700";
         }
     };
+
+    const isJobExpired = (job) => {
+        if (!job.deadline) return false;
+        return new Date() > job.deadline;
+    };
+
+    const getDeadlineInfo = (job) => {
+        if (!job.deadline) return { text: "No deadline", color: "text-gray-400", urgent: false };
+        const now = new Date();
+        const diff = job.deadline - now;
+        const daysLeft = Math.ceil(diff / (1000 * 60 * 60 * 24));
+
+        if (daysLeft < 0) return { text: "Deadline passed", color: "text-red-600", urgent: true };
+        if (daysLeft === 0) return { text: "Closes today!", color: "text-red-600", urgent: true };
+        if (daysLeft <= 3) return { text: `${daysLeft} day${daysLeft > 1 ? 's' : ''} left`, color: "text-orange-600", urgent: true };
+        if (daysLeft <= 7) return { text: `${daysLeft} days left`, color: "text-yellow-600", urgent: false };
+        return { text: job.deadline.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }), color: "text-gray-600", urgent: false };
+    };
+
+    const isApplied = (jobId) => appliedJobIds.includes(jobId);
 
     if (!user) return null;
 
@@ -178,6 +217,7 @@ const CandidateJobs = () => {
                             >
                                 <option value="date-desc">Newest First</option>
                                 <option value="date-asc">Oldest First</option>
+                                <option value="deadline">Deadline (Soonest)</option>
                                 <option value="name">Name (A-Z)</option>
                             </select>
                         </div>
@@ -196,52 +236,88 @@ const CandidateJobs = () => {
                             </div>
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                                {getFilteredJobs().map(job => (
-                                    <div key={job.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow group flex flex-col">
-                                        <div className="flex justify-between items-start mb-4">
-                                            <div>
-                                                <h3 className="font-bold text-xl text-gray-800 group-hover:text-[#0a2a5e] transition-colors">{job.title}</h3>
-                                                <p className="text-gray-500 font-medium">{job.position}</p>
-                                            </div>
-                                            <span className={`px-3 py-1 rounded-full text-xs font-bold ${getStatusColor(job.status)}`}>
-                                                {job.status}
-                                            </span>
-                                        </div>
+                                {getFilteredJobs().map(job => {
+                                    const expired = isJobExpired(job) || !job.isActive;
+                                    const applied = isApplied(job.id);
+                                    const deadlineInfo = getDeadlineInfo(job);
 
-                                        <div className="space-y-2 mb-6 flex-1">
-                                            <div className="flex items-center gap-2 text-gray-500 text-sm">
-                                                <MapPin className="w-4 h-4" /> {job.location}
-                                            </div>
-                                            <div className="flex items-center gap-2 text-gray-500 text-sm">
-                                                <Briefcase className="w-4 h-4" /> {job.workModel}
-                                            </div>
-                                            <div className="flex items-center gap-2 text-green-600 font-medium text-sm">
-                                                <DollarSign className="w-4 h-4" /> {job.salaryRange}
-                                            </div>
-                                            <div className="flex items-center gap-2 text-gray-500 text-sm">
-                                                <Calendar className="w-4 h-4" /> Posted {job.appliedDate.toLocaleDateString()}
-                                            </div>
-                                        </div>
+                                    return (
+                                        <div key={job.id} className={`bg-white rounded-2xl shadow-sm border p-6 transition-shadow group flex flex-col relative ${expired ? 'border-gray-200 opacity-75' : 'border-gray-100 hover:shadow-md'}`}>
+                                            {/* Applied Badge */}
+                                            {applied && (
+                                                <div className="absolute top-4 right-4 flex items-center gap-1 px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold">
+                                                    <CheckCircle2 className="w-3.5 h-3.5" /> Applied
+                                                </div>
+                                            )}
 
-                                        <button
-                                            onClick={() => {
-                                                setSelectedJob(job);
-                                                setShowJobModal(true);
-                                            }}
-                                            className="w-full bg-gray-50 text-[#0a2a5e] py-3 rounded-xl font-semibold hover:bg-[#0a2a5e] hover:text-white transition-all flex items-center justify-center gap-2"
-                                        >
-                                            View Details
-                                            <ChevronRight className="w-4 h-4" />
-                                        </button>
-                                    </div>
-                                ))}
+                                            {/* Closed Badge */}
+                                            {expired && !applied && (
+                                                <div className="absolute top-4 right-4 flex items-center gap-1 px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-bold">
+                                                    <XCircle className="w-3.5 h-3.5" /> Closed
+                                                </div>
+                                            )}
+
+                                            <div className="flex justify-between items-start mb-4">
+                                                <div>
+                                                    <h3 className="font-bold text-xl text-gray-800 group-hover:text-[#0a2a5e] transition-colors">{job.title}</h3>
+                                                    <p className="text-gray-500 font-medium">{job.position}</p>
+                                                </div>
+                                                {!applied && !expired && (
+                                                    <span className={`px-3 py-1 rounded-full text-xs font-bold ${getStatusColor(job.status)}`}>
+                                                        {job.status}
+                                                    </span>
+                                                )}
+                                            </div>
+
+                                            <div className="space-y-2 mb-4 flex-1">
+                                                <div className="flex items-center gap-2 text-gray-500 text-sm">
+                                                    <MapPin className="w-4 h-4" /> {job.location}
+                                                </div>
+                                                <div className="flex items-center gap-2 text-gray-500 text-sm">
+                                                    <Briefcase className="w-4 h-4" /> {job.workModel}
+                                                </div>
+                                                <div className="flex items-center gap-2 text-green-600 font-medium text-sm">
+                                                    <DollarSign className="w-4 h-4" /> {job.salaryRange}
+                                                </div>
+                                                <div className="flex items-center gap-2 text-gray-500 text-sm">
+                                                    <Calendar className="w-4 h-4" /> Posted {job.appliedDate.toLocaleDateString()}
+                                                </div>
+                                            </div>
+
+                                            {/* Deadline Banner */}
+                                            <div className={`flex items-center gap-2 px-3 py-2 rounded-xl mb-4 text-sm font-semibold ${expired ? 'bg-red-50 text-red-600' :
+                                                    deadlineInfo.urgent ? 'bg-orange-50 text-orange-700 animate-pulse' :
+                                                        'bg-gray-50 text-gray-600'
+                                                }`}>
+                                                {expired ? <XCircle className="w-4 h-4" /> : deadlineInfo.urgent ? <AlertTriangle className="w-4 h-4" /> : <Clock className="w-4 h-4" />}
+                                                <span>{expired ? "Deadline passed" : `Deadline: ${deadlineInfo.text}`}</span>
+                                            </div>
+
+                                            <button
+                                                onClick={() => {
+                                                    setSelectedJob(job);
+                                                    setShowJobModal(true);
+                                                }}
+                                                className={`w-full py-3 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 ${expired ? 'bg-gray-100 text-gray-400 cursor-not-allowed' :
+                                                        applied ? 'bg-green-50 text-green-700 cursor-default' :
+                                                            'bg-gray-50 text-[#0a2a5e] hover:bg-[#0a2a5e] hover:text-white'
+                                                    }`}
+                                                disabled={expired}
+                                            >
+                                                {applied ? <><CheckCircle2 className="w-4 h-4" /> Already Applied</> :
+                                                    expired ? <><XCircle className="w-4 h-4" /> Closed</> :
+                                                        <>View Details <ChevronRight className="w-4 h-4" /></>}
+                                            </button>
+                                        </div>
+                                    );
+                                })}
                             </div>
                         )}
                     </div>
                 </div>
             </main>
 
-            {/* Job Info Modal - Reuse from Dashboard */}
+            {/* Job Info Modal */}
             {showJobModal && selectedJob && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
                     <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowJobModal(false)}></div>
@@ -252,6 +328,18 @@ const CandidateJobs = () => {
                             </button>
                             <h2 className="text-3xl font-bold mb-2">{selectedJob.title}</h2>
                             <p className="text-blue-200 text-lg">{selectedJob.position} • {selectedJob.location}</p>
+
+                            {/* Deadline in Modal Header */}
+                            {selectedJob.deadline && (
+                                <div className={`mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold ${isJobExpired(selectedJob) ? 'bg-red-500/20 text-red-200' :
+                                        getDeadlineInfo(selectedJob).urgent ? 'bg-orange-500/20 text-orange-200 animate-pulse' :
+                                            'bg-white/10 text-blue-100'
+                                    }`}>
+                                    <Clock className="w-4 h-4" />
+                                    {isJobExpired(selectedJob) ? "Deadline Passed" :
+                                        `Deadline: ${selectedJob.deadline.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}`}
+                                </div>
+                            )}
                         </div>
 
                         <div className="flex-1 overflow-y-auto p-8 space-y-6">
@@ -270,6 +358,39 @@ const CandidateJobs = () => {
                                 </div>
                             </div>
 
+                            {/* Prominent Deadline Section */}
+                            {selectedJob.deadline && (
+                                <div className={`p-5 rounded-2xl border-2 flex items-center gap-4 ${isJobExpired(selectedJob) ? 'bg-red-50 border-red-300' :
+                                        getDeadlineInfo(selectedJob).urgent ? 'bg-orange-50 border-orange-300' :
+                                            'bg-blue-50 border-blue-200'
+                                    }`}>
+                                    <div className={`w-12 h-12 rounded-full flex items-center justify-center ${isJobExpired(selectedJob) ? 'bg-red-100' :
+                                            getDeadlineInfo(selectedJob).urgent ? 'bg-orange-100' :
+                                                'bg-blue-100'
+                                        }`}>
+                                        <Clock className={`w-6 h-6 ${isJobExpired(selectedJob) ? 'text-red-600' :
+                                                getDeadlineInfo(selectedJob).urgent ? 'text-orange-600' :
+                                                    'text-blue-600'
+                                            }`} />
+                                    </div>
+                                    <div>
+                                        <p className={`font-bold text-lg ${isJobExpired(selectedJob) ? 'text-red-700' :
+                                                getDeadlineInfo(selectedJob).urgent ? 'text-orange-700' :
+                                                    'text-blue-700'
+                                            }`}>
+                                            {isJobExpired(selectedJob) ? "Applications Closed" :
+                                                `Apply before ${selectedJob.deadline.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" })}`}
+                                        </p>
+                                        <p className={`text-sm ${isJobExpired(selectedJob) ? 'text-red-500' :
+                                                getDeadlineInfo(selectedJob).urgent ? 'text-orange-500' :
+                                                    'text-blue-500'
+                                            }`}>
+                                            {getDeadlineInfo(selectedJob).text}
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
+
                             <div className="prose max-w-none">
                                 <h3 className="text-lg font-bold text-gray-800 mb-2">Job Description</h3>
                                 <div
@@ -280,15 +401,25 @@ const CandidateJobs = () => {
                         </div>
 
                         <div className="p-6 bg-gray-50 border-t border-gray-100 flex justify-end">
-                            <button
-                                onClick={() => {
-                                    setShowJobModal(false);
-                                    navigate(`/candidate/apply/${selectedJob.id}`);
-                                }}
-                                className="bg-[#0a2a5e] text-white px-8 py-3 rounded-xl font-bold hover:bg-[#0d3b82] transition-colors flex items-center gap-2 shadow-lg"
-                            >
-                                Apply Now <Send className="w-4 h-4" />
-                            </button>
+                            {isApplied(selectedJob.id) ? (
+                                <div className="flex items-center gap-2 px-8 py-3 bg-green-100 text-green-700 rounded-xl font-bold">
+                                    <CheckCircle2 className="w-5 h-5" /> You have already applied
+                                </div>
+                            ) : isJobExpired(selectedJob) || !selectedJob.isActive ? (
+                                <div className="flex items-center gap-2 px-8 py-3 bg-red-100 text-red-700 rounded-xl font-bold">
+                                    <XCircle className="w-5 h-5" /> This job is closed
+                                </div>
+                            ) : (
+                                <button
+                                    onClick={() => {
+                                        setShowJobModal(false);
+                                        navigate(`/candidate/apply/${selectedJob.id}`);
+                                    }}
+                                    className="bg-[#0a2a5e] text-white px-8 py-3 rounded-xl font-bold hover:bg-[#0d3b82] transition-colors flex items-center gap-2 shadow-lg"
+                                >
+                                    Apply Now <Send className="w-4 h-4" />
+                                </button>
+                            )}
                         </div>
                     </div>
                 </div>

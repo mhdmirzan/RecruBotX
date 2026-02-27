@@ -516,7 +516,7 @@ async def send_email_otp(
     await store_otp(db, data.email, otp)
     
     # Send email
-    success = send_otp_email(data.email, otp)
+    success = await send_otp_email(data.email, otp)
     
     if not success:
         raise HTTPException(
