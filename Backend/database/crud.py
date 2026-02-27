@@ -262,12 +262,14 @@ async def create_candidate_user(
     email: str,
     password: str
 ) -> str:
-    """Create a new candidate user."""
+    """Create a new candidate user with bcrypt-hashed password."""
+    import bcrypt
+    password_hash = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
     user = {
         "first_name": first_name,
         "last_name": last_name,
         "email": email.lower(),
-        "password": password,  # In production, hash this with bcrypt
+        "password": password_hash,
         "created_at": datetime.utcnow(),
         "updated_at": datetime.utcnow(),
         "is_active": True

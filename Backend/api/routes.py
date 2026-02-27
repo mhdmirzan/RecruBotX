@@ -441,6 +441,7 @@ class UserRegisterRequest(BaseModel):
     lastName: str
     email: str
     password: str
+    otpCode: str = ""  # OTP code for email verification
 
 
 class UserLoginRequest(BaseModel):
@@ -457,39 +458,148 @@ class UserResponse(BaseModel):
     isActive: bool
 
 
+class OtpRequest(BaseModel):
+    email: str
+
+
+class OtpVerifyRequest(BaseModel):
+    email: str
+    otp: str
+
+
+# ==================== Password Validation ====================
+
+import re
+
+def validate_password(password: str) -> str | None:
+    """
+    Enforce complex password requirements.
+    Returns None if valid, or an error message describing the failure.
+    """
+    if len(password) < 8:
+        return "Password must be at least 8 characters long"
+    if not re.search(r"[A-Z]", password):
+        return "Password must contain at least one uppercase letter"
+    if not re.search(r"[a-z]", password):
+        return "Password must contain at least one lowercase letter"
+    if not re.search(r"\d", password):
+        return "Password must contain at least one number"
+    if not re.search(r"[!@#$%^&*(),.?\":{}|<>_\-+=\[\]\\;'/~`]", password):
+        return "Password must contain at least one special character (!@#$%^&* etc.)"
+    return None
+
+
+# ==================== OTP Email Verification ====================
+
+from services.email_service import (
+    generate_otp, store_otp, verify_otp as verify_otp_code,
+    is_email_verified, send_otp_email
+)
+
+
+@router.post("/auth/send-otp", response_model=dict)
+async def send_email_otp(
+    data: OtpRequest,
+    db=Depends(get_database),
+):
+    """Send a 6-digit OTP to the user's email for verification."""
+    print(f"Request to send OTP to: {data.email}")
+    if db is None:
+        raise HTTPException(status_code=503, detail="Database unavailable")
+
+    # Check if email is already registered
+    existing = await crud.get_user_by_email(db, data.email)
+    if existing:
+        raise HTTPException(status_code=400, detail="An account with this email already exists")
+
+    otp = generate_otp()
+    await store_otp(db, data.email, otp)
+    
+    # Send email
+    success = send_otp_email(data.email, otp)
+    
+    if not success:
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to send verification code. Please ensure your email address is correct and check your internet connection."
+        )
+
+    return {"success": True, "message": "Verification code sent to your email"}
+
+
+@router.post("/auth/verify-otp", response_model=dict)
+async def verify_email_otp(
+    data: OtpVerifyRequest,
+    db=Depends(get_database),
+):
+    """Verify the OTP code sent to the user's email."""
+    if db is None:
+        raise HTTPException(status_code=503, detail="Database unavailable")
+
+    valid = await verify_otp_code(db, data.email, data.otp)
+    if not valid:
+        raise HTTPException(status_code=400, detail="Invalid or expired verification code")
+
+    return {"success": True, "message": "Email verified successfully"}
+
+
+# ==================== User Auth Endpoints ====================
+
+
 @router.post("/auth/register", response_model=dict)
 async def register_user(
     user_data: UserRegisterRequest,
     db=Depends(get_database)
 ):
-    """Register a new candidate user."""
-    # Check database connection
+    """Register a new user. Requires email OTP verification and complex password."""
     if db is None:
         raise HTTPException(
             status_code=503,
-            detail="Database connection unavailable. MongoDB is not connected. Please check DNS settings or use a standard connection string."
+            detail="Database connection unavailable. MongoDB is not connected."
         )
-    
-    # Check if user already exists
+
+    # 1. Password complexity check
+    pwd_error = validate_password(user_data.password)
+    if pwd_error:
+        raise HTTPException(status_code=400, detail=pwd_error)
+
+    # 2. Email already registered?
     existing_user = await crud.get_user_by_email(db, user_data.email)
     if existing_user:
+        raise HTTPException(status_code=400, detail="User already exists with this email")
+
+    # 3. Verify OTP was confirmed
+    email_ok = await is_email_verified(db, user_data.email)
+    if not email_ok:
         raise HTTPException(
             status_code=400,
-            detail="User already exists with this email"
+            detail="Email not verified. Please verify your email with an OTP code first."
         )
-    
-    # Create new user
+
+    # 4. Create user (password is hashed inside crud.create_candidate_user)
     user_id = await crud.create_candidate_user(
         db,
         user_data.firstName,
         user_data.lastName,
         user_data.email,
-        user_data.password  # In production, hash this!
+        user_data.password,
     )
-    
-    # Get created user
+
     user = await crud.get_user_by_id(db, user_id)
-    
+
+    # Log registration activity
+    try:
+        await log_activity(
+            db=db,
+            user_id=str(user["_id"]),
+            user_email=user["email"],
+            user_role="candidate",
+            action_type="user_register",
+            action_detail={"method": "email_otp"},
+        )
+    except Exception:
+        pass
+
     return {
         "success": True,
         "message": "User registered successfully",
@@ -509,37 +619,36 @@ async def login_user(
     login_data: UserLoginRequest,
     db=Depends(get_database)
 ):
-    """Login a candidate user."""
-    # Check database connection
+    """Login a user with email and password (bcrypt verified)."""
+    import bcrypt as _bcrypt
+
     if db is None:
         raise HTTPException(
             status_code=503,
             detail="Database connection unavailable. MongoDB is not connected."
         )
-    
-    # Get user by email
+
     user = await crud.get_user_by_email(db, login_data.email)
-    
+
     if not user:
-        raise HTTPException(
-            status_code=401,
-            detail="Invalid email or password"
+        raise HTTPException(status_code=401, detail="Invalid email or password")
+
+    # Verify bcrypt-hashed password
+    stored_hash = user.get("password", "")
+    try:
+        password_ok = _bcrypt.checkpw(
+            login_data.password.encode("utf-8"),
+            stored_hash.encode("utf-8"),
         )
-    
-    # Check password (in production, use bcrypt to compare hashed passwords)
-    if user["password"] != login_data.password:
-        raise HTTPException(
-            status_code=401,
-            detail="Invalid email or password"
-        )
-    
-    # Check if user is active
+    except Exception:
+        password_ok = False
+
+    if not password_ok:
+        raise HTTPException(status_code=401, detail="Invalid email or password")
+
     if not user.get("is_active", True):
-        raise HTTPException(
-            status_code=403,
-            detail="User account is inactive"
-        )
-    
+        raise HTTPException(status_code=403, detail="User account is inactive")
+
     # Log the login activity
     try:
         await log_activity(
@@ -551,7 +660,7 @@ async def login_user(
             action_detail={"method": "email_password"},
         )
     except Exception:
-        pass  # Don't block login if logging fails
+        pass
 
     return {
         "success": True,
