@@ -66,13 +66,41 @@ const RecruiterAllJobs = () => {
     const fetchApplicants = useCallback(async (jobId, showLoader = false) => {
         if (showLoader) setApplicantsLoading(true);
         try {
-            const response = await fetch(`${API_BASE_URL}/rankings/job/${jobId}`);
-            if (response.ok) {
-                const data = await response.json();
-                setApplicants(data);
-            } else {
-                setApplicants([]);
+            // Fetch both CV-screening rankings and interview session results in parallel
+            const [rankingsRes, sessionsRes] = await Promise.all([
+                fetch(`${API_BASE_URL}/rankings/job/${jobId}`),
+                fetch(`${API_BASE_URL}/interview/sessions/${jobId}`)
+            ]);
+
+            let rankings = [];
+            if (rankingsRes.ok) {
+                rankings = await rankingsRes.json();
             }
+
+            let sessions = [];
+            if (sessionsRes.ok) {
+                const sessData = await sessionsRes.json();
+                sessions = sessData.reports || [];
+            }
+
+            // Add interview session candidates not already represented in rankings
+            const rankedNames = new Set(rankings.map(r => r.candidateName?.toLowerCase()));
+            const sessionApplicants = sessions
+                .filter(s => !rankedNames.has(s.candidateName?.toLowerCase()))
+                .map((s, idx) => ({
+                    id: s._id || s.sessionId,
+                    candidateName: s.candidateName,
+                    rank: rankings.length + idx + 1,
+                    score: s.status === "Completed" ? `${Math.round(s.avgScore)}/100` : "—",
+                    interviewStatus: s.status === "Completed" ? "Completed" : "In Progress",
+                    date: s.completedAt
+                        ? new Date(s.completedAt).toLocaleDateString("en-GB").split("/").join("-")
+                        : "Pending",
+                    isFromSession: true,
+                    sessionId: s.sessionId,
+                }));
+
+            setApplicants([...rankings, ...sessionApplicants]);
         } catch (error) {
             console.error("Error fetching applicants:", error);
             setApplicants([]);
@@ -103,7 +131,10 @@ const RecruiterAllJobs = () => {
     };
 
     const handleDownloadReport = async (applicant) => {
-        if (!applicant.id) return;
+        if (!applicant.id || applicant.isFromSession) {
+            alert("PDF download is only available for CV-screened candidates.");
+            return;
+        }
 
         setDownloadingId(applicant.id);
         try {
@@ -137,7 +168,11 @@ const RecruiterAllJobs = () => {
     };
 
     const handleViewReport = (applicant) => {
-        navigate(`/recruiter/report/${applicant.id}`);
+        if (applicant.isFromSession) {
+            navigate(`/recruiter/reports/${selectedJob?.id}`);
+        } else {
+            navigate(`/recruiter/report/${applicant.id}`);
+        }
     };
 
     const handleLogout = () => {

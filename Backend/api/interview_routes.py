@@ -108,10 +108,11 @@ async def start_interview(
             "candidate_name": candidate_name,
             "email_address": email_address,
             "phone_number": phone_number,
-            "linkedin": linkedin_profile,
+            "linkedin_profile": linkedin_profile,
+            "cv_file_name": cv_file.filename,
             "cv_file_path": str(file_path),
             "job_id": job_id,
-            "cv_text": cv_text[:2000] 
+            "cv_text": cv_text[:2000]
         }
         
         # We reuse the create_interview_cv crud function for the candidate data
@@ -250,3 +251,84 @@ async def generate_report(session_id: str, db=Depends(get_database)):
             "eval_msg": "Evaluation saved directly to the database for recruiter view."
         }
     }
+
+
+@router.get("/sessions/{job_id}")
+async def get_interview_sessions_by_job(
+    job_id: str,
+    db=Depends(get_database)
+):
+    """
+    Get all interview sessions for a specific job, joined with interview_cvs data.
+    Returns candidate info + avg_score from interview_sessions.
+    """
+    sessions = []
+    cursor = db.interview_sessions.find({"job_id": job_id}).sort("created_at", -1)
+
+    counter = 1
+    async for session in cursor:
+        session_id = session.get("session_id", "")
+
+        # Fetch candidate info from interview_cvs (fields stored at top level)
+        cv_doc = await db.interview_cvs.find_one({"session_id": session_id})
+
+        candidate_name = "Unknown Candidate"
+        email = ""
+        phone = ""
+        linkedin = ""
+        cv_file_path = ""
+        cv_file_name = ""
+        date_applied = session.get("created_at")
+
+        if cv_doc:
+            candidate_name = cv_doc.get("candidate_name") or candidate_name
+            email = cv_doc.get("email_address", "")
+            phone = cv_doc.get("phone_number", "")
+            linkedin = cv_doc.get("linkedin_profile", "")
+            cv_file_path = cv_doc.get("cv_file_path", "")
+            cv_file_name = cv_doc.get("cv_file_name", "")
+            date_applied = cv_doc.get("created_at") or date_applied
+
+        avg_score = session.get("avg_score", None)
+
+        sessions.append({
+            "_id": str(session["_id"]),
+            "sessionId": session_id,
+            "no": counter,
+            "jobId": session.get("job_id", job_id),
+            "candidateName": candidate_name,
+            "emailAddress": email,
+            "phoneNumber": phone,
+            "linkedinProfile": linkedin,
+            "cvFilePath": cv_file_path,
+            "cvFileName": cv_file_name,
+            "avgScore": avg_score,
+            "status": session.get("status", "In Progress"),
+            "dateApplied": date_applied.isoformat() if date_applied else None,
+        })
+        counter += 1
+
+    return {"reports": sessions, "total": len(sessions)}
+
+
+@router.get("/cv-file/{session_id}")
+async def serve_interview_cv(session_id: str, db=Depends(get_database)):
+    """Serve the candidate's CV PDF file for a given session."""
+    from fastapi.responses import FileResponse
+    import os
+
+    cv_doc = await db.interview_cvs.find_one({"session_id": session_id})
+    if not cv_doc:
+        raise HTTPException(status_code=404, detail="CV record not found")
+
+    file_path = cv_doc.get("cv_file_path", "")
+    if not file_path or not os.path.exists(file_path):
+        raise HTTPException(status_code=404, detail="CV file not found on server")
+
+    file_name = cv_doc.get("cv_file_name") or os.path.basename(file_path)
+    return FileResponse(
+        path=file_path,
+        media_type="application/pdf",
+        filename=file_name,
+        headers={"Content-Disposition": f'inline; filename="{file_name}"'}
+    )
