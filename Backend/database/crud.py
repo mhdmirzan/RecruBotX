@@ -253,7 +253,7 @@ async def get_statistics(db: AsyncIOMotorDatabase) -> Dict[str, Any]:
     }
 
 
-# ==================== Candidate Users ====================
+# ==================== Candidates ====================
 
 async def create_candidate_user(
     db: AsyncIOMotorDatabase,
@@ -274,7 +274,7 @@ async def create_candidate_user(
         "updated_at": datetime.utcnow(),
         "is_active": True
     }
-    result = await db.candidate_users.insert_one(user)
+    result = await db.candidates.insert_one(user)
     return str(result.inserted_id)
 
 
@@ -283,7 +283,7 @@ async def get_user_by_email(
     email: str
 ) -> Optional[Dict[str, Any]]:
     """Get a user by email."""
-    user = await db.candidate_users.find_one({"email": email.lower()})
+    user = await db.candidates.find_one({"email": email.lower()})
     if user:
         user["_id"] = str(user["_id"])
     return user
@@ -294,7 +294,7 @@ async def get_user_by_id(
     user_id: str
 ) -> Optional[Dict[str, Any]]:
     """Get a user by ID."""
-    user = await db.candidate_users.find_one({"_id": ObjectId(user_id)})
+    user = await db.candidates.find_one({"_id": ObjectId(user_id)})
     if user:
         user["_id"] = str(user["_id"])
     return user
@@ -305,7 +305,7 @@ async def get_all_users(
 ) -> List[Dict[str, Any]]:
     """Get all candidate users."""
     users = []
-    cursor = db.candidate_users.find({})
+    cursor = db.candidates.find({})
     async for user in cursor:
         user["_id"] = str(user["_id"])
         users.append(user)
@@ -319,11 +319,59 @@ async def update_user(
 ) -> bool:
     """Update user information."""
     update_data["updated_at"] = datetime.utcnow()
-    result = await db.candidate_users.update_one(
+    result = await db.candidates.update_one(
         {"_id": ObjectId(user_id)},
         {"$set": update_data}
     )
     return result.modified_count > 0
+
+
+# ==================== Recruiters ====================
+
+async def create_recruiter_user(
+    db: AsyncIOMotorDatabase,
+    first_name: str,
+    last_name: str,
+    email: str,
+    password: str,
+    company: str,
+) -> str:
+    """Create a new recruiter user with bcrypt-hashed password."""
+    import bcrypt
+
+    password_hash = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+    recruiter = {
+        "first_name": first_name,
+        "last_name": last_name,
+        "company": company,
+        "email": email.lower(),
+        "password": password_hash,
+        "created_at": datetime.utcnow(),
+        "updated_at": datetime.utcnow(),
+        "is_active": True,
+    }
+    result = await db.recruiters.insert_one(recruiter)
+    return str(result.inserted_id)
+
+
+async def get_recruiter_by_email(
+    db: AsyncIOMotorDatabase,
+    email: str,
+) -> Optional[Dict[str, Any]]:
+    recruiter = await db.recruiters.find_one({"email": email.lower()})
+    if recruiter:
+        recruiter["_id"] = str(recruiter["_id"])
+    return recruiter
+
+
+async def get_recruiter_by_id(
+    db: AsyncIOMotorDatabase,
+    recruiter_id: str,
+) -> Optional[Dict[str, Any]]:
+    recruiter = await db.recruiters.find_one({"_id": ObjectId(recruiter_id)})
+    if recruiter:
+        recruiter["_id"] = str(recruiter["_id"])
+    return recruiter
 
 
 # ==================== Interview CV Details ====================

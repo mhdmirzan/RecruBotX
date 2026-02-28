@@ -17,7 +17,8 @@ import {
 } from "lucide-react";
 import recruiterHero from "./assets/images/general/image1.jpg";
 
-import { registerUser, sendOtp, verifyOtp, validatePasswordComplexity } from "./utils/userDatabase";
+import API_BASE_URL from "./apiConfig";
+import { sendOtp, verifyOtp, validatePasswordComplexity } from "./utils/userDatabase";
 
 const RecruiterSignupPage = () => {
   const navigate = useNavigate();
@@ -124,14 +125,30 @@ const RecruiterSignupPage = () => {
 
     setIsLoading(true);
 
-    const result = await registerUser({
-      firstName: formData.firstName,
-      lastName: formData.lastName,
-      email: formData.email,
-      password: formData.password,
-      companyName: formData.companyName,
-      otpCode: otpCode,
-    });
+    let result;
+    try {
+      const response = await fetch(`${API_BASE_URL}/recruiter/auth/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          companyName: formData.companyName,
+          email: formData.email,
+          password: formData.password,
+          otpCode: otpCode,
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        result = { success: false, message: data.detail || "Registration failed" };
+      } else {
+        result = { success: true, user: data.user };
+        localStorage.setItem("recruiterUser", JSON.stringify(data.user));
+      }
+    } catch (error) {
+      result = { success: false, message: "Network error. Please check if the backend server is running." };
+    }
 
     setIsLoading(false);
     if (result.success) {

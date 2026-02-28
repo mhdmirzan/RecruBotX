@@ -175,7 +175,7 @@ async def get_dashboard_stats(db) -> dict:
     now = datetime.utcnow()
     today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
 
-    total_candidates = await db.candidate_users.count_documents({})
+    total_candidates = await db.candidates.count_documents({})
     total_jobs = await db.job_descriptions.count_documents({})
     total_screenings = await db.screening_results.count_documents({})
     total_job_postings = await db.job_postings.count_documents({})
@@ -187,8 +187,7 @@ async def get_dashboard_stats(db) -> dict:
     })
 
     try:
-        recruiter_ids = await db.job_postings.distinct("recruiter_id")
-        total_recruiters = len(recruiter_ids)
+        total_recruiters = await db.recruiters.count_documents({})
     except Exception:
         total_recruiters = 0
 
@@ -238,21 +237,9 @@ async def get_all_candidates_with_activity(db) -> List[dict]:
     Get all CANDIDATE users (those NOT in job_postings as a recruiter_id).
     Sorted by API cost descending.
     """
-    # Collect all recruiter IDs from job_postings to EXCLUDE them
-    recruiter_ids = set()
-    try:
-        async for jp in db.job_postings.find({}, {"recruiter_id": 1}):
-            rid = jp.get("recruiter_id", "")
-            if rid:
-                recruiter_ids.add(str(rid))
-    except Exception:
-        pass
-
     users = []
-    async for user in db.candidate_users.find({}):
+    async for user in db.candidates.find({}):
         user_id = str(user["_id"])
-        if user_id in recruiter_ids:
-            continue  # skip recruiters
         activity_count = await db.activity_logs.count_documents({"user_id": user_id})
         last_activity = await db.activity_logs.find_one({"user_id": user_id}, sort=[("timestamp", -1)])
         cost, tokens = await _get_user_token_cost(db, user_id)
@@ -278,39 +265,30 @@ async def get_all_recruiters_with_activity(db) -> List[dict]:
     Get all RECRUITER users (those who have at least one job posting).
     Sorted by API cost descending.
     """
-    # Collect unique recruiter IDs and their job count
-    recruiter_jobs: dict = {}  # recruiter_id -> job_count
-    try:
-        async for jp in db.job_postings.find({}, {"recruiter_id": 1}):
-            rid = str(jp.get("recruiter_id", ""))
-            if rid:
-                recruiter_jobs[rid] = recruiter_jobs.get(rid, 0) + 1
-    except Exception:
-        pass
-
     recruiters = []
-    for rid, job_count in recruiter_jobs.items():
-        # Try to find user profile in candidate_users
-        user = None
-        try:
-            if ObjectId.is_valid(rid):
-                user = await db.candidate_users.find_one({"_id": ObjectId(rid)})
-        except Exception:
-            pass
-
+    async for user in db.recruiters.find({}):
+        rid = str(user["_id"])
         activity_count = await db.activity_logs.count_documents({"user_id": rid})
         last_activity = await db.activity_logs.find_one({"user_id": rid}, sort=[("timestamp", -1)])
         cost, tokens = await _get_user_token_cost(db, rid)
 
+        # jobCount derived from job_postings
+        job_count = 0
+        try:
+            job_count = await db.job_postings.count_documents({"recruiter_id": rid})
+        except Exception:
+            job_count = 0
+
         recruiters.append({
             "id": rid,
-            "firstName": user.get("first_name", "") if user else "",
-            "lastName": user.get("last_name", "") if user else "",
-            "email": user.get("email", "") if user else "",
+            "firstName": user.get("first_name", ""),
+            "lastName": user.get("last_name", ""),
+            "email": user.get("email", ""),
             "role": "recruiter",
+            "company": user.get("company", ""),
             "jobCount": job_count,
-            "createdAt": user.get("created_at", datetime.utcnow()).isoformat() if user and isinstance(user.get("created_at"), datetime) else "",
-            "isActive": True,
+            "createdAt": user.get("created_at", datetime.utcnow()).isoformat() if isinstance(user.get("created_at"), datetime) else "",
+            "isActive": user.get("is_active", True),
             "activityCount": activity_count,
             "lastActivity": last_activity["timestamp"].isoformat() if last_activity and isinstance(last_activity.get("timestamp"), datetime) else None,
             "totalCostUsd": cost,
@@ -331,7 +309,7 @@ async def get_all_users_with_activity(db) -> List[dict]:
 async def delete_candidate_by_id(db, user_id: str) -> bool:
     """Delete a candidate user and their activity logs."""
     try:
-        result = await db.candidate_users.delete_one({"_id": ObjectId(user_id)})
+        result = await db.candidates.delete_one({"_id": ObjectId(user_id)})
         await db.activity_logs.delete_many({"user_id": user_id})
         return result.deleted_count > 0
     except Exception:
@@ -340,16 +318,15 @@ async def delete_candidate_by_id(db, user_id: str) -> bool:
 
 async def delete_recruiter_by_id(db, recruiter_id: str) -> bool:
     """
-    Delete a recruiter: removes their job postings and candidate_users record.
-    The recruiter_id in job_postings may or may not match a candidate_users _id.
+    Delete a recruiter: removes their job postings and recruiter record.
     """
     try:
         await db.job_postings.delete_many({"recruiter_id": recruiter_id})
         await db.activity_logs.delete_many({"user_id": recruiter_id})
-        # Also try to delete from candidate_users if valid ObjectId
         if ObjectId.is_valid(recruiter_id):
-            await db.candidate_users.delete_one({"_id": ObjectId(recruiter_id)})
-        return True
+            result = await db.recruiters.delete_one({"_id": ObjectId(recruiter_id)})
+            return result.deleted_count > 0
+        return False
     except Exception:
         return False
 
