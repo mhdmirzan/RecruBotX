@@ -83,7 +83,7 @@ async def init_dummy_users():
         print(f"   Skipped: {skipped_count} users (already existed)")
         
         # List all users
-        total_users = await db.candidate_users.count_documents({})
+        total_users = await db.candidates.count_documents({})
         print(f"   Total users in database: {total_users}")
         
     except Exception as e:

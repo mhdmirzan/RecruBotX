@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import image1 from "./assets/images/general/image1.jpg";
 
-import { loginUser } from "./utils/userDatabase";
+import API_BASE_URL from "./apiConfig";
 
 const RecruiterSigninPage = () => {
     const navigate = useNavigate();
@@ -47,8 +47,25 @@ const RecruiterSigninPage = () => {
         setError("");
         setIsLoading(true);
 
-        // Call shared login logic
-        const result = await loginUser(formData.email, formData.password);
+        let result;
+        try {
+            const response = await fetch(`${API_BASE_URL}/recruiter/auth/login`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    email: formData.email,
+                    password: formData.password,
+                }),
+            });
+            const data = await response.json();
+            if (!response.ok) {
+                result = { success: false, message: data.detail || "Login failed" };
+            } else {
+                result = { success: true, user: data.user };
+            }
+        } catch (error) {
+            result = { success: false, message: "Network error. Please check if the backend server is running." };
+        }
 
         setIsLoading(false);
 
@@ -56,8 +73,7 @@ const RecruiterSigninPage = () => {
             // Store specifically for the recruiter logic
             localStorage.setItem("recruiterUser", JSON.stringify({
                 ...result.user,
-                // Add fallback company name if user doesn't have one in DB yet
-                companyName: result.user.companyName || "RecruBotX Corp"
+                companyName: result.user.companyName || ""
             }));
             alert(`Welcome back, ${result.user.firstName}!`);
             navigate("/recruiter/dashboard");

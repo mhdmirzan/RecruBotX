@@ -273,8 +273,8 @@ async def download_evaluation_report(
     job = await get_job_posting_by_id(db, evaluation["job_posting_id"])
     
     # Get recruiter info for company name
-    recruiter = await db.recruiter_users.find_one({"_id": ObjectId(evaluation["recruiter_id"])})
-    company_name = recruiter.get("company_name", "Your Company") if recruiter else "Your Company"
+    recruiter = await db.recruiters.find_one({"_id": ObjectId(evaluation["recruiter_id"])})
+    company_name = recruiter.get("company", "Your Company") if recruiter else "Your Company"
     
     # Extract strengths and weaknesses
     eval_details = ranking.get("evaluation_details", {}) if ranking else {}

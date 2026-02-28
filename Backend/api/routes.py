@@ -449,6 +449,20 @@ class UserLoginRequest(BaseModel):
     password: str
 
 
+class RecruiterRegisterRequest(BaseModel):
+    firstName: str
+    lastName: str
+    companyName: str
+    email: str
+    password: str
+    otpCode: str = ""  # OTP code for email verification
+
+
+class RecruiterLoginRequest(BaseModel):
+    email: str
+    password: str
+
+
 class UserResponse(BaseModel):
     id: str
     firstName: str
@@ -672,6 +686,140 @@ async def login_user(
             "email": user["email"],
             "createdAt": user["created_at"].isoformat(),
             "isActive": user["is_active"]
+        }
+    }
+
+
+# ==================== Recruiter Auth Endpoints ====================
+
+
+@router.post("/recruiter/auth/register", response_model=dict)
+async def register_recruiter(
+    user_data: RecruiterRegisterRequest,
+    db=Depends(get_database),
+):
+    """Register a new recruiter. Requires email OTP verification."""
+    if db is None:
+        raise HTTPException(
+            status_code=503,
+            detail="Database connection unavailable. MongoDB is not connected."
+        )
+
+    # 1. Password complexity check (same as candidate)
+    pwd_error = validate_password(user_data.password)
+    if pwd_error:
+        raise HTTPException(status_code=400, detail=pwd_error)
+
+    # 2. Email already registered as recruiter?
+    existing_recruiter = await crud.get_recruiter_by_email(db, user_data.email)
+    if existing_recruiter:
+        raise HTTPException(status_code=400, detail="Recruiter already exists with this email")
+
+    # 3. Verify OTP was confirmed
+    email_ok = await is_email_verified(db, user_data.email)
+    if not email_ok:
+        raise HTTPException(
+            status_code=400,
+            detail="Email not verified. Please verify your email with an OTP code first."
+        )
+
+    # 4. Create recruiter
+    recruiter_id = await crud.create_recruiter_user(
+        db,
+        user_data.firstName,
+        user_data.lastName,
+        user_data.email,
+        user_data.password,
+        user_data.companyName,
+    )
+
+    recruiter = await crud.get_recruiter_by_id(db, recruiter_id)
+
+    # Log registration activity
+    try:
+        await log_activity(
+            db=db,
+            user_id=str(recruiter["_id"]),
+            user_email=recruiter["email"],
+            user_role="recruiter",
+            action_type="user_register",
+            action_detail={"method": "email_otp"},
+        )
+    except Exception:
+        pass
+
+    return {
+        "success": True,
+        "message": "Recruiter registered successfully",
+        "user": {
+            "id": recruiter["_id"],
+            "firstName": recruiter.get("first_name", ""),
+            "lastName": recruiter.get("last_name", ""),
+            "companyName": recruiter.get("company", ""),
+            "email": recruiter.get("email", ""),
+            "createdAt": recruiter.get("created_at").isoformat() if recruiter.get("created_at") else "",
+            "isActive": recruiter.get("is_active", True),
+        }
+    }
+
+
+@router.post("/recruiter/auth/login", response_model=dict)
+async def login_recruiter(
+    login_data: RecruiterLoginRequest,
+    db=Depends(get_database),
+):
+    """Login a recruiter with email and password (bcrypt verified)."""
+    import bcrypt as _bcrypt
+
+    if db is None:
+        raise HTTPException(
+            status_code=503,
+            detail="Database connection unavailable. MongoDB is not connected."
+        )
+
+    recruiter = await crud.get_recruiter_by_email(db, login_data.email)
+    if not recruiter:
+        raise HTTPException(status_code=401, detail="Invalid email or password")
+
+    stored_hash = recruiter.get("password", "")
+    try:
+        password_ok = _bcrypt.checkpw(
+            login_data.password.encode("utf-8"),
+            stored_hash.encode("utf-8"),
+        )
+    except Exception:
+        password_ok = False
+
+    if not password_ok:
+        raise HTTPException(status_code=401, detail="Invalid email or password")
+
+    if not recruiter.get("is_active", True):
+        raise HTTPException(status_code=403, detail="User account is inactive")
+
+    # Log login activity
+    try:
+        await log_activity(
+            db=db,
+            user_id=str(recruiter["_id"]),
+            user_email=recruiter.get("email", ""),
+            user_role="recruiter",
+            action_type="user_login",
+            action_detail={"method": "email_password"},
+        )
+    except Exception:
+        pass
+
+    return {
+        "success": True,
+        "message": "Login successful",
+        "user": {
+            "id": recruiter["_id"],
+            "firstName": recruiter.get("first_name", ""),
+            "lastName": recruiter.get("last_name", ""),
+            "companyName": recruiter.get("company", ""),
+            "email": recruiter.get("email", ""),
+            "createdAt": recruiter.get("created_at").isoformat() if recruiter.get("created_at") else "",
+            "isActive": recruiter.get("is_active", True),
         }
     }
 
