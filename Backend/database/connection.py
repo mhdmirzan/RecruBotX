@@ -130,6 +130,28 @@ class DatabaseManager:
                 background=True
             )
             
+            # Candidates indexes
+            await self.db.candidates.create_index(
+                "email", unique=True, background=True
+            )
+            await self.db.candidates.create_index(
+                "created_at", background=True
+            )
+            await self.db.candidates.create_index(
+                "is_active", background=True
+            )
+
+            # Recruiters indexes
+            await self.db.recruiters.create_index(
+                "email", unique=True, background=True
+            )
+            await self.db.recruiters.create_index(
+                "created_at", background=True
+            )
+            await self.db.recruiters.create_index(
+                "is_active", background=True
+            )
+
             # Superuser indexes
             await self.db.superusers.create_index(
                 "email", unique=True, background=True
