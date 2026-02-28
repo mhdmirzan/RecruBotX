@@ -6,6 +6,7 @@ from fastapi import APIRouter, HTTPException, Depends, UploadFile, File
 from pydantic import BaseModel
 from typing import Optional, List
 from datetime import datetime
+from bson import ObjectId
 from database.connection import get_database
 from database.job_posting_crud import (
     create_job_posting,
@@ -42,6 +43,7 @@ class JobPostingRequest(BaseModel):
     salaryRange: str
     experienceRange: str
     industryDomain: str
+    numberOfVacancies: int = 1
     questions: Optional[List[JobQuestion]] = []
     specificInstruction: Optional[str] = None
     jobDescription: Optional[str] = None
@@ -57,6 +59,7 @@ class JobPostingUpdateRequest(BaseModel):
     salaryRange: Optional[str] = None
     experienceRange: Optional[str] = None
     industryDomain: Optional[str] = None
+    numberOfVacancies: Optional[int] = None
     questions: Optional[List[JobQuestion]] = None
     specificInstruction: Optional[str] = None
     jobDescription: Optional[str] = None
@@ -112,7 +115,8 @@ async def create_job(
         [q.dict() for q in job_data.questions],
         job_data.specificInstruction,
         job_data.jobDescription,
-        parsed_deadline
+        parsed_deadline,
+        job_data.numberOfVacancies
     )
     
     job = await get_job_posting_by_id(db, job_id)
@@ -125,6 +129,7 @@ async def create_job(
             "recruiterId": job["recruiter_id"],
             "interviewField": job["interview_field"],
             "positionLevel": job["position_level"],
+            "numberOfVacancies": job.get("number_of_vacancies", 1),
             "jobDescription": job.get("job_description"),
             "experienceRange": job.get("experience_range"),
             "industryDomain": job.get("industry_domain"),
@@ -151,12 +156,17 @@ async def get_recruiter_jobs(
     # Auto-close expired jobs
     await close_expired_jobs(db)
     jobs = await get_job_postings_by_recruiter(db, recruiter_id)
+    # Get recruiter company name
+    recruiter_doc = await db.recruiters.find_one({"_id": ObjectId(recruiter_id)}) if ObjectId.is_valid(recruiter_id) else None
+    company_name = recruiter_doc.get("company", "") if recruiter_doc else ""
     return [
         {
             "id": job["_id"],
             "recruiterId": job["recruiter_id"],
+            "companyName": company_name,
             "interviewField": job["interview_field"],
             "positionLevel": job["position_level"],
+            "numberOfVacancies": job.get("number_of_vacancies", 1),
             "numberOfQuestions": job.get("number_of_questions", 3),
             "topNCvs": job.get("top_n_cvs", 10),
             "workModel": job.get("work_model", "Remote"),
@@ -191,12 +201,26 @@ async def get_all_jobs(
     # Auto-close expired jobs
     await close_expired_jobs(db)
     jobs = await get_all_job_postings(db)
+
+    # Batch-fetch recruiter company names
+    recruiter_ids = list({job["recruiter_id"] for job in jobs if ObjectId.is_valid(job["recruiter_id"])})
+    recruiter_map = {}
+    if recruiter_ids:
+        cursor = db.recruiters.find(
+            {"_id": {"$in": [ObjectId(rid) for rid in recruiter_ids]}},
+            {"_id": 1, "company": 1}
+        )
+        async for rec in cursor:
+            recruiter_map[str(rec["_id"])] = rec.get("company", "")
+
     return [
         {
             "id": job["_id"],
             "recruiterId": job["recruiter_id"],
+            "companyName": recruiter_map.get(job["recruiter_id"], ""),
             "interviewField": job["interview_field"],
             "positionLevel": job["position_level"],
+            "numberOfVacancies": job.get("number_of_vacancies", 1),
             "numberOfQuestions": job.get("number_of_questions", 3),
             "topNCvs": job.get("top_n_cvs", 10),
             "workModel": job.get("work_model", "Remote"),
@@ -276,6 +300,8 @@ async def update_job(
         update_fields["experience_range"] = update_data.experienceRange
     if update_data.industryDomain is not None:
         update_fields["industry_domain"] = update_data.industryDomain
+    if update_data.numberOfVacancies is not None:
+        update_fields["number_of_vacancies"] = update_data.numberOfVacancies
     if update_data.questions is not None:
         update_fields["questions"] = [q.dict() for q in update_data.questions]
     if update_data.specificInstruction is not None:
@@ -307,6 +333,7 @@ async def update_job(
             "recruiterId": updated_job["recruiter_id"],
             "interviewField": updated_job["interview_field"],
             "positionLevel": updated_job["position_level"],
+            "numberOfVacancies": updated_job.get("number_of_vacancies", 1),
             "jobDescription": updated_job.get("job_description"),
             "experienceRange": updated_job.get("experience_range"),
             "industryDomain": updated_job.get("industry_domain"),

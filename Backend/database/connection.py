@@ -168,6 +168,31 @@ class DatabaseManager:
                 [("action_type", 1), ("timestamp", -1)], background=True
             )
 
+            # Job applications indexes — unique per candidate+job, fast lookups
+            await self.db.job_applications.create_index(
+                [("job_id", 1), ("candidate_id", 1)],
+                unique=True,
+                background=True,
+                name="unique_candidate_job_application"
+            )
+            await self.db.job_applications.create_index(
+                "candidate_id", background=True
+            )
+            await self.db.job_applications.create_index(
+                "job_id", background=True
+            )
+
+            # Job postings indexes
+            await self.db.job_postings.create_index(
+                "recruiter_id", background=True
+            )
+            await self.db.job_postings.create_index(
+                [("is_active", -1), ("created_at", -1)], background=True
+            )
+            await self.db.job_postings.create_index(
+                "deadline", background=True
+            )
+
             print("✓ Database indexes created successfully")
         except Exception as e:
             print(f"⚠ Warning: Could not create some indexes: {e}")

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { LogOut, FileText, Search, LayoutDashboard, Cog, Briefcase, Calendar, MapPin, CheckCircle, Clock, Send, ArrowRight, ChevronRight, Zap, DollarSign, Home, X, BarChart3, AlertTriangle, XCircle } from "lucide-react";
+import { LogOut, FileText, Search, LayoutDashboard, Cog, Briefcase, Calendar, MapPin, CheckCircle, Clock, Send, ArrowRight, ChevronRight, Zap, DollarSign, Home, X, BarChart3, AlertTriangle, XCircle, Users } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { getCurrentUser, logoutUser } from "./utils/userDatabase";
 import API_BASE_URL from "./apiConfig";
+import CandidateSidebar from "./components/CandidateSidebar";
 
 const CandidateDashboard = () => {
   const navigate = useNavigate();
@@ -62,16 +63,18 @@ const CandidateDashboard = () => {
         // Transform data to match our format
         const transformedJobs = data.map(job => ({
           id: job._id || job.id,
-          company: `${job.interviewField} Position`,
+          title: job.interviewField,
+          company: job.companyName || "",
           position: job.positionLevel,
           interviewField: job.interviewField,
           workModel: job.workModel,
           status: job.status,
           location: job.location,
           salaryRange: job.salaryRange,
+          numberOfVacancies: job.numberOfVacancies || 1,
           appliedDate: new Date(job.createdAt),
           isActive: job.isActive,
-          jobDescription: job.jobDescription, // Added jobDescription
+          jobDescription: job.jobDescription,
           experienceRange: job.experienceRange,
           industryDomain: job.industryDomain,
           questions: job.questions,
@@ -227,66 +230,7 @@ const CandidateDashboard = () => {
   return (
     <div className="h-screen w-screen flex bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden fixed inset-0">
       {/* Sidebar - Always Visible, No Scroll */}
-      <aside className="w-72 h-screen bg-white shadow-xl flex flex-col p-6 border-r border-gray-200 flex-shrink-0">
-
-        {/* Logo */}
-        <div className="mb-8 text-center flex-shrink-0">
-          <h1 className="text-3xl font-bold text-[#0a2a5e]">RecruBotX</h1>
-        </div>
-
-        <nav className="flex flex-col space-y-4 text-gray-700 flex-shrink-0">
-          <NavLink
-            to="/candidate/dashboard"
-            className={({ isActive }) =>
-              `font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 ${isActive ? "bg-[#0a2a5e]/10 text-[#0a2a5e]" : "text-gray-700 hover:bg-[#0a2a5e]/5 hover:text-[#0a2a5e]"}`
-            }
-          >
-            <LayoutDashboard className="w-5 h-5" /> Dashboard
-          </NavLink>
-
-          <NavLink
-            to="/candidate/jobs"
-            className={({ isActive }) =>
-              `font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 ${isActive ? "bg-[#0a2a5e]/10 text-[#0a2a5e]" : "text-gray-700 hover:bg-[#0a2a5e]/5 hover:text-[#0a2a5e]"}`
-            }
-          >
-            <Briefcase className="w-5 h-5" /> Job Applications
-          </NavLink>
-
-          <button
-            onClick={handleCreateResume}
-            className="font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 text-gray-700 hover:bg-[#0a2a5e]/5 hover:text-[#0a2a5e] text-left"
-          >
-            <FileText className="w-5 h-5" /> Create Resume
-          </button>
-
-          <button
-            onClick={handleCVScreening}
-            className="font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 text-gray-700 hover:bg-[#0a2a5e]/5 hover:text-[#0a2a5e] text-left"
-          >
-            <Search className="w-5 h-5" /> CV Screening
-          </button>
-
-          <NavLink
-            to="/candidate/settings"
-            className={({ isActive }) =>
-              `font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 ${isActive ? "bg-[#0a2a5e]/10 text-[#0a2a5e]" : "text-gray-700 hover:bg-[#0a2a5e]/5 hover:text-[#0a2a5e]"}`
-            }
-          >
-            <Cog className="w-5 h-5" /> Settings
-          </NavLink>
-        </nav>
-
-        {/* Bottom Section - Logout Only */}
-        <div className="mt-auto flex-shrink-0">
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-red-500 to-red-600 px-4 py-3 rounded-xl text-white hover:from-red-600 hover:to-red-700 transition-all shadow-md"
-          >
-            <LogOut className="w-5 h-5" /> Logout
-          </button>
-        </div>
-      </aside>
+      <CandidateSidebar />
 
       {/* Main Content - Non-scrollable */}
       <main className="flex-1 h-screen flex flex-col overflow-hidden py-8 px-8">
@@ -413,8 +357,11 @@ const CandidateDashboard = () => {
                     >
                       <div className="flex justify-between items-start mb-3">
                         <div className="flex-1">
-                          <h4 className="font-bold text-gray-800 text-lg">{job.company}</h4>
+                          <h4 className="font-bold text-gray-800 text-lg">{job.title}</h4>
                           <p className="text-[#0a2a5e] font-medium">{job.position}</p>
+                          {job.company && (
+                            <p className="text-gray-500 text-sm font-semibold mt-0.5">{job.company}</p>
+                          )}
                         </div>
                         <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(job.status)}`}>
                           {job.status}
@@ -435,9 +382,9 @@ const CandidateDashboard = () => {
                             <DollarSign className="w-4 h-4" />
                             <span>{job.salaryRange}</span>
                           </div>
-                          <div className="flex items-center gap-1">
-                            <Calendar className="w-4 h-4 text-[#0a2a5e]" />
-                            <span>{job.appliedDate.toLocaleDateString()}</span>
+                          <div className="flex items-center gap-1 text-indigo-600 font-semibold">
+                            <Users className="w-4 h-4" />
+                            <span>{job.numberOfVacancies} {job.numberOfVacancies === 1 ? 'Vacancy' : 'Vacancies'}</span>
                           </div>
                         </div>
 

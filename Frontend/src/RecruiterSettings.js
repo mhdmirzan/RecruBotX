@@ -10,8 +10,10 @@ import {
     EyeOff,
     Check,
     X,
-    Search
+    Search,
+    Briefcase
 } from "lucide-react";
+import RecruiterSidebar from "./components/RecruiterSidebar";
 
 const RecruiterSettings = () => {
     const navigate = useNavigate();
@@ -122,22 +124,7 @@ const RecruiterSettings = () => {
     return (
         <div className="h-screen w-screen flex bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden fixed inset-0 font-poppins">
             {/* Sidebar */}
-            <aside className="w-72 h-screen bg-white shadow-xl flex flex-col p-6 border-r border-gray-200 flex-shrink-0">
-                <div className="mb-8 text-center flex-shrink-0">
-                    <h1 className="text-3xl font-bold text-[#0a2a5e]">RecruBotX</h1>
-                </div>
-
-                <nav className="flex flex-col space-y-4 text-gray-700 flex-shrink-0">
-                    <NavLink to="/recruiter/dashboard" className={({ isActive }) => `font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 ${isActive ? "bg-[#0a2a5e]/10 text-[#0a2a5e]" : "text-gray-700 hover:bg-[#0a2a5e]/5 hover:text-[#0a2a5e]"}`}><LayoutDashboard className="w-5 h-5" /> Dashboard</NavLink>
-                    <NavLink to="/recruiter/job-posting" className={({ isActive }) => `font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 ${isActive ? "bg-[#0a2a5e]/10 text-[#0a2a5e]" : "text-gray-700 hover:bg-[#0a2a5e]/5 hover:text-[#0a2a5e]"}`}><PlusCircle className="w-5 h-5" /> Job Posting</NavLink>
-                    <NavLink to="/recruiter/cv-screening" className={({ isActive }) => `font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 ${isActive ? "bg-[#0a2a5e]/10 text-[#0a2a5e]" : "text-gray-700 hover:bg-[#0a2a5e]/5 hover:text-[#0a2a5e]"}`}><Search className="w-5 h-5" /> CV Screening</NavLink>
-                    <NavLink to="/recruiter/settings" className={({ isActive }) => `font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 ${isActive ? "bg-[#0a2a5e]/10 text-[#0a2a5e]" : "text-gray-700 hover:bg-[#0a2a5e]/5 hover:text-[#0a2a5e]"}`}><Cog className="w-5 h-5" /> Settings</NavLink>
-                </nav>
-
-                <div className="mt-auto flex-shrink-0">
-                    <button onClick={handleLogout} className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-red-500 to-red-600 px-4 py-3 rounded-xl text-white hover:from-red-600 hover:to-red-700 transition-all shadow-md mt-4 font-semibold"><LogOut className="w-5 h-5" /> Logout</button>
-                </div>
-            </aside>
+            <RecruiterSidebar />
 
             {/* Main Content */}
             <main className="flex-1 h-screen flex flex-col overflow-hidden py-8 px-8">
@@ -148,20 +135,6 @@ const RecruiterSettings = () => {
                         <p className="text-gray-500 text-md mt-1 py-4">Manage your professional profile and account settings</p>
                     </div>
 
-                    {/* User Profile - Top Right */}
-                    <div className="flex items-center gap-3">
-                        <div className="text-right">
-                            <h3 className="font-bold text-gray-800">{recruiterData.firstName} {recruiterData.lastName}</h3>
-                            <p className="text-sm text-gray-500">{recruiterData.email}</p>
-                        </div>
-                        <div className="w-12 h-12 bg-gradient-to-br from-[#0a2a5e] to-[#2b4c8c] rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg overflow-hidden">
-                            {formData.profileImage ? (
-                                <img src={formData.profileImage} alt="Profile" className="w-full h-full object-cover" />
-                            ) : (
-                                <>{formData.firstName.charAt(0)}{formData.lastName.charAt(0)}</>
-                            )}
-                        </div>
-                    </div>
                 </div>
 
                 {/* Settings Form - Full Page Scrollable Content Area */}

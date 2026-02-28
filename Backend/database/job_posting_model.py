@@ -37,6 +37,7 @@ class JobPostingModel(BaseModel):
     status: str  # Employment status (Full-time, Part-time, Contract)
     location: str  # Job location
     salary_range: str  # Salary range (e.g., "$70k - $150k")
+    number_of_vacancies: int = 1  # Number of open positions
     cv_file_ids: Optional[List[str]] = []  # Array of ObjectIds referencing job_cv_files collection
     job_description: Optional[str] = None  # Optional job description
     created_at: datetime = Field(default_factory=datetime.utcnow)
