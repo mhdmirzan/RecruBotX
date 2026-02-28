@@ -10,18 +10,16 @@ import {
   LayoutDashboard,
   Settings,
   LogOut,
-  X,
   Trash2,
   Search
 } from "lucide-react";
 import API_BASE_URL from "./apiConfig";
+import RecruiterSidebar from "./components/RecruiterSidebar";
 
 const RecruiterDashboard = () => {
   const navigate = useNavigate();
   const [recruiterData, setRecruiterData] = useState(null);
   const [jobPostings, setJobPostings] = useState([]);
-  const [selectedJob, setSelectedJob] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [dashboardStats, setDashboardStats] = useState({
     activeJobs: 0,
     totalCandidates: 0,
@@ -60,16 +58,6 @@ const RecruiterDashboard = () => {
     } catch (error) {
       console.error("Error fetching job postings:", error);
     }
-  };
-
-  const handleViewJob = (job) => {
-    setSelectedJob(job);
-    setIsModalOpen(true);
-  };
-
-  const closeModal = () => {
-    setIsModalOpen(false);
-    setSelectedJob(null);
   };
 
   const handleLogout = () => {
@@ -112,62 +100,7 @@ const RecruiterDashboard = () => {
   return (
     <div className="h-screen w-screen flex bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden fixed inset-0">
       {/* Sidebar */}
-      <aside className="w-72 h-screen bg-white shadow-xl flex flex-col p-6 border-r border-gray-200 flex-shrink-0">
-        <div className="mb-8 text-center flex-shrink-0">
-          <h1 className="text-3xl font-bold text-[#0a2a5e]">RecruBotX</h1>
-        </div>
-
-        <nav className="flex flex-col space-y-4 text-gray-700 flex-shrink-0">
-          <NavLink
-            to="/recruiter/dashboard"
-            className={({ isActive }) =>
-              `font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 ${isActive ? "bg-[#0a2a5e]/10 text-[#0a2a5e]" : "text-gray-700 hover:bg-[#0a2a5e]/5 hover:text-[#0a2a5e]"
-              }`
-            }
-          >
-            <LayoutDashboard className="w-5 h-5" /> Dashboard
-          </NavLink>
-
-          <NavLink
-            to="/recruiter/job-posting"
-            className={({ isActive }) =>
-              `font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 ${isActive ? "bg-[#0a2a5e]/10 text-[#0a2a5e]" : "text-gray-700 hover:bg-[#0a2a5e]/5 hover:text-[#0a2a5e]"
-              }`
-            }
-          >
-            <PlusCircle className="w-5 h-5" /> Job Posting
-          </NavLink>
-
-          <NavLink
-            to="/recruiter/cv-screening"
-            className={({ isActive }) =>
-              `font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 ${isActive ? "bg-[#0a2a5e]/10 text-[#0a2a5e]" : "text-gray-700 hover:bg-[#0a2a5e]/5 hover:text-[#0a2a5e]"
-              }`
-            }
-          >
-            <Search className="w-5 h-5" /> CV Screening
-          </NavLink>
-
-          <NavLink
-            to="/recruiter/settings"
-            className={({ isActive }) =>
-              `font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 ${isActive ? "bg-[#0a2a5e]/10 text-[#0a2a5e]" : "text-gray-700 hover:bg-[#0a2a5e]/5 hover:text-[#0a2a5e]"
-              }`
-            }
-          >
-            <Settings className="w-5 h-5" /> Settings
-          </NavLink>
-        </nav>
-
-        <div className="mt-auto flex-shrink-0">
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-red-500 to-red-600 px-4 py-3 rounded-xl text-white hover:from-red-600 hover:to-red-700 transition-all shadow-md"
-          >
-            <LogOut className="w-5 h-5" /> Logout
-          </button>
-        </div>
-      </aside>
+      <RecruiterSidebar />
 
       {/* Main Content */}
       <main className="flex-1 h-screen flex flex-col overflow-hidden py-8 px-8">
@@ -177,28 +110,9 @@ const RecruiterDashboard = () => {
           animate={{ opacity: 1, y: 0 }}
           className="bg-gradient-to-r from-[#0a2a5e] to-[#0d3b82] rounded-2xl p-6 mb-6 text-white shadow-lg flex-shrink-0"
         >
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-2xl font-bold">Welcome back, {recruiterData.firstName}!</h2>
-              <p className="text-blue-100 mt-1">Manage your hiring pipeline and find the best talent efficiently.</p>
-            </div>
-
-            {/* User Profile - Inside Banner */}
-            <div className="flex items-center gap-3">
-              <div className="text-right">
-                <h3 className="font-bold text-white">
-                  {recruiterData.firstName} {recruiterData.lastName}
-                </h3>
-                <p className="text-sm text-blue-200">{recruiterData.email}</p>
-              </div>
-              <div className="w-14 h-14 bg-white rounded-full flex items-center justify-center text-[#0a2a5e] font-bold text-xl shadow-lg overflow-hidden">
-                {recruiterData.profileImage ? (
-                  <img src={recruiterData.profileImage} alt="Profile" className="w-full h-full object-cover" />
-                ) : (
-                  <>{recruiterData.firstName?.charAt(0)}{recruiterData.lastName?.charAt(0)}</>
-                )}
-              </div>
-            </div>
+          <div>
+            <h2 className="text-2xl font-bold">Welcome back, {recruiterData.firstName}!</h2>
+            <p className="text-blue-100 mt-1">Manage your hiring pipeline and find the best talent efficiently.</p>
           </div>
         </motion.div>
 
@@ -212,11 +126,11 @@ const RecruiterDashboard = () => {
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-500 text-sm font-medium">Active Jobs</p>
-                <h3 className="text-3xl font-bold text-gray-800 mt-2">{dashboardStats.activeJobs}</h3>
+                <p className="text-[#0a2a5e]/60 text-sm font-medium">Active Jobs</p>
+                <h3 className="text-3xl font-bold text-[#0a2a5e] mt-2">{dashboardStats.activeJobs}</h3>
               </div>
-              <div className="w-14 h-14 bg-purple-100 rounded-xl flex items-center justify-center">
-                <Briefcase className="w-7 h-7 text-purple-600" />
+              <div className="w-14 h-14 bg-[#0a2a5e]/10 rounded-xl flex items-center justify-center">
+                <Briefcase className="w-7 h-7 text-[#0a2a5e]" />
               </div>
             </div>
           </motion.div>
@@ -229,11 +143,11 @@ const RecruiterDashboard = () => {
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-500 text-sm font-medium">Total Candidates</p>
-                <h3 className="text-3xl font-bold text-gray-800 mt-2">{dashboardStats.totalCandidates}</h3>
+                <p className="text-[#0a2a5e]/60 text-sm font-medium">Total Candidates</p>
+                <h3 className="text-3xl font-bold text-[#0a2a5e] mt-2">{dashboardStats.totalCandidates}</h3>
               </div>
-              <div className="w-14 h-14 bg-green-100 rounded-xl flex items-center justify-center">
-                <Users className="w-7 h-7 text-green-600" />
+              <div className="w-14 h-14 bg-[#0a2a5e]/10 rounded-xl flex items-center justify-center">
+                <Users className="w-7 h-7 text-[#0a2a5e]" />
               </div>
             </div>
           </motion.div>
@@ -246,10 +160,10 @@ const RecruiterDashboard = () => {
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-500 text-sm font-medium">AI Interviews</p>
-                <h3 className="text-3xl font-bold text-gray-800 mt-2">{dashboardStats.aiInterviews}</h3>
+                <p className="text-[#0a2a5e]/60 text-sm font-medium">AI Interviews</p>
+                <h3 className="text-3xl font-bold text-[#0a2a5e] mt-2">{dashboardStats.aiInterviews}</h3>
               </div>
-              <div className="w-14 h-14 bg-blue-100 rounded-xl flex items-center justify-center">
+              <div className="w-14 h-14 bg-[#0a2a5e]/10 rounded-xl flex items-center justify-center">
                 <Video className="w-7 h-7 text-[#0a2a5e]" />
               </div>
             </div>
@@ -263,11 +177,11 @@ const RecruiterDashboard = () => {
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-500 text-sm font-medium">CVs Screened</p>
-                <h3 className="text-3xl font-bold text-gray-800 mt-2">{dashboardStats.cvsScreened}</h3>
+                <p className="text-[#0a2a5e]/60 text-sm font-medium">CVs Screened</p>
+                <h3 className="text-3xl font-bold text-[#0a2a5e] mt-2">{dashboardStats.cvsScreened}</h3>
               </div>
-              <div className="w-14 h-14 bg-pink-100 rounded-xl flex items-center justify-center">
-                <FileText className="w-7 h-7 text-pink-600" />
+              <div className="w-14 h-14 bg-[#0a2a5e]/10 rounded-xl flex items-center justify-center">
+                <FileText className="w-7 h-7 text-[#0a2a5e]" />
               </div>
             </div>
           </motion.div>
@@ -325,7 +239,7 @@ const RecruiterDashboard = () => {
                       </span>
                       <div className="flex gap-2">
                         <button
-                          onClick={() => handleViewJob(job)}
+                          onClick={() => navigate(`/recruiter/reports/${job.id || job._id}`)}
                           className="text-[#0a2a5e] hover:bg-[#0a2a5e]/5 px-3 py-1.5 rounded-lg text-sm font-semibold transition-all border border-[#0a2a5e]/20"
                         >
                           View
@@ -347,107 +261,6 @@ const RecruiterDashboard = () => {
         </div>
       </main>
 
-      {/* Modal for Job Details */}
-      {isModalOpen && selectedJob && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          {/* Backdrop with blur */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm"
-            onClick={closeModal}
-          ></motion.div>
-
-          {/* Modal Content */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="relative bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden"
-          >
-            {/* Modal Header */}
-            <div className="bg-gradient-to-r from-[#0a2a5e] to-[#0d3b82] text-white p-6">
-              <div className="flex justify-between items-start">
-                <div>
-                  <h2 className="text-2xl font-bold mb-2">{selectedJob.interviewField}</h2>
-                  <p className="text-blue-100">{selectedJob.positionLevel}</p>
-                </div>
-                <button
-                  onClick={closeModal}
-                  className="text-white hover:bg-white hover:bg-opacity-20 rounded-full p-2 transition-all"
-                >
-                  <X className="w-6 h-6" />
-                </button>
-              </div>
-            </div>
-
-            {/* Modal Body - Scrollable */}
-            <div className="p-6 space-y-6 overflow-y-auto max-h-[calc(90vh-200px)]">
-              {/* Job Details Grid */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
-                  <p className="text-sm text-gray-600 mb-1 font-medium">Interview Field</p>
-                  <p className="font-bold text-gray-800 text-lg">{selectedJob.interviewField}</p>
-                </div>
-                <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
-                  <p className="text-sm text-gray-600 mb-1 font-medium">Position Level</p>
-                  <p className="font-bold text-gray-800 text-lg">{selectedJob.positionLevel}</p>
-                </div>
-                <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
-                  <p className="text-sm text-gray-600 mb-1 font-medium">Number of Questions</p>
-                  <p className="font-bold text-gray-800 text-lg">{selectedJob.numberOfQuestions}</p>
-                </div>
-                <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
-                  <p className="text-sm text-gray-600 mb-1 font-medium">Top N CVs</p>
-                  <p className="font-bold text-gray-800 text-lg">{selectedJob.topNCvs}</p>
-                </div>
-                <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
-                  <p className="text-sm text-gray-600 mb-1 font-medium">Total CVs Uploaded</p>
-                  <p className="font-bold text-gray-800 text-lg">{selectedJob.cvFilesCount || 0}</p>
-                </div>
-                <div className="bg-[#0a2a5e]/5 rounded-xl p-4 border border-[#0a2a5e]/10">
-                  <p className="text-sm text-gray-600 mb-1 font-medium">Created Date</p>
-                  <p className="font-bold text-gray-800 text-lg">
-                    {new Date(selectedJob.createdAt).toLocaleDateString('en-US', {
-                      month: 'short',
-                      day: 'numeric',
-                      year: 'numeric'
-                    })}
-                  </p>
-                </div>
-              </div>
-
-              {/* Job Description */}
-              <div>
-                <h3 className="text-lg font-bold text-gray-800 mb-3 flex items-center gap-2">
-                  <FileText className="w-5 h-5 text-[#0a2a5e]" />
-                  Job Description
-                </h3>
-                <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
-                  <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">
-                    {selectedJob.jobDescription}
-                  </p>
-                </div>
-              </div>
-
-              {/* Action Buttons - Right Aligned */}
-              <div className="flex justify-end gap-3">
-                <button
-                  onClick={() => {
-                    navigate(`/recruiter/reports/${selectedJob.id || selectedJob._id}`);
-                    closeModal();
-                  }}
-                  className="bg-purple-600 text-white px-6 py-2.5 rounded-xl font-semibold hover:bg-purple-700 transition-all shadow-md flex items-center gap-2"
-                >
-                  <Video className="w-4 h-4" />
-                  View Interviews
-                </button>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-      )}
     </div>
   );
 };

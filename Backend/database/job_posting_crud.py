@@ -22,7 +22,8 @@ async def create_job_posting(
     questions: List[Dict[str, Any]],
     specific_instruction: Optional[str] = None,
     job_description: Optional[str] = None,
-    deadline: Optional[datetime] = None
+    deadline: Optional[datetime] = None,
+    number_of_vacancies: int = 1
 ) -> str:
     """Create a new job posting."""
     job_posting = {
@@ -35,6 +36,7 @@ async def create_job_posting(
         "salary_range": salary_range,
         "experience_range": experience_range,
         "industry_domain": industry_domain,
+        "number_of_vacancies": number_of_vacancies,
         "questions": questions,
         "specific_instruction": specific_instruction,
         "cv_file_ids": [],

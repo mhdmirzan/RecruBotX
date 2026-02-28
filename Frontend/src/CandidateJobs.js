@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Search, Briefcase, MapPin, DollarSign, Calendar, ChevronRight, Send, Filter, X, Clock, CheckCircle2, XCircle, AlertTriangle } from "lucide-react";
+import { Search, Briefcase, MapPin, DollarSign, Calendar, ChevronRight, Send, Filter, X, Clock, CheckCircle2, XCircle, AlertTriangle, Users } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { getCurrentUser, logoutUser } from "./utils/userDatabase";
 import API_BASE_URL from "./apiConfig";
@@ -42,7 +42,7 @@ const CandidateJobs = () => {
                 const data = await response.json();
                 const transformed = data.map(job => ({
                     id: job._id || job.id,
-                    company: `${job.interviewField} Position`,
+                    company: job.companyName || job.interviewField + " Company",
                     title: job.interviewField,
                     position: job.positionLevel,
                     interviewField: job.interviewField,
@@ -53,6 +53,7 @@ const CandidateJobs = () => {
                     experienceRange: job.experienceRange,
                     industryDomain: job.industryDomain,
                     jobDescription: job.jobDescription,
+                    numberOfVacancies: job.numberOfVacancies || 1,
                     deadline: job.deadline ? new Date(job.deadline) : null,
                     appliedDate: new Date(job.createdAt),
                     isActive: job.isActive
@@ -80,6 +81,12 @@ const CandidateJobs = () => {
 
     const getFilteredJobs = () => {
         let filtered = [...jobPostings];
+
+        // Remove closed/expired jobs unless the candidate has already applied
+        filtered = filtered.filter(job => {
+            const expired = isJobExpired(job) || !job.isActive;
+            return !expired || isApplied(job.id);
+        });
 
         // Text Search
         if (searchTerm) {
@@ -257,10 +264,13 @@ const CandidateJobs = () => {
                                                 </div>
                                             )}
 
-                                            <div className="flex justify-between items-start mb-4">
-                                                <div>
+                                            <div className="flex justify-between items-start mb-3">
+                                                <div className="flex-1">
                                                     <h3 className="font-bold text-xl text-gray-800 group-hover:text-[#0a2a5e] transition-colors">{job.title}</h3>
                                                     <p className="text-gray-500 font-medium">{job.position}</p>
+                                                    {job.company && (
+                                                        <p className="text-[#0a2a5e] text-sm font-semibold mt-0.5">{job.company}</p>
+                                                    )}
                                                 </div>
                                                 {!applied && !expired && (
                                                     <span className={`px-3 py-1 rounded-full text-xs font-bold ${getStatusColor(job.status)}`}>
@@ -279,8 +289,11 @@ const CandidateJobs = () => {
                                                 <div className="flex items-center gap-2 text-green-600 font-medium text-sm">
                                                     <DollarSign className="w-4 h-4" /> {job.salaryRange}
                                                 </div>
-                                                <div className="flex items-center gap-2 text-gray-500 text-sm">
+                                                <div className="flex items-center gap-2 text-calendar-500 text-sm">
                                                     <Calendar className="w-4 h-4" /> Posted {job.appliedDate.toLocaleDateString()}
+                                                </div>
+                                                <div className="flex items-center gap-2 text-indigo-600 text-sm font-semibold">
+                                                    <Users className="w-4 h-4" /> {job.numberOfVacancies} {job.numberOfVacancies === 1 ? 'Vacancy' : 'Vacancies'}
                                                 </div>
                                             </div>
 
@@ -326,8 +339,11 @@ const CandidateJobs = () => {
                             <button onClick={() => setShowJobModal(false)} className="absolute top-6 right-6 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors">
                                 <X className="w-6 h-6" />
                             </button>
-                            <h2 className="text-3xl font-bold mb-2">{selectedJob.title}</h2>
+                            <h2 className="text-3xl font-bold mb-1">{selectedJob.title}</h2>
                             <p className="text-blue-200 text-lg">{selectedJob.position} • {selectedJob.location}</p>
+                            {selectedJob.company && (
+                                <p className="text-blue-100 text-sm mt-1 font-semibold">{selectedJob.company}</p>
+                            )}
 
                             {/* Deadline in Modal Header */}
                             {selectedJob.deadline && (
@@ -343,7 +359,7 @@ const CandidateJobs = () => {
                         </div>
 
                         <div className="flex-1 overflow-y-auto p-8 space-y-6">
-                            <div className="grid grid-cols-3 gap-4">
+                            <div className="grid grid-cols-4 gap-4">
                                 <div className="p-4 bg-gray-50 rounded-xl">
                                     <p className="text-xs text-gray-500 uppercase font-bold">Salary</p>
                                     <p className="font-semibold text-gray-800">{selectedJob.salaryRange}</p>
@@ -355,6 +371,10 @@ const CandidateJobs = () => {
                                 <div className="p-4 bg-gray-50 rounded-xl">
                                     <p className="text-xs text-gray-500 uppercase font-bold">Domain</p>
                                     <p className="font-semibold text-gray-800">{selectedJob.industryDomain || "General"}</p>
+                                </div>
+                                <div className="p-4 bg-indigo-50 rounded-xl border border-indigo-100">
+                                    <p className="text-xs text-indigo-500 uppercase font-bold">Vacancies</p>
+                                    <p className="font-bold text-indigo-700 text-lg">{selectedJob.numberOfVacancies || 1}</p>
                                 </div>
                             </div>
 

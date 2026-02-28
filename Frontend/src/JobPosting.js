@@ -39,6 +39,7 @@ const JobPosting = () => {
         salaryRange: "",
         experienceRange: "",
         industryDomain: "",
+        numberOfVacancies: 1,
         jobDescription: "",
         questions: [], // Array of { text, type, difficulty }
         specificInstruction: "",
@@ -95,6 +96,7 @@ const JobPosting = () => {
                     salaryRange: selectedJob.salaryRange || "",
                     experienceRange: selectedJob.experienceRange || "",
                     industryDomain: selectedJob.industryDomain || "",
+                    numberOfVacancies: selectedJob.numberOfVacancies || 1,
                     jobDescription: selectedJob.jobDescription || "",
                     questions: selectedJob.questions || [],
                     specificInstruction: selectedJob.specificInstruction || "",
@@ -271,7 +273,20 @@ const JobPosting = () => {
                     <NavLink to="/recruiter/settings" className={({ isActive }) => `font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 ${isActive ? "bg-[#0a2a5e]/10 text-[#0a2a5e]" : "text-gray-700 hover:bg-[#0a2a5e]/5 hover:text-[#0a2a5e]"}`}><Cog className="w-5 h-5" /> Settings</NavLink>
                 </nav>
 
-                <div className="mt-auto flex-shrink-0">
+                <div className="mt-auto flex-shrink-0 space-y-3">
+                    <div className="flex items-center gap-3 bg-gray-100 rounded-xl px-3 py-2.5">
+                        <div className="w-10 h-10 bg-[#0a2a5e] rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0 overflow-hidden">
+                            {recruiterData.profileImage ? (
+                                <img src={recruiterData.profileImage} alt="Profile" className="w-full h-full object-cover" />
+                            ) : (
+                                <>{recruiterData.firstName?.charAt(0)}{recruiterData.lastName?.charAt(0)}</>
+                            )}
+                        </div>
+                        <div className="min-w-0">
+                            <p className="font-bold text-[#0a2a5e] text-sm truncate">{recruiterData.firstName} {recruiterData.lastName}</p>
+                            <p className="text-xs text-gray-500 truncate">{recruiterData.email}</p>
+                        </div>
+                    </div>                    
                     <button onClick={handleLogout} className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-red-500 to-red-600 px-4 py-3 rounded-xl text-white hover:from-red-600 hover:to-red-700 transition-all shadow-md"><LogOut className="w-5 h-5" /> Logout</button>
                 </div>
             </aside>
@@ -290,17 +305,6 @@ const JobPosting = () => {
                         <NavLink to="/recruiter/all-jobs" className="px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 flex items-center gap-2 shadow-sm">
                             <Briefcase className="w-4 h-4" /> View All Jobs
                         </NavLink>
-
-                        {/* User Profile */}
-                        <div className="flex items-center gap-3">
-                            <div className="text-right">
-                                <h3 className="font-bold text-gray-800">{recruiterData.firstName} {recruiterData.lastName}</h3>
-                                <p className="text-sm text-gray-500">{recruiterData.email}</p>
-                            </div>
-                            <div className="w-12 h-12 bg-gradient-to-br from-[#0a2a5e] to-[#2b4c8c] rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg overflow-hidden">
-                                {recruiterData.profileImage ? (<img src={recruiterData.profileImage} alt="Profile" className="w-full h-full object-cover" />) : (<>{recruiterData.firstName?.charAt(0)}{recruiterData.lastName?.charAt(0)}</>)}
-                            </div>
-                        </div>
                     </div>
                 </div>
 
@@ -352,17 +356,7 @@ const JobPosting = () => {
                                 <div className="grid grid-cols-2 gap-6">
                                     <div>
                                         <label className="block font-medium text-gray-700 mb-2">Interview Field <span className="text-red-500">*</span></label>
-                                        <select name="interviewField" value={formData.interviewField} onChange={handleInputChange} className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#0a2a5e] outline-none" required>
-                                            <option value="">Select a field...</option>
-                                            <option value="Software Engineering">Software Engineering</option>
-                                            <option value="Data Science">Data Science</option>
-                                            <option value="Product Management">Product Management</option>
-                                            <option value="UI/UX Design">UI/UX Design</option>
-                                            <option value="Marketing">Marketing</option>
-                                            <option value="Sales">Sales</option>
-                                            <option value="Finance">Finance</option>
-                                            <option value="Human Resources">Human Resources</option>
-                                        </select>
+                                        <input type="text" name="interviewField" value={formData.interviewField} onChange={handleInputChange} placeholder="e.g. Software Engineering" className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#0a2a5e] outline-none" required />
                                     </div>
                                     <div>
                                         <label className="block font-medium text-gray-700 mb-2">Position Level <span className="text-red-500">*</span></label>
@@ -412,21 +406,25 @@ const JobPosting = () => {
                                         <label className="block font-medium text-gray-700 mb-2">Experience Range <span className="text-red-500">*</span></label>
                                         <input type="text" name="experienceRange" value={formData.experienceRange} onChange={handleInputChange} placeholder="e.g. 3-5 Years" className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#0a2a5e] outline-none" required />
                                     </div>
+                                    <div>
+                                        <label className="block font-medium text-gray-700 mb-2">Number of Vacancies <span className="text-red-500">*</span></label>
+                                        <input type="number" name="numberOfVacancies" value={formData.numberOfVacancies} onChange={handleInputChange} min="1" placeholder="e.g. 2" className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#0a2a5e] outline-none" required />
+                                    </div>
                                 </div>
 
                                 {/* Deadline Field - Prominent */}
-                                <div className="mt-6 p-5 bg-gradient-to-r from-red-50 to-orange-50 border-2 border-red-200 rounded-2xl">
-                                    <label className="block font-bold text-red-700 mb-2 flex items-center gap-2">
+                                <div className="mt-6 p-5 bg-[#0a2a5e]/5 border-2 border-[#0a2a5e]/30 rounded-2xl">
+                                    <label className="block font-bold text-[#0a2a5e] mb-2 flex items-center gap-2">
                                         <Clock className="w-5 h-5" /> Application Deadline <span className="text-red-500">*</span>
                                     </label>
-                                    <p className="text-sm text-red-500 mb-3">After this date, the job will automatically close and candidates cannot apply.</p>
+                                    <p className="text-sm text-[#0a2a5e]/70 mb-3">After this date, the job will automatically close and candidates cannot apply.</p>
                                     <input
                                         type="date"
                                         name="deadline"
                                         value={formData.deadline}
                                         onChange={handleInputChange}
                                         min={new Date().toISOString().split('T')[0]}
-                                        className="w-full px-4 py-3 border-2 border-red-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none bg-white text-lg font-semibold"
+                                        className="w-full px-4 py-3 border-2 border-[#0a2a5e]/30 rounded-xl focus:ring-2 focus:ring-[#0a2a5e] focus:border-[#0a2a5e] outline-none bg-white text-lg font-semibold text-[#0a2a5e]"
                                         required
                                     />
                                 </div>
@@ -560,14 +558,15 @@ const JobPosting = () => {
                                             <p><span className="font-medium text-gray-900">Salary:</span> {formData.salaryRange}</p>
                                             <p><span className="font-medium text-gray-900">Experience:</span> {formData.experienceRange}</p>
                                             <p><span className="font-medium text-gray-900">Status:</span> {formData.status}</p>
+                                            <p><span className="font-medium text-gray-900">Vacancies:</span> {formData.numberOfVacancies}</p>
                                         </div>
                                     </div>
                                     <div>
                                         <h4 className="font-semibold text-gray-500 mb-2 uppercase tracking-wide">Deadline & Interview</h4>
                                         <div className="space-y-2">
-                                            <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-xl">
-                                                <Clock className="w-5 h-5 text-red-600" />
-                                                <span className="font-bold text-red-700">
+                                            <div className="flex items-center gap-2 p-3 bg-[#0a2a5e]/5 border border-[#0a2a5e]/20 rounded-xl">
+                                                <Clock className="w-5 h-5 text-[#0a2a5e]" />
+                                                <span className="font-bold text-[#0a2a5e]">
                                                     {formData.deadline ? new Date(formData.deadline).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }) : "Not set"}
                                                 </span>
                                             </div>

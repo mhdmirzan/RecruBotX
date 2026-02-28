@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate, NavLink } from "react-router-dom";
 import {
     LayoutDashboard,
@@ -21,6 +21,7 @@ import {
     XCircle
 } from "lucide-react";
 import API_BASE_URL from "./apiConfig";
+import RecruiterSidebar from "./components/RecruiterSidebar";
 
 const RecruiterAllJobs = () => {
     const navigate = useNavigate();
@@ -31,6 +32,7 @@ const RecruiterAllJobs = () => {
     const [applicants, setApplicants] = useState([]);
     const [applicantsLoading, setApplicantsLoading] = useState(false);
     const [downloadingId, setDownloadingId] = useState(null);
+    const pollingRef = useRef(null);
 
     useEffect(() => {
         const storedUser = localStorage.getItem("recruiterUser");
@@ -61,16 +63,10 @@ const RecruiterAllJobs = () => {
         }
     };
 
-    const handleJobClick = async (job) => {
-        if (selectedJob?.id === job.id) {
-            setSelectedJob(null);
-            setApplicants([]);
-            return;
-        }
-        setSelectedJob(job);
-        setApplicantsLoading(true);
+    const fetchApplicants = useCallback(async (jobId, showLoader = false) => {
+        if (showLoader) setApplicantsLoading(true);
         try {
-            const response = await fetch(`${API_BASE_URL}/rankings/job/${job.id}`);
+            const response = await fetch(`${API_BASE_URL}/rankings/job/${jobId}`);
             if (response.ok) {
                 const data = await response.json();
                 setApplicants(data);
@@ -81,8 +77,29 @@ const RecruiterAllJobs = () => {
             console.error("Error fetching applicants:", error);
             setApplicants([]);
         } finally {
-            setApplicantsLoading(false);
+            if (showLoader) setApplicantsLoading(false);
         }
+    }, []);
+
+    // Auto-poll applicants every 10 s when a job is expanded
+    useEffect(() => {
+        if (pollingRef.current) clearInterval(pollingRef.current);
+        if (selectedJob) {
+            pollingRef.current = setInterval(() => {
+                fetchApplicants(selectedJob.id, false);
+            }, 10000);
+        }
+        return () => { if (pollingRef.current) clearInterval(pollingRef.current); };
+    }, [selectedJob, fetchApplicants]);
+
+    const handleJobClick = async (job) => {
+        if (selectedJob?.id === job.id) {
+            setSelectedJob(null);
+            setApplicants([]);
+            return;
+        }
+        setSelectedJob(job);
+        fetchApplicants(job.id, true);
     };
 
     const handleDownloadReport = async (applicant) => {
@@ -160,22 +177,7 @@ const RecruiterAllJobs = () => {
     return (
         <div className="h-screen w-screen flex bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden fixed inset-0">
             {/* Sidebar */}
-            <aside className="w-72 h-screen bg-white shadow-xl flex flex-col p-6 border-r border-gray-200 flex-shrink-0">
-                <div className="mb-8 text-center flex-shrink-0">
-                    <h1 className="text-3xl font-bold text-[#0a2a5e]">RecruBotX</h1>
-                </div>
-
-                <nav className="flex flex-col space-y-4 text-gray-700 flex-shrink-0">
-                    <NavLink to="/recruiter/dashboard" className={({ isActive }) => `font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 ${isActive ? "bg-[#0a2a5e]/10 text-[#0a2a5e]" : "text-gray-700 hover:bg-[#0a2a5e]/5 hover:text-[#0a2a5e]"}`}><LayoutDashboard className="w-5 h-5" /> Dashboard</NavLink>
-                    <NavLink to="/recruiter/job-posting" className={({ isActive }) => `font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 ${isActive ? "bg-[#0a2a5e]/10 text-[#0a2a5e]" : "text-gray-700 hover:bg-[#0a2a5e]/5 hover:text-[#0a2a5e]"}`}><PlusCircle className="w-5 h-5" /> Job Posting</NavLink>
-                    <NavLink to="/recruiter/cv-screening" className={({ isActive }) => `font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 ${isActive ? "bg-[#0a2a5e]/10 text-[#0a2a5e]" : "text-gray-700 hover:bg-[#0a2a5e]/5 hover:text-[#0a2a5e]"}`}><Search className="w-5 h-5" /> CV Screening</NavLink>
-                    <NavLink to="/recruiter/settings" className={({ isActive }) => `font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 ${isActive ? "bg-[#0a2a5e]/10 text-[#0a2a5e]" : "text-gray-700 hover:bg-[#0a2a5e]/5 hover:text-[#0a2a5e]"}`}><Cog className="w-5 h-5" /> Settings</NavLink>
-                </nav>
-
-                <div className="mt-auto flex-shrink-0">
-                    <button onClick={handleLogout} className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-red-500 to-red-600 px-4 py-3 rounded-xl text-white hover:from-red-600 hover:to-red-700 transition-all shadow-md"><LogOut className="w-5 h-5" /> Logout</button>
-                </div>
-            </aside>
+            <RecruiterSidebar />
 
             {/* Main Content */}
             <main className="flex-1 h-screen flex flex-col overflow-hidden py-8 px-8">
@@ -193,17 +195,6 @@ const RecruiterAllJobs = () => {
                             <p className="text-gray-500 mt-1">
                                 {jobPostings.length} job{jobPostings.length !== 1 ? "s" : ""} posted
                             </p>
-                        </div>
-                    </div>
-
-                    {/* User Profile */}
-                    <div className="flex items-center gap-3">
-                        <div className="text-right">
-                            <h3 className="font-bold text-gray-800">{recruiterData.firstName} {recruiterData.lastName}</h3>
-                            <p className="text-sm text-gray-500">{recruiterData.email}</p>
-                        </div>
-                        <div className="w-12 h-12 bg-gradient-to-br from-[#0a2a5e] to-[#2b4c8c] rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg overflow-hidden">
-                            {recruiterData.profileImage ? (<img src={recruiterData.profileImage} alt="Profile" className="w-full h-full object-cover" />) : (<>{recruiterData.firstName?.charAt(0)}{recruiterData.lastName?.charAt(0)}</>)}
                         </div>
                     </div>
                 </div>
@@ -262,7 +253,7 @@ const RecruiterAllJobs = () => {
                                             </div>
 
                                             {/* Deadline & Status Badges */}
-                                            <div className="flex items-center gap-3 mt-3 pt-3 border-t border-gray-100">
+                                            <div className="flex items-center gap-3 mt-3 pt-3 px-6 pb-4 border-t border-gray-100">
                                                 {/* Active/Closed Badge */}
                                                 {job.isActive ? (
                                                     <span className="px-3 py-1 bg-green-50 text-green-700 text-xs font-bold rounded-full">Active</span>
