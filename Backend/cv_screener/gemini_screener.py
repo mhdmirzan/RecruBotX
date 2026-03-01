@@ -125,6 +125,50 @@ Return ONLY a valid JSON object.
 }}
 """
 
+        self.master_screening_prompt = """
+You are an AI CV evaluation engine.
+
+Your task:
+Evaluate the candidate CV strictly based on relevance to the provided job description.
+
+Use only the structured CV data provided.
+Do NOT invent information.
+Do NOT assume missing data.
+
+Return ONLY valid JSON.
+Do NOT include explanation.
+Do NOT include markdown.
+Do NOT include extra text.
+
+Scoring Scale:
+0 = Not Relevant
+100 = Highly Relevant
+
+Scoring Criteria:
+- technical_score (40%)
+- experience_score (30%)
+- project_score (20%)
+- education_score (10%)
+
+Calculate overall_cv_score as weighted average.
+
+Return format:
+
+{{
+  "technical_score": number,
+  "experience_score": number,
+  "project_score": number,
+  "education_score": number,
+  "overall_cv_score": number
+}}
+
+Job Description:
+{job_description}
+
+Parsed CV Data:
+{cv_content}
+"""
+
         self.weighted_screening_prompt = """
 You are an elite HR recruiter and career strategist. Analyze the provided CV against the Job Description.
 Score the candidate on each of the following criteria from 0 to 100. Also extract the candidate's name and email address from the CV.
@@ -259,6 +303,23 @@ Return ONLY a valid JSON object.
             cv_content=cv_content
         )
         return await self._call_gemini(prompt, file_name)
+
+    async def screen_cv_master(self, job_description: str, cv_content: str, file_name: str) -> Dict[str, Any]:
+        """Screen a CV using the master screening prompt (Anti-Gravity)."""
+        prompt = self.master_screening_prompt.format(
+            job_description=job_description,
+            cv_content=cv_content
+        )
+        result = await self._call_gemini(prompt, file_name)
+        
+        # Ensure the expected keys exist even if the model fails
+        return {
+            "technical_score": float(result.get("technical_score", 0)),
+            "experience_score": float(result.get("experience_score", 0)),
+            "project_score": float(result.get("project_score", 0)),
+            "education_score": float(result.get("education_score", 0)),
+            "overall_cv_score": float(result.get("overall_cv_score", 0))
+        }
 
     async def screen_cv_weighted(self, job_description: str, cv_content: str, file_name: str, weightages: Dict[str, float]) -> Dict[str, Any]:
         """

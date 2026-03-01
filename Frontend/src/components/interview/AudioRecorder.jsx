@@ -46,12 +46,15 @@ const AudioRecorder = ({
   const INTERRUPT_THRESHOLD = 30;   // Higher threshold for barge-in
   const SILENCE_DURATION = 2000;    // Wait 2.0s before sending audio (User Requirement)
 
+  const isMountedRef = useRef(true);
+
   // Initialize Microphone once
   useEffect(() => {
-    let isMounted = true;
-    initMicrophone(isMounted);
+    isMountedRef.current = true;
+    initMicrophone(isMountedRef.current);
+
     return () => {
-      isMounted = false;
+      isMountedRef.current = false;
       cleanupMicrophone();
     };
   }, []); // Run once on mount
@@ -113,7 +116,7 @@ const AudioRecorder = ({
   };
 
   const monitorAudioLevel = () => {
-    if (!analyserRef.current) return;
+    if (!isMountedRef.current || !analyserRef.current) return;
 
     const dataArray = new Uint8Array(analyserRef.current.fftSize);
     analyserRef.current.getByteTimeDomainData(dataArray);
@@ -166,7 +169,9 @@ const AudioRecorder = ({
       }
     }
 
-    animationFrameRef.current = requestAnimationFrame(monitorAudioLevel);
+    if (isMountedRef.current) {
+      animationFrameRef.current = requestAnimationFrame(monitorAudioLevel);
+    }
   };
 
   // UI Helper

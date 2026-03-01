@@ -32,25 +32,37 @@ async def get_job_rankings(
 ):
     """Get all candidate rankings for a specific job."""
     rankings = await get_rankings_by_job(db, job_id)
-    return [
-        {
+    
+    # Sort rankings descending by score
+    sorted_rankings = sorted(rankings, key=lambda x: x.get('score', 0), reverse=True)
+    
+    result = []
+    for index, ranking in enumerate(sorted_rankings):
+        result.append({
             "id": str(ranking["_id"]),  # Convert ObjectId to string
             "jobPostingId": ranking["job_posting_id"],
             "recruiterId": ranking["recruiter_id"],
             "candidateName": ranking["candidate_name"],
-            "rank": ranking["rank"],
-            "score": f"{ranking['score']:.0f}/100",
+            "rank": index + 1, # Dynamic rank assignment
+            "score": f"{ranking.get('score', 0):.0f}/100",
             "cvScore": f"{ranking.get('cv_score', 0):.0f}/100",
+            "cvTechnicalScore": f"{ranking.get('cv_technical_score', 0):.0f}/100",
+            "cvExperienceScore": f"{ranking.get('cv_experience_score', 0):.0f}/100",
+            "cvProjectScore": f"{ranking.get('cv_project_score', 0):.0f}/100",
+            "cvEducationScore": f"{ranking.get('cv_education_score', 0):.0f}/100",
             "interviewScore": f"{ranking.get('interview_score', 0):.0f}/100",
+            "technicalScore": f"{ranking.get('technical_score', 0):.0f}/100",
+            "communicationScore": f"{ranking.get('communication_score', 0):.0f}/100",
+            "confidenceScore": f"{ranking.get('confidence_score', 0):.0f}/100",
             "facialRecognitionScore": f"{ranking.get('facial_recognition_score', 0):.0f}/100",
-            "completion": f"{ranking['completion']}%",
-            "interviewStatus": ranking["interview_status"],
+            "completion": f"{ranking.get('completion', 100)}%",
+            "interviewStatus": ranking.get("interview_status", "Pending"),
             "date": ranking["created_at"].strftime("%d-%m-%Y"),
             "cvData": ranking.get("cv_data"),
             "evaluationDetails": ranking.get("evaluation_details")
-        }
-        for ranking in rankings
-    ]
+        })
+        
+    return result
 
 
 @router.get("/recruiter/{recruiter_id}", response_model=list)
@@ -62,8 +74,12 @@ async def get_recruiter_rankings(
     print(f"[DEBUG] Fetching rankings for recruiter_id: {recruiter_id}")
     rankings = await get_rankings_by_recruiter(db, recruiter_id)
     print(f"[DEBUG] Found {len(rankings)} rankings")
+    # Sort the rankings descending
+    sorted_rankings = sorted(rankings, key=lambda x: x.get('score', 0), reverse=True)
     
-    for ranking in rankings:
+    result = []
+    
+    for index, ranking in enumerate(sorted_rankings):
         print(f"[DEBUG] Processing ranking: {ranking.get('_id')}, job_posting_id: {ranking.get('job_posting_id')}")
         
         # Safe score formatting
@@ -78,10 +94,10 @@ async def get_recruiter_rankings(
             "jobPostingId": ranking["job_posting_id"],
             "recruiterId": ranking["recruiter_id"],
             "candidateName": ranking["candidate_name"],
-            "rank": ranking["rank"],
+            "rank": index + 1,
             "score": score_display,
             "completion": f"{ranking.get('completion', 100)}%",
-            "interviewStatus": ranking["interview_status"],
+            "interviewStatus": ranking.get("interview_status", "Unknown"),
             "date": ranking["created_at"].strftime("%d-%m-%Y")
         })
     

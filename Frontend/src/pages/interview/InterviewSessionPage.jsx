@@ -8,10 +8,10 @@ import CandidateDashboard from '../../components/interview/CandidateDashboard';
 import API_BASE_URL from '../../apiConfig';
 
 function App() {
-  // State
   const [currentState, setCurrentState] = useState(ConversationState.IDLE);
   const [isConnected, setIsConnected] = useState(false);
   const [sessionActive, setSessionActive] = useState(false);
+  const [isConcluding, setIsConcluding] = useState(false);
   const [messages, setMessages] = useState([]);
   const [interimText, setInterimText] = useState('');
   const [liveCaption, setLiveCaption] = useState(''); // Live caption state
@@ -189,8 +189,14 @@ function App() {
 
       case 'report':
         logDebug('📊 Report Received');
+        setIsConcluding(false);
         setReportData(data.payload);
         setSessionActive(false); // Switch to report view
+        break;
+
+      case 'interview_concluding':
+        logDebug('⏳ Interview Concluding... Generating Report');
+        setIsConcluding(true);
         break;
 
       case 'response_complete':
@@ -296,7 +302,7 @@ function App() {
   // --- Render ---
 
   // 1. Setup Screen (New Dashboard)
-  if (!sessionActive && !reportData) {
+  if (!sessionActive && !reportData && !isConcluding) {
     return (
       <CandidateDashboard
         candidateName={config.candidate_name}
@@ -306,11 +312,29 @@ function App() {
   }
 
   // 2. Report Screen
-  if (reportData) {
+  if (reportData && !isConcluding) {
     return <InterviewReport reportData={reportData} onRestart={() => window.location.reload()} />;
   }
 
-  // 3. Live Interview Screen
+  // 3. Concluding Loading Screen
+  if (isConcluding) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-900 text-white font-sans">
+        <div className="flex flex-col items-center gap-6">
+          <div className="relative flex items-center justify-center">
+            <div className="w-16 h-16 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin"></div>
+            <div className="absolute w-8 h-8 border-4 border-indigo-500/20 border-b-indigo-500 rounded-full animate-spin-reverse"></div>
+          </div>
+          <div className="text-center">
+            <h3 className="text-xl font-bold bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent mb-2">Finalizing Interview</h3>
+            <p className="text-slate-400 animate-pulse text-sm">Calculing metrics and generating AI feedback report...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // 4. Live Interview Screen
   return (
     <>
       <LiveInterviewSession
