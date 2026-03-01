@@ -78,7 +78,7 @@ You are a professional hiring evaluation system.
 
 Generate a structured candidate evaluation report.
 
-Be objective, professional, and concise.
+Be objective, professional, and concise. Your final hiring recommendation must be an actual evaluation of the candidate's fitness for the role based on their performance, strengths, and weaknesses, NOT just a comment about the interview transcript.
 Maximum 250 words.
 Plain text only.
 No markdown formatting.
@@ -94,14 +94,10 @@ Interview Status: {status}
 
 Generate:
 
-1. Strengths (bullet points)
-2. Weaknesses (bullet points)
-3. Areas for Improvement (bullet points)
-4. Hiring Recommendation:
-   - Strong Hire
-   - Hire
-   - Consider
-   - Reject
+1. Strengths: (bullet points)
+2. Weaknesses: (bullet points)
+3. Areas for Improvement: (bullet points)
+4. Hiring Recommendation: (Provide a clear, proper recommendation on whether to hire them for the role and why, ending with one of: Strong Hire, Hire, Consider, or Reject)
 """
 
 STAGE_INSTRUCTIONS = {
