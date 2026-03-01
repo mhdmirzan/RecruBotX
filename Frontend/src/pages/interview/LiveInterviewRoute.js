@@ -149,6 +149,7 @@ const LiveInterviewRoute = () => {
             case 'transcription':
                 setMessages(prev => [...prev, { role: 'candidate', content: data.payload }]);
                 break;
+            case 'interview_concluding':
             case 'report':
                 // Instead of abruptly closing, flag that we are wrapping up.
                 // The actual navigation will happen after the last audio chunk finishes playing.
@@ -237,9 +238,14 @@ const LiveInterviewRoute = () => {
     const confirmEndInterview = () => {
         setIsEndModalOpen(false);
         if (ws.current?.readyState === WebSocket.OPEN) {
-            ws.current.close();
+            ws.current.send(JSON.stringify({ type: 'end_interview' }));
+            setTimeout(() => {
+                if (ws.current) ws.current.close();
+                navigate("/candidate/interview-complete", { state: { sessionId, candidateName, jobTitle, aborted: true } });
+            }, 500);
+        } else {
+            navigate("/candidate/interview-complete", { state: { sessionId, candidateName, jobTitle, aborted: true } });
         }
-        navigate("/candidate/interview-complete", { state: { sessionId, candidateName, jobTitle, aborted: true } });
     };
 
     if (!sessionId) return null;

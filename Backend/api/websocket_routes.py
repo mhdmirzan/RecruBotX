@@ -170,6 +170,24 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str):
                                     "type": "report",
                                     "payload": report_dict
                                 })
+                elif msg_type == "end_interview":
+                    # Flag the session as manually ended in the database so the penalty applies
+                    await manager.send_json(session_id, {
+                        "type": "interview_concluding",
+                        "payload": "Calculating results..."
+                    })
+                    
+                    # Force the status to Manually Ended so finalize_interview catches it
+                    await db.interview_sessions.update_one(
+                        {"session_id": session_id},
+                        {"$set": {"status": "Manually Ended"}}
+                    )
+                    
+                    report_dict = await service.finalize_interview(session_id)
+                    await manager.send_json(session_id, {
+                        "type": "report",
+                        "payload": report_dict
+                    })
                                     
                 elif msg_type == "interrupt":
                     # Handled natively by wiping the current audio play queue on frontend

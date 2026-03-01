@@ -11,7 +11,11 @@ import {
     CheckCircle,
     XCircle,
     Download,
-    Search
+    Search,
+    Mail,
+    Phone,
+    Linkedin,
+    AlertTriangle
 } from "lucide-react";
 import { motion } from "framer-motion";
 import API_BASE_URL from "./apiConfig";
@@ -249,6 +253,16 @@ const CandidateReport = () => {
                             </div>
                         </div>
 
+                        {report.manualEndDetected && (
+                            <div className="bg-orange-50 border-l-4 border-orange-500 p-5 rounded-2xl flex gap-3 shadow-sm items-center">
+                                <AlertTriangle className="w-6 h-6 text-orange-500 shrink-0" />
+                                <div>
+                                    <h5 className="font-bold text-orange-800">Interview Ended Early</h5>
+                                    <p className="text-orange-700 text-sm">The candidate manually ended the interview before completion. This triggers an automatic 15% penalty on their final interview score.</p>
+                                </div>
+                            </div>
+                        )}
+
                         <div className="grid grid-cols-3 gap-6">
                             {/* Skills Breakdown */}
                             <div className="col-span-2 space-y-6">
@@ -325,6 +339,40 @@ const CandidateReport = () => {
                                             <p className="text-gray-400 text-sm">No specific areas of improvement highlighted.</p>
                                         )}
                                     </ul>
+                                </div>
+
+                                {/* Candidate Details */}
+                                <div className="bg-white rounded-3xl shadow-xl p-8 border border-gray-100">
+                                    <h4 className="font-bold text-gray-800 mb-4 flex items-center gap-2">Contact Details</h4>
+                                    <div className="space-y-4">
+                                        {report.email ? (
+                                            <div className="flex items-center gap-3 text-gray-600">
+                                                <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
+                                                    <Mail className="w-4 h-4" />
+                                                </div>
+                                                <a href={`mailto:${report.email}`} className="text-sm hover:text-blue-600 hover:underline">{report.email}</a>
+                                            </div>
+                                        ) : null}
+                                        {report.phone ? (
+                                            <div className="flex items-center gap-3 text-gray-600">
+                                                <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
+                                                    <Phone className="w-4 h-4" />
+                                                </div>
+                                                <a href={`tel:${report.phone}`} className="text-sm hover:text-blue-600 hover:underline">{report.phone}</a>
+                                            </div>
+                                        ) : null}
+                                        {report.linkedin ? (
+                                            <div className="flex items-center gap-3 text-gray-600 overflow-hidden">
+                                                <div className="p-2 bg-blue-50 text-blue-600 rounded-lg shrink-0">
+                                                    <Linkedin className="w-4 h-4" />
+                                                </div>
+                                                <a href={report.linkedin} target="_blank" rel="noreferrer" className="text-sm hover:text-blue-600 hover:underline truncate">{report.linkedin}</a>
+                                            </div>
+                                        ) : null}
+                                        {!report.email && !report.phone && !report.linkedin && (
+                                            <p className="text-sm text-gray-400">No contact details provided.</p>
+                                        )}
+                                    </div>
                                 </div>
 
                                 {/* CV Preview Button */}
