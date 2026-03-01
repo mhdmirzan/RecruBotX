@@ -21,6 +21,7 @@ from database.job_posting_crud import (
     record_application,
     has_candidate_applied,
     get_candidate_applications,
+    get_candidate_applications_with_dates,
     close_expired_jobs
 )
 
@@ -430,3 +431,15 @@ async def get_applied_jobs(
         raise HTTPException(status_code=503, detail="Database unavailable")
     job_ids = await get_candidate_applications(db, candidate_id)
     return {"appliedJobIds": job_ids}
+
+
+@router.get("/candidate/{candidate_id}/applied-jobs-activity", response_model=dict)
+async def get_applied_jobs_activity(
+    candidate_id: str,
+    db=Depends(get_database)
+):
+    """Get all jobs a candidate applied to, sorted by most-recent first, with timestamps."""
+    if db is None:
+        raise HTTPException(status_code=503, detail="Database unavailable")
+    apps = await get_candidate_applications_with_dates(db, candidate_id)
+    return {"applications": apps}

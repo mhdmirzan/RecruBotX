@@ -265,6 +265,24 @@ async def get_candidate_applications(
     return job_ids
 
 
+async def get_candidate_applications_with_dates(
+    db: AsyncIOMotorDatabase,
+    candidate_id: str
+) -> List[Dict[str, Any]]:
+    """Get all job applications for a candidate with their applied_at timestamps."""
+    apps = []
+    cursor = db.job_applications.find(
+        {"candidate_id": candidate_id},
+        {"job_id": 1, "applied_at": 1}
+    ).sort("applied_at", -1)
+    async for app in cursor:
+        apps.append({
+            "jobId": app["job_id"],
+            "appliedAt": app.get("applied_at", datetime.utcnow()).isoformat() + "Z"
+        })
+    return apps
+
+
 # ==================== Auto-Close Expired Jobs ====================
 
 async def close_expired_jobs(db: AsyncIOMotorDatabase) -> int:

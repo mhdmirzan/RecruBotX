@@ -19,7 +19,6 @@ import {
 } from "lucide-react";
 import API_BASE_URL from "./apiConfig";
 import RecruiterSidebar from "./components/RecruiterSidebar";
-import LoadingSpinner from "./components/LoadingSpinner";
 
 const RecruiterAllScreenings = () => {
     const navigate = useNavigate();
@@ -152,7 +151,10 @@ const RecruiterAllScreenings = () => {
     if (!recruiterData) {
         return (
             <div className="h-screen flex items-center justify-center bg-gray-100">
-                <LoadingSpinner />
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#0a2a5e] mx-auto mb-4"></div>
+                    <p className="text-gray-600">Loading...</p>
+                </div>
             </div>
         );
     }
@@ -174,7 +176,7 @@ const RecruiterAllScreenings = () => {
                             <ArrowLeft className="w-6 h-6 text-gray-600" />
                         </button>
                         <div>
-                            <h2 className="text-3xl font-bold text-[#0a2a5e]">All CV Screenings</h2>
+                            <h2 className="text-3xl font-bold text-[#0a2a5e]">All CV Reviews</h2>
                             <p className="text-gray-500 mt-1">
                                 {screenings.length} screening batch{screenings.length !== 1 ? "es" : ""}
                                 {selectedScreening && ` • Viewing candidates`}
@@ -190,7 +192,7 @@ const RecruiterAllScreenings = () => {
                 <div className="flex-1 overflow-hidden flex flex-col">
                     {isLoading ? (
                         <div className="flex-1 flex items-center justify-center">
-                            <LoadingSpinner inline />
+                            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#0a2a5e]"></div>
                         </div>
                     ) : screenings.length === 0 ? (
                         <div className="flex-1 flex flex-col items-center justify-center text-gray-500">
@@ -201,7 +203,7 @@ const RecruiterAllScreenings = () => {
                                 onClick={() => navigate("/recruiter/cv-screening")}
                                 className="mt-4 px-6 py-3 bg-[#0a2a5e] text-white rounded-xl hover:bg-[#061a3d] transition-all"
                             >
-                                Go to CV Screening
+                                Go to CV Review
                             </button>
                         </div>
                     ) : (
@@ -221,7 +223,7 @@ const RecruiterAllScreenings = () => {
                                                 <div className="flex items-center justify-between">
                                                     <div className="flex-1">
                                                         <div className="flex items-center gap-3 mb-2">
-                                                            <h3 className="text-xl font-bold text-gray-800">CV Screening Batch</h3>
+                                                            <h3 className="text-xl font-bold text-gray-800">CV Review Batch</h3>
                                                             <span className="px-3 py-1 bg-purple-50 text-purple-700 text-xs font-semibold rounded-full">Screening</span>
                                                         </div>
                                                         <p className="text-sm text-gray-600 mb-2">
@@ -252,7 +254,7 @@ const RecruiterAllScreenings = () => {
 
                                                 {applicantsLoading ? (
                                                     <div className="flex items-center justify-center py-12">
-                                                        <LoadingSpinner inline />
+                                                        <Loader2 className="w-8 h-8 text-[#0a2a5e] animate-spin" />
                                                     </div>
                                                 ) : applicants.length === 0 ? (
                                                     <div className="flex flex-col items-center justify-center py-12 text-gray-500">
@@ -322,7 +324,7 @@ const RecruiterAllScreenings = () => {
                                                                         className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-white bg-gradient-to-r from-[#0a2a5e] to-[#0d3b82] hover:from-[#061a3d] hover:to-[#0a2a5e] rounded-lg transition-all shadow-sm disabled:opacity-50"
                                                                     >
                                                                         {downloadingId === applicant.id ? (
-                                                                            <LoadingSpinner size="sm" />
+                                                                            <Loader2 className="w-4 h-4 animate-spin" />
                                                                         ) : (
                                                                             <Download className="w-4 h-4" />
                                                                         )}

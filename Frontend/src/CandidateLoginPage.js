@@ -52,7 +52,6 @@ const CandidateLoginPage = () => {
     setIsLoading(false);
 
     if (result.success) {
-      alert(`Welcome back, ${result.user.firstName}!`);
       navigate("/candidate/dashboard");
     } else {
       setError(result.message);

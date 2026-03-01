@@ -19,7 +19,6 @@ import {
     Clock
 } from "lucide-react";
 import API_BASE_URL from "./apiConfig";
-import LoadingSpinner from "./components/LoadingSpinner";
 
 const JobPosting = () => {
     const navigate = useNavigate();
@@ -251,7 +250,10 @@ const JobPosting = () => {
     if (!recruiterData) {
         return (
             <div className="h-screen flex items-center justify-center bg-gray-100">
-                <LoadingSpinner />
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#0a2a5e] mx-auto mb-4"></div>
+                    <p className="text-gray-600">Loading...</p>
+                </div>
             </div>
         );
     }
@@ -267,7 +269,7 @@ const JobPosting = () => {
                 <nav className="flex flex-col space-y-4 text-gray-700 flex-shrink-0">
                     <NavLink to="/recruiter/dashboard" className={({ isActive }) => `font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 ${isActive ? "bg-[#0a2a5e]/10 text-[#0a2a5e]" : "text-gray-700 hover:bg-[#0a2a5e]/5 hover:text-[#0a2a5e]"}`}><LayoutDashboard className="w-5 h-5" /> Dashboard</NavLink>
                     <NavLink to="/recruiter/job-posting" className={({ isActive }) => `font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 ${isActive ? "bg-[#0a2a5e]/10 text-[#0a2a5e]" : "text-gray-700 hover:bg-[#0a2a5e]/5 hover:text-[#0a2a5e]"}`}><PlusCircle className="w-5 h-5" /> Job Posting</NavLink>
-                    <NavLink to="/recruiter/cv-screening" className={({ isActive }) => `font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 ${isActive ? "bg-[#0a2a5e]/10 text-[#0a2a5e]" : "text-gray-700 hover:bg-[#0a2a5e]/5 hover:text-[#0a2a5e]"}`}><Search className="w-5 h-5" /> CV Screening</NavLink>
+                    <NavLink to="/recruiter/cv-screening" className={({ isActive }) => `font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 ${isActive ? "bg-[#0a2a5e]/10 text-[#0a2a5e]" : "text-gray-700 hover:bg-[#0a2a5e]/5 hover:text-[#0a2a5e]"}`}><Search className="w-5 h-5" /> CV Review</NavLink>
                     <NavLink to="/recruiter/settings" className={({ isActive }) => `font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 ${isActive ? "bg-[#0a2a5e]/10 text-[#0a2a5e]" : "text-gray-700 hover:bg-[#0a2a5e]/5 hover:text-[#0a2a5e]"}`}><Cog className="w-5 h-5" /> Settings</NavLink>
                 </nav>
 
@@ -609,7 +611,7 @@ const JobPosting = () => {
                                 disabled={isLoading}
                                 className="px-8 py-3 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all flex items-center gap-2"
                             >
-                                {isLoading ? <LoadingSpinner size="sm" /> : <Save className="w-5 h-5" />}
+                                {isLoading ? <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div> : <Save className="w-5 h-5" />}
                                 {selectedJobId ? "Update Job" : "Publish Job"}
                             </button>
                         )}

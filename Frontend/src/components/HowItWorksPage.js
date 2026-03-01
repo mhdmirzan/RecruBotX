@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   FileText,
-  Calendar,
   MessageCircle,
   BarChart3,
   ArrowRight,
@@ -33,13 +32,6 @@ const HowItWorksPage = () => {
         "Experience evaluation",
         "Cultural fit analysis",
       ],
-    },
-    {
-      icon: Calendar,
-      title: "Auto Scheduling",
-      description:
-        "Automatic interview scheduling with calendar integration and email communication.",
-      features: ["Calendar sync", "Automated emails", "Time zone handling", "Rescheduling"],
     },
     {
       icon: MessageCircle,
