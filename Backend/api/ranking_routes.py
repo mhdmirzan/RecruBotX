@@ -140,16 +140,38 @@ async def get_candidate_report(
     # Get job posting for JD
     job = await get_job_posting_by_id(db, ranking["job_posting_id"])
     
+    # Calculate actual rank dynamically
+    from database.ranking_crud import get_rankings_by_job
+    all_rankings = await get_rankings_by_job(db, ranking["job_posting_id"])
+    sorted_rankings = sorted(all_rankings, key=lambda x: x.get('score', 0), reverse=True)
+    actual_rank = ranking.get("rank", 999) # Fallback to stored rank
+    for idx, r in enumerate(sorted_rankings):
+        if str(r.get("_id")) == ranking_id:
+            actual_rank = idx + 1
+            break
+
     # Get evaluation report
     evaluation = await db.evaluation_reports.find_one({"candidate_ranking_id": ranking_id})
     
     # Get session_id to link cv properly
     session_id = None
+    email = None
+    phone = None
+    linkedin = None
+    
     candidate_id = ranking.get("candidate_id")
     if candidate_id:
         session_doc = await db.interview_sessions.find_one({"candidate_id": str(candidate_id)})
         if session_doc:
             session_id = session_doc.get("session_id")
+            
+        from bson import ObjectId
+        # Fetch the CV doc to get the details entered before the interview
+        cv_data_doc = await db.interview_cvs.find_one({"_id": ObjectId(str(candidate_id))})
+        if cv_data_doc:
+            email = cv_data_doc.get("email_address")
+            phone = cv_data_doc.get("phone_number")
+            linkedin = cv_data_doc.get("linkedin_profile")
             
     # Extract strengths and weaknesses from evaluation details
     eval_details = ranking.get("evaluation_details", {})
@@ -198,8 +220,8 @@ async def get_candidate_report(
         "cvScore": f"{ranking.get('cv_score', 0):.0f}/100",
         "interviewScore": f"{ranking.get('interview_score', 0):.0f}/100",
         "facialRecognitionScore": f"{ranking.get('facial_recognition_score', 0):.0f}/100",
-        "rank": ranking["rank"],
-        "completion": f"{ranking['completion']}%",
+        "rank": actual_rank,
+        "completion": f"{ranking.get('completion', 100)}%",
         "interviewStatus": ranking["interview_status"],
         "date": ranking["created_at"].strftime("%d-%m-%Y"),
         "skills": skills,
@@ -210,7 +232,11 @@ async def get_candidate_report(
         "detailedAnalysis": evaluation.get("summary") or evaluation.get("detailed_analysis") if evaluation else None,
         "recommendations": evaluation.get("verdict") or evaluation.get("recommendations") if evaluation else None,
         "evaluationId": str(evaluation["_id"]) if evaluation else None,
-        "sessionId": session_id
+        "sessionId": session_id,
+        "manualEndDetected": ranking.get("manual_end_detected", False) or ranking.get("interview_status") == "Manually Ended",
+        "email": email,
+        "phone": phone,
+        "linkedin": linkedin
     }
 
 
