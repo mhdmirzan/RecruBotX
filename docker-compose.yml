@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  # ─── FastAPI Backend ────────────────────────────────────────────────────────
+  backend:
+    build:
+      context: ./Backend
+      dockerfile: Dockerfile
+    container_name: recrubotx-backend
+    restart: unless-stopped
+    expose:
+      - "8000"
+    environment:
+      - MONGODB_URL=${MONGODB_URL}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - DEEPGRAM_API_KEY=${DEEPGRAM_API_KEY}
+      - BREVO_API_KEY=${BREVO_API_KEY}
+      - EMAIL_FROM_EMAIL=${EMAIL_FROM_EMAIL}
+      - EMAIL_FROM_NAME=${EMAIL_FROM_NAME:-RecruBotX}
+      - EMAIL_PROVIDER=${EMAIL_PROVIDER:-brevo}
+      - RESEND_API_KEY=${RESEND_API_KEY:-}
+      - RESEND_FROM=${RESEND_FROM:-RecruBotX <onboarding@resend.dev>}
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-http://localhost}
+      - PORT=8000
+      - APP_ENV=production
+      - MONGODB_STRICT_STARTUP=${MONGODB_STRICT_STARTUP:-true}
+    volumes:
+      - uploads_data:/app/uploads
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # ─── React Frontend (nginx) ─────────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./Frontend
+      dockerfile: Dockerfile
+    container_name: recrubotx-frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - app-network
+
+volumes:
+  uploads_data:
+
+networks:
+  app-network:
+    driver: bridge
