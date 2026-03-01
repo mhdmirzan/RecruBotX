@@ -109,10 +109,11 @@ async def start_interview(
             "candidate_name": candidate_name,
             "email_address": email_address,
             "phone_number": phone_number,
-            "linkedin": linkedin_profile,
+            "linkedin_profile": linkedin_profile,
+            "cv_file_name": cv_file.filename,
             "cv_file_path": str(file_path),
             "job_id": job_id,
-            "cv_text": cv_text[:2000] 
+            "cv_text": cv_text[:2000]
         }
         
         # We reuse the create_interview_cv crud function for the candidate data

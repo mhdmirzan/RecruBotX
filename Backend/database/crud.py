@@ -387,6 +387,7 @@ async def create_interview_cv(
         "candidate_name": cv_data.get("candidate_name"),
         "phone_number": cv_data.get("phone_number"),
         "email_address": cv_data.get("email_address"),
+        "linkedin_profile": cv_data.get("linkedin_profile"),
         "education": cv_data.get("education", []),
         "projects": cv_data.get("projects", []),
         "skills": cv_data.get("skills", []),

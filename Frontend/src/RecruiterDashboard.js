@@ -53,7 +53,9 @@ const RecruiterDashboard = () => {
         activeJobs: data.length,
         totalCandidates: data.reduce((sum, job) => sum + (job.cvFilesCount || 0), 0),
         aiInterviews: data.filter(job => (job.cvFilesCount || 0) > 0).length,
-        cvsScreened: data.reduce((sum, job) => sum + (job.cvFilesCount || 0), 0)
+        cvsScreened: data
+          .filter(job => job.status === "Screening")
+          .reduce((sum, job) => sum + (job.cvFilesCount || 0), 0)
       });
     } catch (error) {
       console.error("Error fetching job postings:", error);

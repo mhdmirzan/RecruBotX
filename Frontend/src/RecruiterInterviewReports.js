@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
     ArrowLeft,
+    Users,
     FileText,
     Download,
     Video
@@ -63,10 +64,8 @@ const RecruiterInterviewReports = () => {
 
     return (
         <div className="h-screen w-screen flex bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden fixed inset-0">
-            {/* Sidebar */}
             <RecruiterSidebar />
 
-            {/* Main Content */}
             <main className="flex-1 h-screen flex flex-col overflow-hidden py-8 px-8">
                 {/* Header */}
                 <div className="mb-6 flex items-center gap-4 flex-shrink-0">

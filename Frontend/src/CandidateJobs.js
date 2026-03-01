@@ -40,7 +40,9 @@ const CandidateJobs = () => {
             const response = await fetch(`${API_BASE_URL}/jobs/all`);
             if (response.ok) {
                 const data = await response.json();
-                const transformed = data.map(job => ({
+                // Filter out CV Screening postings — only show real job postings
+                const jobsOnly = data.filter(job => job.status !== "Screening");
+                const transformed = jobsOnly.map(job => ({
                     id: job._id || job.id,
                     company: job.companyName || job.interviewField + " Company",
                     title: job.interviewField,
