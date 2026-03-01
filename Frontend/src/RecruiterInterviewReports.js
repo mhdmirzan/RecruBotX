@@ -1,19 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate, NavLink } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import {
-    LayoutDashboard,
-    LogOut,
-    PlusCircle,
-    Search,
-    Settings,
     ArrowLeft,
     FileText,
-    Video,
-    CheckCircle,
-    XCircle,
     Download,
-    Play,
-    Briefcase
+    Video
 } from "lucide-react";
 import API_BASE_URL from "./apiConfig";
 import RecruiterSidebar from "./components/RecruiterSidebar";
@@ -52,7 +43,7 @@ const RecruiterInterviewReports = () => {
     const fetchReports = async () => {
         try {
             setIsLoading(true);
-            const response = await fetch(`${API_BASE_URL}/voice-interview/reports/${jobId}`);
+            const response = await fetch(`${API_BASE_URL}/interview/reports/${jobId}`);
             if (response.ok) {
                 const data = await response.json();
                 setReports(data.reports || []);
@@ -64,9 +55,8 @@ const RecruiterInterviewReports = () => {
         }
     };
 
-    const handleLogout = () => {
-        localStorage.removeItem("recruiterUser");
-        navigate("/recruiter/signin");
+    const handleDownloadCV = (sessionId) => {
+        window.open(`${API_BASE_URL}/interview/cv-file/${sessionId}`, "_blank");
     };
 
     if (!recruiterData) return null;
@@ -79,26 +69,24 @@ const RecruiterInterviewReports = () => {
             {/* Main Content */}
             <main className="flex-1 h-screen flex flex-col overflow-hidden py-8 px-8">
                 {/* Header */}
-                <div className="mb-6 flex items-center justify-between flex-shrink-0">
-                    <div className="flex items-center gap-4">
-                        <button
-                            onClick={() => navigate("/recruiter/dashboard")}
-                            className="p-2 hover:bg-gray-200 rounded-full transition-colors"
-                        >
-                            <ArrowLeft className="w-6 h-6 text-gray-600" />
-                        </button>
-                        <div>
-                            <h2 className="text-2xl font-bold text-gray-800">
-                                Interview Reports
-                            </h2>
-                            <p className="text-gray-500">
-                                {jobDetails ? `${jobDetails.interviewField} (${jobDetails.positionLevel})` : "Loading job details..."}
-                            </p>
-                        </div>
+                <div className="mb-6 flex items-center gap-4 flex-shrink-0">
+                    <button
+                        onClick={() => navigate("/recruiter/dashboard")}
+                        className="p-2 hover:bg-gray-200 rounded-full transition-colors"
+                    >
+                        <ArrowLeft className="w-6 h-6 text-gray-600" />
+                    </button>
+                    <div>
+                        <h2 className="text-2xl font-bold text-gray-800">Interview Reports</h2>
+                        <p className="text-gray-500 text-sm">
+                            {jobDetails
+                                ? `${jobDetails.interviewField} (${jobDetails.positionLevel})`
+                                : "Loading job details..."}
+                        </p>
                     </div>
                 </div>
 
-                {/* Content */}
+                {/* Table Card */}
                 <div className="bg-white rounded-2xl shadow-lg flex-1 overflow-hidden flex flex-col">
                     {isLoading ? (
                         <div className="flex-1 flex items-center justify-center">
@@ -107,57 +95,80 @@ const RecruiterInterviewReports = () => {
                     ) : reports.length === 0 ? (
                         <div className="flex-1 flex flex-col items-center justify-center text-gray-500">
                             <Video className="w-16 h-16 mb-4 text-gray-300" />
-                            <p className="text-lg font-medium">No completed interviews yet</p>
+                            <p className="text-lg font-medium">No interviews yet</p>
                             <p className="text-sm">Reports will appear here once candidates complete their AI interviews.</p>
                         </div>
                     ) : (
-                        <div className="flex-1 overflow-y-auto p-6">
-                            <div className="grid gap-4">
-                                {reports.map((report) => (
-                                    <div
-                                        key={report._id}
-                                        className="border border-gray-200 rounded-xl p-6 hover:shadow-md transition-shadow flex items-center justify-between"
-                                    >
-                                        <div className="flex items-center gap-4">
-                                            <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg ${report.avg_score >= 80 ? 'bg-green-500' :
-                                                report.avg_score >= 60 ? 'bg-yellow-500' : 'bg-red-500'
-                                                }`}>
-                                                {Math.round(report.avg_score)}%
-                                            </div>
-                                            <div>
-                                                <h3 className="font-bold text-gray-800 text-lg">{report.candidate_name}</h3>
-                                                <div className="flex items-center gap-3 text-sm text-gray-500">
-                                                    <span className="flex items-center gap-1">
-                                                        <FileText className="w-4 h-4" />
-                                                        {report.email_address}
-                                                    </span>
-                                                    <span>•</span>
-                                                    <span>{new Date(report.completed_at).toLocaleDateString()}</span>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div className="flex items-center gap-6">
-                                            <div className="text-right">
-                                                <p className="text-sm text-gray-500 uppercase font-semibold">Performance</p>
-                                                <p className={`font-bold ${report.avg_score >= 80 ? 'text-green-600' :
-                                                    report.avg_score >= 60 ? 'text-yellow-600' : 'text-red-600'
+                        <div className="flex-1 overflow-y-auto">
+                            <table className="w-full border-collapse">
+                                <thead>
+                                    <tr className="bg-[#0a2a5e] text-white text-sm">
+                                        <th className="py-4 px-5 text-left font-semibold w-10">#</th>
+                                        <th className="py-4 px-5 text-left font-semibold">Candidate Name</th>
+                                        <th className="py-4 px-5 text-left font-semibold">Email Address</th>
+                                        <th className="py-4 px-5 text-left font-semibold">Phone Number</th>
+                                        <th className="py-4 px-5 text-left font-semibold">Date Applied</th>
+                                        <th className="py-4 px-5 text-left font-semibold">Avg Score</th>
+                                        <th className="py-4 px-5 text-left font-semibold">CV</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {reports.map((report, index) => (
+                                        <tr
+                                            key={report._id}
+                                            className="border-b border-gray-100 hover:bg-gray-50 transition-colors text-sm"
+                                        >
+                                            <td className="py-4 px-5 text-gray-500">{index + 1}</td>
+                                            <td className="py-4 px-5 font-semibold text-gray-800">
+                                                {report.candidate_name || "—"}
+                                            </td>
+                                            <td className="py-4 px-5 text-gray-600">
+                                                {report.email_address || <span className="text-gray-400">—</span>}
+                                            </td>
+                                            <td className="py-4 px-5 text-gray-600">
+                                                {report.phone_number || <span className="text-gray-400">—</span>}
+                                            </td>
+                                            <td className="py-4 px-5 text-gray-600">{report.date_applied}</td>
+                                            <td className="py-4 px-5">
+                                                {report.avg_score !== null && report.avg_score !== undefined ? (
+                                                    <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold border ${
+                                                        report.avg_score >= 80
+                                                            ? "text-green-600 border-green-400 bg-green-50"
+                                                            : report.avg_score >= 60
+                                                            ? "text-yellow-600 border-yellow-400 bg-yellow-50"
+                                                            : "text-red-600 border-red-400 bg-red-50"
                                                     }`}>
-                                                    {report.performance_level}
-                                                </p>
-                                            </div>
+                                                        {Math.round(report.avg_score)}/100
+                                                    </span>
+                                                ) : (
+                                                    <span className="text-orange-500 font-medium text-xs">In Progress</span>
+                                                )}
+                                            </td>
+                                            <td className="py-4 px-5">
+                                                {report.has_cv ? (
+                                                    <button
+                                                        onClick={() => handleDownloadCV(report.session_id)}
+                                                        className="flex items-center gap-1 text-[#0a2a5e] hover:text-[#061a3d] font-medium transition-colors"
+                                                        title="Download CV"
+                                                    >
+                                                        <Download className="w-4 h-4" />
+                                                        <span className="text-xs">Download</span>
+                                                    </button>
+                                                ) : (
+                                                    <span className="text-gray-400 text-xs">No CV</span>
+                                                )}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
 
-                                            <button
-                                                onClick={() => navigate(`/recruiter/interview-report/${report._id}`)}
-                                                className="flex items-center gap-2 bg-[#0a2a5e] text-white px-4 py-2 rounded-lg hover:bg-[#061a3d] transition-colors"
-                                            >
-                                                View Report
-                                                <ArrowLeft className="w-4 h-4 rotate-180" />
-                                            </button>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
+                    {/* Footer */}
+                    {!isLoading && reports.length > 0 && (
+                        <div className="px-5 py-3 border-t border-gray-100 text-sm text-gray-500">
+                            {reports.length} applicant{reports.length !== 1 ? "s" : ""} found
                         </div>
                     )}
                 </div>
