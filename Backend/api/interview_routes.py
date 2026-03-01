@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException, UploadFile, File, Form, Depends
+from fastapi.responses import FileResponse
 from typing import Optional
 import shutil
 import uuid
@@ -253,82 +254,99 @@ async def generate_report(session_id: str, db=Depends(get_database)):
     }
 
 
-@router.get("/sessions/{job_id}")
-async def get_interview_sessions_by_job(
-    job_id: str,
-    db=Depends(get_database)
-):
+@router.get("/reports/{job_id}")
+async def get_interview_reports(job_id: str, db=Depends(get_database)):
     """
-    Get all interview sessions for a specific job, joined with interview_cvs data.
-    Returns candidate info + avg_score from interview_sessions.
+    Get all interview sessions for a specific job, including candidate info and scores.
     """
-    sessions = []
-    cursor = db.interview_sessions.find({"job_id": job_id}).sort("created_at", -1)
+    try:
+        sessions = []
+        cursor = db.interview_sessions.find({"job_id": job_id}).sort("created_at", -1)
+        async for session in cursor:
+            session_id = session.get("session_id")
 
-    counter = 1
-    async for session in cursor:
-        session_id = session.get("session_id", "")
+            # Fetch candidate data from interview_cvs via candidate_id
+            candidate_id = session.get("candidate_id")
+            cv_doc = None
+            if candidate_id:
+                from bson import ObjectId
+                try:
+                    cv_doc = await db.interview_cvs.find_one({"_id": ObjectId(candidate_id)})
+                except Exception:
+                    cv_doc = await db.interview_cvs.find_one({"session_id": session_id})
+            if not cv_doc:
+                cv_doc = await db.interview_cvs.find_one({"session_id": session_id})
 
-        # Fetch candidate info from interview_cvs (fields stored at top level)
-        cv_doc = await db.interview_cvs.find_one({"session_id": session_id})
+            candidate_name = (
+                cv_doc.get("candidate_name") if cv_doc else None
+            ) or session.get("context", {}).get("candidate_name", "Unknown Candidate")
 
-        candidate_name = "Unknown Candidate"
-        email = ""
-        phone = ""
-        linkedin = ""
-        cv_file_path = ""
-        cv_file_name = ""
-        date_applied = session.get("created_at")
+            email_address = cv_doc.get("email_address", "") if cv_doc else ""
+            phone_number = cv_doc.get("phone_number", "") if cv_doc else ""
+            cv_file_path = cv_doc.get("cv_file_path") if cv_doc else None
 
-        if cv_doc:
-            candidate_name = cv_doc.get("candidate_name") or candidate_name
-            email = cv_doc.get("email_address", "")
-            phone = cv_doc.get("phone_number", "")
-            linkedin = cv_doc.get("linkedin_profile", "")
-            cv_file_path = cv_doc.get("cv_file_path", "")
-            cv_file_name = cv_doc.get("cv_file_name", "")
-            date_applied = cv_doc.get("created_at") or date_applied
+            # Score / status
+            raw_score = session.get("avg_score")
+            status = session.get("status", "In Progress")
+            if raw_score is not None:
+                avg_score = raw_score
+            else:
+                avg_score = None
 
-        avg_score = session.get("avg_score", None)
+            sessions.append({
+                "_id": str(session["_id"]),
+                "session_id": session_id,
+                "candidate_id": session.get("candidate_id", ""),
+                "candidate_name": candidate_name,
+                "email_address": email_address,
+                "phone_number": phone_number,
+                "date_applied": session.get("created_at", datetime.utcnow()).strftime("%d %b %Y"),
+                "avg_score": avg_score,
+                "status": status,
+                "has_cv": cv_file_path is not None and Path(cv_file_path).exists(),
+            })
 
-        sessions.append({
-            "_id": str(session["_id"]),
-            "sessionId": session_id,
-            "no": counter,
-            "jobId": session.get("job_id", job_id),
-            "candidateName": candidate_name,
-            "emailAddress": email,
-            "phoneNumber": phone,
-            "linkedinProfile": linkedin,
-            "cvFilePath": cv_file_path,
-            "cvFileName": cv_file_name,
-            "avgScore": avg_score,
-            "status": session.get("status", "In Progress"),
-            "dateApplied": date_applied.isoformat() if date_applied else None,
-        })
-        counter += 1
+        return {"reports": sessions, "total": len(sessions)}
 
-    return {"reports": sessions, "total": len(sessions)}
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/cv-file/{session_id}")
-async def serve_interview_cv(session_id: str, db=Depends(get_database)):
-    """Serve the candidate's CV PDF file for a given session."""
-    from fastapi.responses import FileResponse
-    import os
-
-    cv_doc = await db.interview_cvs.find_one({"session_id": session_id})
+async def download_cv_file(session_id: str, db=Depends(get_database)):
+    """
+    Download the CV file for a given interview session.
+    Resolves the correct interview_cvs record via interview_sessions.candidate_id.
+    """
+    cv_doc = None
+    # First try resolving via interview_sessions.candidate_id
+    sess_doc = await db.interview_sessions.find_one({"session_id": session_id})
+    candidate_id = sess_doc.get("candidate_id") if sess_doc else None
+    if candidate_id:
+        from bson import ObjectId
+        try:
+            cv_doc = await db.interview_cvs.find_one({"_id": ObjectId(candidate_id)})
+        except Exception:
+            pass
+    # Fallback: direct session_id lookup (legacy data)
     if not cv_doc:
-        raise HTTPException(status_code=404, detail="CV record not found")
+        cv_doc = await db.interview_cvs.find_one({"session_id": session_id})
 
-    file_path = cv_doc.get("cv_file_path", "")
-    if not file_path or not os.path.exists(file_path):
+    if not cv_doc:
+        raise HTTPException(status_code=404, detail="Candidate record not found")
+
+    cv_file_path = cv_doc.get("cv_file_path")
+    if not cv_file_path or not Path(cv_file_path).exists():
         raise HTTPException(status_code=404, detail="CV file not found on server")
 
-    file_name = cv_doc.get("cv_file_name") or os.path.basename(file_path)
+    candidate_name = cv_doc.get("candidate_name", "candidate")
+    safe_name = "".join(c for c in candidate_name if c.isalnum() or c in (" ", "_", "-")).strip()
+    download_name = f"{safe_name}_CV.pdf"
+
     return FileResponse(
-        path=file_path,
+        path=cv_file_path,
         media_type="application/pdf",
-        filename=file_name,
-        headers={"Content-Disposition": f'inline; filename="{file_name}"'}
+        filename=download_name
     )

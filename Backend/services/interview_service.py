@@ -222,18 +222,32 @@ class InterviewService:
         )
         
         # 1. Fetch Candidate Data mapped during start_interview
-        cv_data_doc = await self.db.interview_cvs.find_one({"session_id": session_id})
-        
+        #    interview_sessions.candidate_id links to interview_cvs._id
+        session_doc = await self.db.interview_sessions.find_one({"session_id": session_id})
+        candidate_id = session_doc.get("candidate_id") if session_doc else None
+        cv_data_doc = None
+        if candidate_id:
+            from bson import ObjectId as _ObjId
+            try:
+                cv_data_doc = await self.db.interview_cvs.find_one({"_id": _ObjId(candidate_id)})
+            except Exception:
+                # Fallback: try session_id (legacy data)
+                cv_data_doc = await self.db.interview_cvs.find_one({"session_id": session_id})
+        if not cv_data_doc:
+            # Last-resort fallback for legacy records
+            cv_data_doc = await self.db.interview_cvs.find_one({"session_id": session_id})
+
         if cv_data_doc:
-            # Also update legacy collection just in case
+            # Update using the document's actual _id (not session_id, which is a different UUID)
             await self.db.interview_cvs.update_one(
-                {"session_id": session_id},
+                {"_id": cv_data_doc["_id"]},
                 {"$set": evaluation}
             )
             
-            job_id = cv_data_doc.get("cv_data", {}).get("job_id")
-            candidate_name = cv_data_doc.get("cv_data", {}).get("candidate_name", "Unknown Candidate")
-            email = cv_data_doc.get("cv_data", {}).get("email_address", "")
+            # Data is stored at the top level by create_interview_cv (not nested in cv_data)
+            job_id = cv_data_doc.get("job_id")
+            candidate_name = cv_data_doc.get("candidate_name", "Unknown Candidate")
+            email = cv_data_doc.get("email_address", "")
             
             # 2. Fetch Job to get Recruiter ID
             from bson import ObjectId
@@ -258,7 +272,7 @@ class InterviewService:
                 facial_recognition_score=0.0,
                 completion=100,
                 interview_status="Completed",
-                cv_data=cv_data_doc.get("cv_data", {}),
+                cv_data=cv_data_doc,
                 evaluation_details=evaluation
             )
             
