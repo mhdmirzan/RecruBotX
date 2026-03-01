@@ -107,10 +107,8 @@ const RecruiterInterviewReports = () => {
                                         <th className="py-4 px-5 text-left font-semibold">Date Applied</th>
                                         <th className="py-4 px-5 text-left font-semibold">Avg Score</th>
                                         <th className="py-4 px-5 text-left font-semibold">Recommendation</th>
-                                        <th className="py-4 px-5 text-left font-semibold">Interview Report</th>
-                                        <th className="py-4 px-5 text-left font-semibold">Date Applied</th>
-                                        <th className="py-4 px-5 text-left font-semibold">Avg Score</th>
-                                        <th className="py-4 px-5 text-left font-semibold">CV</th>
+                                        <th className="py-4 px-5 text-center font-semibold">Interview Report</th>
+                                        <th className="py-4 px-5 text-center font-semibold">CV</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -127,10 +125,10 @@ const RecruiterInterviewReports = () => {
                                             <td className="py-4 px-5">
                                                 {report.avg_score !== null && report.avg_score !== undefined ? (
                                                     <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold border ${report.avg_score >= 80
-                                                            ? "text-green-600 border-green-400 bg-green-50"
-                                                            : report.avg_score >= 60
-                                                                ? "text-yellow-600 border-yellow-400 bg-yellow-50"
-                                                                : "text-red-600 border-red-400 bg-red-50"
+                                                        ? "text-green-600 border-green-400 bg-green-50"
+                                                        : report.avg_score >= 60
+                                                            ? "text-yellow-600 border-yellow-400 bg-yellow-50"
+                                                            : "text-red-600 border-red-400 bg-red-50"
                                                         }`}>
                                                         {Math.round(report.avg_score)}/100
                                                     </span>
@@ -141,8 +139,8 @@ const RecruiterInterviewReports = () => {
                                             <td className="py-4 px-5">
                                                 {report.avg_score !== null && report.avg_score !== undefined ? (
                                                     <span className={`inline-block px-3 py-1 text-xs font-semibold rounded-md ${report.avg_score >= 80 ? "bg-green-100 text-green-700" :
-                                                            report.avg_score >= 60 ? "bg-blue-100 text-blue-700" :
-                                                                "bg-red-100 text-red-700"
+                                                        report.avg_score >= 60 ? "bg-blue-100 text-blue-700" :
+                                                            "bg-red-100 text-red-700"
                                                         }`}>
                                                         {report.avg_score >= 80 ? "Strongly Recommended" :
                                                             report.avg_score >= 60 ? "Recommended" :
@@ -152,11 +150,11 @@ const RecruiterInterviewReports = () => {
                                                     <span className="text-gray-400 text-xs">—</span>
                                                 )}
                                             </td>
-                                            <td className="py-4 px-5">
+                                            <td className="py-4 px-5 text-center">
                                                 {report.ranking_id ? (
                                                     <button
                                                         onClick={() => navigate(`/recruiter/report/${report.ranking_id}`)}
-                                                        className="flex items-center gap-1 text-[#0a2a5e] hover:text-[#061a3d] font-medium transition-colors"
+                                                        className="inline-flex items-center gap-1.5 bg-blue-50 text-[#0a2a5e] hover:bg-blue-100 hover:text-[#061a3d] px-3 py-1.5 rounded-lg border border-blue-100 font-medium transition-colors"
                                                         title="View Report"
                                                     >
                                                         <FileText className="w-4 h-4" />
@@ -166,18 +164,18 @@ const RecruiterInterviewReports = () => {
                                                     <span className="text-gray-400 text-xs">Processing...</span>
                                                 )}
                                             </td>
-                                            <td className="py-4 px-5">
+                                            <td className="py-4 px-5 text-center">
                                                 {report.has_cv ? (
                                                     <button
                                                         onClick={() => handleDownloadCV(report.session_id)}
-                                                        className="flex items-center gap-1 text-[#0a2a5e] hover:text-[#061a3d] font-medium transition-colors"
+                                                        className="inline-flex items-center gap-1.5 text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg transition-colors font-medium border border-slate-200"
                                                         title="Download CV"
                                                     >
                                                         <Download className="w-4 h-4" />
-                                                        <span className="text-xs">Download</span>
+                                                        <span className="text-xs">CV</span>
                                                     </button>
                                                 ) : (
-                                                    <span className="text-gray-400 text-xs">No CV</span>
+                                                    <span className="text-gray-400 text-xs">—</span>
                                                 )}
                                             </td>
                                         </tr>
