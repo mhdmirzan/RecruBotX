@@ -143,13 +143,25 @@ async def get_candidate_report(
     # Get evaluation report
     evaluation = await db.evaluation_reports.find_one({"candidate_ranking_id": ranking_id})
     
-    # Get session_id to link cv properly
+    # Get session_id to link cv properly and pull personal details
     session_id = None
+    email = None
+    phone = None
+    linkedin = None
+    
     candidate_id = ranking.get("candidate_id")
     if candidate_id:
         session_doc = await db.interview_sessions.find_one({"candidate_id": str(candidate_id)})
         if session_doc:
             session_id = session_doc.get("session_id")
+            
+        from bson import ObjectId
+        # Fetch the CV doc to get the details entered before the interview
+        cv_data_doc = await db.interview_cvs.find_one({"_id": ObjectId(str(candidate_id))})
+        if cv_data_doc:
+            email = cv_data_doc.get("email_address")
+            phone = cv_data_doc.get("phone_number")
+            linkedin = cv_data_doc.get("linkedin_profile")
             
     # Extract strengths and weaknesses from evaluation details
     eval_details = ranking.get("evaluation_details", {})
@@ -210,7 +222,11 @@ async def get_candidate_report(
         "detailedAnalysis": evaluation.get("summary") or evaluation.get("detailed_analysis") if evaluation else None,
         "recommendations": evaluation.get("verdict") or evaluation.get("recommendations") if evaluation else None,
         "evaluationId": str(evaluation["_id"]) if evaluation else None,
-        "sessionId": session_id
+        "sessionId": session_id,
+        "manualEndDetected": ranking.get("manual_end_detected", False) or ranking.get("interview_status") == "Manually Ended",
+        "email": email,
+        "phone": phone,
+        "linkedin": linkedin
     }
 
 
