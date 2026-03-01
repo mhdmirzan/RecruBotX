@@ -28,6 +28,9 @@ Frontend/.env.production.local
 Backend/.env
 Backend/venv/
 Backend/env/
+
+# Root-level secrets (docker-compose runtime env)
+.env
 Frontend/src/Advertisement.js
 Backend/api/advertisement_routes.py
 
