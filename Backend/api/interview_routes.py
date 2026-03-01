@@ -342,6 +342,16 @@ async def get_interview_reports(job_id: str, db=Depends(get_database)):
             else:
                 avg_score = None
 
+            # Fetch ranking_id for Evaluation view reports connection
+            ranking_id = None
+            if candidate_id:
+                ranking_doc = await db.candidate_rankings.find_one({
+                    "candidate_id": str(candidate_id),
+                    "job_posting_id": job_id
+                })
+                if ranking_doc:
+                    ranking_id = str(ranking_doc["_id"])
+
             sessions.append({
                 "_id": str(session["_id"]),
                 "session_id": session_id,
@@ -352,6 +362,7 @@ async def get_interview_reports(job_id: str, db=Depends(get_database)):
                 "date_applied": session.get("created_at", datetime.utcnow()).strftime("%d %b %Y"),
                 "avg_score": avg_score,
                 "status": status,
+                "ranking_id": ranking_id,
                 "has_cv": cv_file_path is not None and Path(cv_file_path).exists(),
             })
 
