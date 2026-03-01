@@ -148,26 +148,30 @@ async def get_candidate_report(
     strengths = []
     weaknesses = []
     
-    # Parse evaluation details for strengths/weaknesses
-    if isinstance(eval_details, dict):
-        # Try to extract from common fields
-        if "strengths" in eval_details:
-            strengths = eval_details["strengths"] if isinstance(eval_details["strengths"], list) else [eval_details["strengths"]]
-        if "weaknesses" in eval_details:
-            weaknesses = eval_details["weaknesses"] if isinstance(eval_details["weaknesses"], list) else [eval_details["weaknesses"]]
+    # Parse evaluation details for strengths/weaknesses replacing old eval_details
+    if evaluation:
+        if "strengths" in evaluation:
+            strengths = evaluation["strengths"] if isinstance(evaluation["strengths"], list) else [evaluation["strengths"]]
+        if "weaknesses" in evaluation:
+            weaknesses = evaluation["weaknesses"] if isinstance(evaluation["weaknesses"], list) else [evaluation["weaknesses"]]
         
-        # Fallback: generate based on scores
-        if not strengths:
-            strengths = [
-                "Strong technical background",
-                "Good communication skills",
-                "Relevant experience in the field"
-            ]
-        if not weaknesses:
-            weaknesses = [
-                "Could improve problem-solving approach",
-                "Limited experience with some required technologies"
-            ]
+    # Fallback to old format if not in new format
+    if not strengths and isinstance(eval_details, dict):
+        strengths = eval_details.get("strengths", [])
+        if not isinstance(strengths, list): strengths = [strengths]
+    if not weaknesses and isinstance(eval_details, dict):
+        weaknesses = eval_details.get("weaknesses", [])
+        if not isinstance(weaknesses, list): weaknesses = [weaknesses]
+        
+    # Final fallback: generate based on scores
+    if not strengths:
+        strengths = [
+            "No specific strengths recorded"
+        ]
+    if not weaknesses:
+        weaknesses = [
+            "No specific areas of improvement recorded"
+        ]
     
     # Build skills array
     skills = []
@@ -195,8 +199,8 @@ async def get_candidate_report(
         "weaknesses": weaknesses,
         "cvSummary": ranking.get("cv_data", {}).get("text", "CV summary not available"),
         "jobDescription": job.get("job_description", "No job description provided"),
-        "detailedAnalysis": evaluation.get("detailed_analysis") if evaluation else None,
-        "recommendations": evaluation.get("recommendations") if evaluation else None,
+        "detailedAnalysis": evaluation.get("summary") or evaluation.get("detailed_analysis") if evaluation else None,
+        "recommendations": evaluation.get("verdict") or evaluation.get("recommendations") if evaluation else None,
         "evaluationId": str(evaluation["_id"]) if evaluation else None
     }
 
