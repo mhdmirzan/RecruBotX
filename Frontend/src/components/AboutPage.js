@@ -76,8 +76,8 @@ const AboutPage = () => {
         },
         {
             name: "Ahamed Ayyash",
-            role: "Computer Vision Engineer",
-            description: "Developing advanced facial expression analysis and emotion detection systems for comprehensive candidate evaluation.",
+            role: "AI & Computer Vision Engineer",
+            description: "Developed an AI-powered intelligent interviewer system integrating advanced facial expression analysis and real-time emotion detection to enable comprehensive, data-driven candidate evaluation.",
             color: "from-emerald-500 to-teal-600",
             image: ayyashImg
         },
