@@ -357,7 +357,6 @@ class InterviewService:
                     "confidence_score": confidence_score,
                     "completion": 100,
                     "interview_status": "Completed" if status != "Manually Ended" else status,
-                    "manual_end_detected": True if status == "Manually Ended" else False,
                     "evaluation_details.interview_summary": feedback_report
                 }}
             )

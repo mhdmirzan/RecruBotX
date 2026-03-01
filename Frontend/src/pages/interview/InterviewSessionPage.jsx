@@ -292,16 +292,10 @@ function App() {
   const handleEndInterview = () => {
     if (window.confirm("Are you sure you want to end the interview?")) {
       if (ws.current?.readyState === WebSocket.OPEN) {
-        ws.current.send(JSON.stringify({ type: 'end_interview' }));
-        setTimeout(() => {
-          if (ws.current) ws.current.close();
-          setSessionActive(false);
-          window.location.reload();
-        }, 500);
-      } else {
-        setSessionActive(false);
-        window.location.reload();
+        ws.current.close();
       }
+      setSessionActive(false);
+      window.location.reload();
     }
   };
 
