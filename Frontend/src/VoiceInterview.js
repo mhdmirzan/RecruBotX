@@ -1,27 +1,25 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import {
-  Mic, MicOff, Send, CheckCircle, XCircle, Volume2, Loader,
-  Sparkles, Play, Clock, Target, Upload, FileText
+import { NavLink, useNavigate } from "react-router-dom";
+import { 
+  Mic, MicOff, Send, CheckCircle, XCircle, Volume2, Loader, 
+  LogOut, LayoutDashboard, Cog, Sparkles, Play, RotateCcw,
+  Clock, Target, Award, TrendingUp, Upload, FileText
 } from "lucide-react";
-import { getCurrentUser } from "./utils/userDatabase";
-import CandidateSidebar from "./components/CandidateSidebar";
-import API_BASE_URL from "./apiConfig";
+import { getCurrentUser, logoutUser } from "./utils/userDatabase";
 
 const VoiceInterview = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const [user, setUser] = useState(null);
   const [sessionId, setSessionId] = useState(null);
   const [isSetupComplete, setIsSetupComplete] = useState(false);
-
+  
   // Setup state
   const [interviewField, setInterviewField] = useState("");
   const [positionLevel, setPositionLevel] = useState("");
-  const [numQuestions] = useState(5);
+  const [numQuestions, setNumQuestions] = useState(5);
   const [availableFields, setAvailableFields] = useState([]);
   const [availableLevels, setAvailableLevels] = useState([]);
-
+  
   // Candidate Information
   const [candidateName, setCandidateName] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
@@ -31,7 +29,7 @@ const VoiceInterview = () => {
   const [skills, setSkills] = useState("");
   const [experience, setExperience] = useState("");
   const [cvFile, setCvFile] = useState(null);
-
+  
   // Interview state
   const [currentQuestion, setCurrentQuestion] = useState("");
   const [currentQuestionNum, setCurrentQuestionNum] = useState(0);
@@ -43,14 +41,14 @@ const VoiceInterview = () => {
   const [feedback, setFeedback] = useState("");
   const [currentScore, setCurrentScore] = useState(null);
   const [isComplete, setIsComplete] = useState(false);
-
+  
   // Final report
   const [reportData, setReportData] = useState(null);
-
+  
   // Audio visualization
   const [audioLevel, setAudioLevel] = useState(0);
   const animationRef = useRef(null);
-
+  
   // Audio recording
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
@@ -61,42 +59,25 @@ const VoiceInterview = () => {
   const recordingTimerRef = useRef(null);
   const lastSoundTimeRef = useRef(Date.now());
 
-  // Handle Context-Aware Session Init
-  useEffect(() => {
-    if (location.state && location.state.sessionId) {
-      console.log("Initializing from State:", location.state);
-      setSessionId(location.state.sessionId);
-      setCandidateName(location.state.candidateName || "");
-      setInterviewField(location.state.jobTitle || "");
-
-      if (location.state.question) {
-        setCurrentQuestion(location.state.question);
-        setCurrentQuestionNum(location.state.currentQuestionNum || 1);
-        setTotalQuestions(location.state.totalQuestions || 5);
-        setIsSetupComplete(true);
-
-        // Short delay before speaking to allow UI to render
-        setTimeout(() => {
-          speakQuestion(location.state.question);
-        }, 1000);
-      }
-    }
-  }, [location.state]);
-
   // Get current user and fetch fields on mount
   useEffect(() => {
     const currentUser = getCurrentUser();
     if (!currentUser) {
-      navigate("/candidate/signin");
+      navigate("/signin/candidate");
     } else {
       setUser(currentUser);
     }
     fetchAvailableFields();
   }, [navigate]);
 
+  const handleLogout = () => {
+    logoutUser();
+    navigate("/signin/candidate");
+  };
+
   const fetchAvailableFields = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/voice-interview/available-fields`);
+      const response = await fetch("http://localhost:8000/api/voice-interview/available-fields");
       const data = await response.json();
       if (data.success) {
         setAvailableFields(data.fields);
@@ -105,7 +86,7 @@ const VoiceInterview = () => {
     } catch (error) {
       console.error("Error fetching fields:", error);
       setAvailableFields([
-        "Software Engineering", "Data Science", "Web Development",
+        "Software Engineering", "Data Science", "Web Development", 
         "Machine Learning", "DevOps", "Cybersecurity"
       ]);
       setAvailableLevels(["Junior", "Intermediate", "Senior"]);
@@ -126,8 +107,8 @@ const VoiceInterview = () => {
 
   const startInterview = async () => {
     // Validate all required fields
-    if (!interviewField || !positionLevel || !candidateName || !phoneNumber ||
-      !emailAddress || !education || !projects || !skills || !experience || !cvFile) {
+    if (!interviewField || !positionLevel || !candidateName || !phoneNumber || 
+        !emailAddress || !education || !projects || !skills || !experience || !cvFile) {
       alert("Please fill in all required fields including CV upload");
       return;
     }
@@ -154,7 +135,7 @@ const VoiceInterview = () => {
       formData.append('skills', skills);
       formData.append('experience', experience);
 
-      const response = await fetch(`${API_BASE_URL}/voice-interview/start-session-with-cv`, {
+      const response = await fetch("http://localhost:8000/api/voice-interview/start-session-with-cv", {
         method: "POST",
         body: formData,
       });
@@ -166,7 +147,7 @@ const VoiceInterview = () => {
         setCurrentQuestionNum(data.current_question);
         setTotalQuestions(data.total_questions);
         setIsSetupComplete(true);
-
+        
         // Speak the question
         speakQuestion(data.question);
       } else {
@@ -197,24 +178,18 @@ const VoiceInterview = () => {
 
   const startRecording = async (isAutomatic = false) => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true
-        }
-      });
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       audioStreamRef.current = stream;
       audioChunksRef.current = [];
 
       // Setup audio context for real-time level monitoring
       const audioContext = new (window.AudioContext || window.webkitAudioContext)();
       audioContextRef.current = audioContext;
-
+      
       const analyser = audioContext.createAnalyser();
       analyser.fftSize = 256;
       analyserRef.current = analyser;
-
+      
       const source = audioContext.createMediaStreamSource(stream);
       source.connect(analyser);
 
@@ -229,7 +204,7 @@ const VoiceInterview = () => {
 
       mediaRecorder.onstop = async () => {
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-
+        
         // Clean up
         if (audioContextRef.current) {
           audioContextRef.current.close();
@@ -237,7 +212,7 @@ const VoiceInterview = () => {
         if (audioStreamRef.current) {
           audioStreamRef.current.getTracks().forEach(track => track.stop());
         }
-
+        
         // Clear timers
         if (silenceTimerRef.current) {
           clearInterval(silenceTimerRef.current);
@@ -245,7 +220,7 @@ const VoiceInterview = () => {
         if (recordingTimerRef.current) {
           clearTimeout(recordingTimerRef.current);
         }
-
+        
         await submitAudioAnswer(audioBlob);
       };
 
@@ -294,7 +269,7 @@ const VoiceInterview = () => {
     } else {
       // Check if 4 seconds of silence
       const silenceDuration = (currentTime - lastSoundTimeRef.current) / 1000;
-
+      
       if (silenceDuration >= 4 && isRecording) {
         console.log("🤫 4 seconds of silence detected, stopping recording...");
         stopRecording();
@@ -307,7 +282,7 @@ const VoiceInterview = () => {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
       setAudioLevel(0);
-
+      
       // Clear intervals
       if (silenceTimerRef.current) {
         clearInterval(silenceTimerRef.current);
@@ -327,7 +302,7 @@ const VoiceInterview = () => {
       formData.append("session_id", sessionId);
       formData.append("audio_file", audioBlob, "recording.webm");
 
-      const response = await fetch(`${API_BASE_URL}/voice-interview/submit-answer`, {
+      const response = await fetch("http://localhost:8000/api/voice-interview/submit-answer", {
         method: "POST",
         body: formData,
       });
@@ -336,7 +311,7 @@ const VoiceInterview = () => {
       if (data.success) {
         setFeedback(data.feedback);
         setCurrentScore(data.score);
-
+        
         // Check if interview is complete
         if (data.is_complete) {
           setIsComplete(true);
@@ -368,7 +343,7 @@ const VoiceInterview = () => {
       formData.append("session_id", sessionId);
       formData.append("text_answer", userAnswer);
 
-      const response = await fetch(`${API_BASE_URL}/voice-interview/submit-answer`, {
+      const response = await fetch("http://localhost:8000/api/voice-interview/submit-answer", {
         method: "POST",
         body: formData,
       });
@@ -377,7 +352,7 @@ const VoiceInterview = () => {
       if (data.success) {
         setFeedback(data.feedback);
         setCurrentScore(data.score);
-
+        
         // Check if interview is complete
         if (data.is_complete) {
           setIsComplete(true);
@@ -405,7 +380,7 @@ const VoiceInterview = () => {
 
     try {
       const response = await fetch(
-        `${API_BASE_URL}/voice-interview/next-question?session_id=${sessionId}`,
+        `http://localhost:8000/api/voice-interview/next-question?session_id=${sessionId}`,
         { method: "POST" }
       );
 
@@ -430,7 +405,7 @@ const VoiceInterview = () => {
   const generateReport = async () => {
     try {
       const response = await fetch(
-        `${API_BASE_URL}/voice-interview/generate-report/${sessionId}`,
+        `http://localhost:8000/api/voice-interview/generate-report/${sessionId}`,
         { method: "POST" }
       );
 
@@ -475,7 +450,7 @@ const VoiceInterview = () => {
         clearInterval(animationRef.current);
       }
     };
-  }, [isSpeaking, isRecording]);
+  }, [isSpeaking]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -500,57 +475,89 @@ const VoiceInterview = () => {
     return (
       <div className="h-screen flex items-center justify-center bg-gray-100">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#0a2a5e] mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading...</p>
         </div>
       </div>
     );
   }
 
+  // Sidebar Component
+  const Sidebar = () => (
+    <aside className="w-72 h-screen bg-white shadow-xl flex flex-col p-6 border-r border-gray-200 flex-shrink-0">
+      <div className="mb-8 text-center flex-shrink-0">
+        <h1 className="text-3xl font-bold text-blue-600">RecruBotX</h1>
+      </div>
+
+      <nav className="flex flex-col space-y-4 text-gray-700 flex-shrink-0">
+        <NavLink
+          to="/candidate/dashboard"
+          className={({ isActive }) =>
+            `font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 ${isActive ? "bg-blue-50 text-blue-600" : "text-gray-700 hover:bg-gray-50 hover:text-blue-600"}`
+          }
+        >
+          <LayoutDashboard className="w-5 h-5" /> Dashboard
+        </NavLink>
+        
+        <NavLink
+          to="/candidate/settings"
+          className={({ isActive }) =>
+            `font-medium px-4 py-3 rounded-xl transition-all flex items-center gap-2 ${isActive ? "bg-blue-50 text-blue-600" : "text-gray-700 hover:bg-gray-50 hover:text-blue-600"}`
+          }
+        >
+          <Cog className="w-5 h-5" /> Settings
+        </NavLink>
+      </nav>
+
+      <div className="mt-auto flex-shrink-0">
+        <div className="mb-4 text-center pb-4 border-b border-gray-200">
+          <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4 text-white font-bold text-2xl shadow-lg overflow-hidden">
+            {user.profileImage ? (
+              <img src={user.profileImage} alt="Profile" className="w-full h-full object-cover" />
+            ) : (
+              <>{user.firstName?.charAt(0)}{user.lastName?.charAt(0)}</>
+            )}
+          </div>
+          <h3 className="font-bold text-gray-800 text-lg">{user.firstName} {user.lastName}</h3>
+          <p className="text-sm text-gray-500 mt-1">{user.email}</p>
+        </div>
+
+        <button
+          onClick={handleLogout}
+          className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-red-500 to-red-600 px-4 py-3 rounded-xl text-white hover:from-red-600 hover:to-red-700 transition-all shadow-md"
+        >
+          <LogOut className="w-5 h-5" /> Logout
+        </button>
+      </div>
+    </aside>
+  );
+
   // Setup Screen
   if (!isSetupComplete) {
     return (
       <div className="h-screen w-screen flex bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden fixed inset-0">
-        <CandidateSidebar />
-
-        <main className="flex-1 h-screen flex flex-col overflow-hidden py-8 px-8">
-          {/* Top Header */}
-          <div className="mb-6 flex-shrink-0 flex justify-between items-center">
-            <div>
-              <h2 className="text-3xl font-bold text-[#0a2a5e]">AI Voice Interview</h2>
-              <p className="text-gray-500 text-md mt-1 py-4">Practice technical interviews with intelligent feedback.</p>
-            </div>
-
-            {/* User Profile - Top Right */}
-            {user && (
-              <div className="flex items-center gap-3">
-                <div className="text-right">
-                  <h3 className="font-bold text-gray-800">
-                    {user.firstName} {user.lastName}
-                  </h3>
-                  <p className="text-sm text-gray-500">{user.email}</p>
-                </div>
-                <div className="w-12 h-12 bg-gradient-to-br from-[#0a2a5e] to-[#2b4c8c] rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg overflow-hidden">
-                  {user.profileImage ? (
-                    <img src={user.profileImage} alt="Profile" className="w-full h-full object-cover" />
-                  ) : (
-                    <>{user.firstName?.charAt(0)}{user.lastName?.charAt(0)}</>
-                  )}
-                </div>
-              </div>
-            )}
+        <Sidebar />
+        
+        <main className="flex-1 h-screen flex flex-col overflow-hidden py-6 px-10">
+          {/* Welcome Banner */}
+                  {/* Top Header */}
+        <div className="flex justify-between items-center mb-3 flex-shrink-0">
+          <div>
+            <h2 className="text-3xl font-bold text-gray-800">AI Voice Interview</h2>
+            <p className="mt-1 text-gray-500 text-md py-4">Practice technical interviews with intelligent feedback.</p>
           </div>
+        </div>
 
           {/* Setup Form */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 overflow-hidden">
             {/* Configuration Card */}
             <div className="lg:col-span-2 bg-white rounded-2xl shadow-lg p-8 flex flex-col overflow-hidden">
               <h3 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2 flex-shrink-0">
-                <Target className="w-6 h-6 text-[#0a2a5e]" />
+                <Target className="w-6 h-6 text-blue-600" />
                 Configure Your Interview
               </h3>
 
-              <div className="space-y-4 overflow-y-auto pr-2" style={{ maxHeight: 'calc(100vh - 300px)' }}>
+              <div className="space-y-4 overflow-y-auto pr-2" style={{maxHeight: 'calc(100vh - 300px)'}}>
                 {/* Personal Information */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -599,7 +606,7 @@ const VoiceInterview = () => {
                   <select
                     value={interviewField}
                     onChange={(e) => setInterviewField(e.target.value)}
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-[#0a2a5e] focus:outline-none transition bg-gray-50 hover:bg-white"
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none transition bg-gray-50 hover:bg-white"
                   >
                     <option value="">Select a field...</option>
                     {availableFields.map((field) => (
@@ -619,10 +626,11 @@ const VoiceInterview = () => {
                         key={level}
                         type="button"
                         onClick={() => setPositionLevel(level)}
-                        className={`p-3 rounded-xl border-2 transition-all ${positionLevel === level
-                          ? "border-[#0a2a5e] bg-[#0a2a5e]/5 text-[#0a2a5e]"
-                          : "border-gray-200 hover:border-[#0a2a5e]/50 hover:bg-gray-50"
-                          }`}
+                        className={`p-3 rounded-xl border-2 transition-all ${
+                          positionLevel === level
+                            ? "border-blue-500 bg-blue-50 text-blue-700"
+                            : "border-gray-200 hover:border-blue-300 hover:bg-gray-50"
+                        }`}
                       >
                         <div className="font-semibold text-sm">{level}</div>
                         <div className="text-xs text-gray-500 mt-1">
@@ -696,8 +704,8 @@ const VoiceInterview = () => {
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
                     Upload Your CV <span className="text-red-500">*</span>
                   </label>
-                  <div className="border-2 border-dashed border-[#0a2a5e]/30 rounded-xl p-4 flex flex-col items-center justify-center hover:bg-[#0a2a5e]/5 transition">
-                    <Upload className="w-6 h-6 text-[#0a2a5e] mb-2" />
+                  <div className="border-2 border-dashed border-blue-300 rounded-xl p-4 flex flex-col items-center justify-center hover:bg-blue-50 transition">
+                    <Upload className="w-6 h-6 text-blue-600 mb-2" />
                     <input
                       id="cvFileUpload"
                       type="file"
@@ -707,7 +715,7 @@ const VoiceInterview = () => {
                     />
                     <label
                       htmlFor="cvFileUpload"
-                      className="cursor-pointer text-[#0a2a5e] font-medium hover:underline text-center text-sm"
+                      className="cursor-pointer text-blue-600 font-medium hover:underline text-center text-sm"
                     >
                       {cvFile ? (
                         <div className="flex items-center gap-2">
@@ -726,7 +734,7 @@ const VoiceInterview = () => {
               <button
                 onClick={startInterview}
                 disabled={isProcessing || !interviewField || !positionLevel || !candidateName || !phoneNumber || !emailAddress || !education || !projects || !skills || !experience || !cvFile}
-                className="w-full bg-gradient-to-r from-[#0a2a5e] to-[#0d3b82] text-white py-4 rounded-xl font-semibold hover:from-[#061a3d] hover:to-[#0a2a5e] transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 mt-6 flex-shrink-0"
+                className="w-full bg-blue-600 text-white py-4 rounded-xl font-semibold hover:bg-blue-700 transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 mt-6 flex-shrink-0"
               >
                 {isProcessing ? (
                   <>
@@ -743,36 +751,36 @@ const VoiceInterview = () => {
             </div>
 
             {/* Info Card */}
-            <div className="bg-white rounded-2xl shadow-lg p-6 flex-shrink-0 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 180px)' }}>
+            <div className="bg-white rounded-2xl shadow-lg p-6 flex-shrink-0 overflow-y-auto"  style={{maxHeight: 'calc(100vh - 180px)'}}>
               <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
                 <Sparkles className="w-5 h-5 text-yellow-500" />
                 How It Works
               </h3>
-
+              
               <div className="space-y-4">
                 <div className="flex items-start gap-3 py-2">
-                  <div className="w-8 h-8 bg-[#0a2a5e]/10 rounded-lg flex items-center justify-center text-[#0a2a5e] font-bold text-sm flex-shrink-0">1</div>
+                  <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 font-bold text-sm flex-shrink-0">1</div>
                   <div>
                     <p className="font-medium text-gray-800">Upload Your CV</p>
                     <p className="text-sm text-gray-500">Submit your resume in PDF format</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3 py-2">
-                  <div className="w-8 h-8 bg-[#0a2a5e]/10 rounded-lg flex items-center justify-center text-[#0a2a5e] font-bold text-sm flex-shrink-0">2</div>
+                  <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 font-bold text-sm flex-shrink-0">2</div>
                   <div>
                     <p className="font-medium text-gray-800">Start Your Interview</p>
                     <p className="text-sm text-gray-500">Click the Start Interview button to begin</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3 py-2">
-                  <div className="w-8 h-8 bg-[#0a2a5e]/10 rounded-lg flex items-center justify-center text-[#0a2a5e] font-bold text-sm flex-shrink-0">3</div>
+                  <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 font-bold text-sm flex-shrink-0">3</div>
                   <div>
                     <p className="font-medium text-gray-800">AI Asks Questions</p>
                     <p className="text-sm text-gray-500">Respond naturally with video feed</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3 py-2">
-                  <div className="w-8 h-8 bg-[#0a2a5e]/10 rounded-lg flex items-center justify-center text-[#0a2a5e] font-bold text-sm flex-shrink-0">4</div>
+                  <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 font-bold text-sm flex-shrink-0">4</div>
                   <div>
                     <p className="font-medium text-gray-800">Get Feedback</p>
                     <p className="text-sm text-gray-500">Receive instant AI-powered insights</p>
@@ -780,12 +788,12 @@ const VoiceInterview = () => {
                 </div>
               </div>
 
-              <div className="mt-6 p-4 bg-[#0a2a5e]/5 rounded-xl">
-                <div className="flex items-center gap-2 text-[#0a2a5e] font-medium mb-2">
+              <div className="mt-6 p-4 bg-blue-50 rounded-xl">
+                <div className="flex items-center gap-2 text-blue-700 font-medium mb-2">
                   <Clock className="w-4 h-4" />
                   Recording Info
                 </div>
-                <p className="text-sm text-[#0a2a5e]/80">
+                <p className="text-sm text-blue-600">
                   Auto-stops after 4 seconds of silence or 1 minute maximum per answer.
                 </p>
               </div>
@@ -799,13 +807,59 @@ const VoiceInterview = () => {
   // Complete Screen
   if (isComplete && reportData) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 via-[#0a2a5e]/5 to-purple-50 p-6">
+      <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-purple-50 p-6">
         <div className="max-w-4xl mx-auto">
           <div className="bg-white rounded-3xl shadow-2xl p-8">
             <div className="text-center mb-8">
               <CheckCircle className="w-20 h-20 text-green-500 mx-auto mb-4" />
               <h1 className="text-4xl font-bold text-gray-800 mb-2">Interview Complete!</h1>
-              <p className="text-gray-600">Great job completing the interview. Our HR team will review your responses and contact you shortly.</p>
+              <p className="text-gray-600">Great job completing the interview</p>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-6 mb-8">
+              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-6">
+                <h3 className="text-lg font-semibold text-gray-800 mb-2">Overall Score</h3>
+                <div className="text-5xl font-bold text-blue-600">{reportData.avg_score}/100</div>
+              </div>
+
+              <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-6">
+                <h3 className="text-lg font-semibold text-gray-800 mb-2">Performance Level</h3>
+                <div className="text-2xl font-bold text-purple-600">{reportData.performance_level}</div>
+              </div>
+            </div>
+
+            <div className="space-y-6 mb-8">
+              {/* Strengths */}
+              <div className="bg-green-50 rounded-2xl p-6">
+                <h3 className="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                  <CheckCircle className="w-6 h-6 text-green-600" />
+                  Strengths
+                </h3>
+                <ul className="space-y-2">
+                  {reportData.strengths.map((strength, idx) => (
+                    <li key={idx} className="text-gray-700 flex items-start gap-2">
+                      <span className="text-green-600 mt-1">•</span>
+                      <span>{strength}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Areas for Improvement */}
+              <div className="bg-orange-50 rounded-2xl p-6">
+                <h3 className="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                  <XCircle className="w-6 h-6 text-orange-600" />
+                  Areas for Improvement
+                </h3>
+                <ul className="space-y-2">
+                  {reportData.improvements.map((improvement, idx) => (
+                    <li key={idx} className="text-gray-700 flex items-start gap-2">
+                      <span className="text-orange-600 mt-1">•</span>
+                      <span>{improvement}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </div>
 
             <div className="flex gap-4">
@@ -861,12 +915,13 @@ const VoiceInterview = () => {
           <div className="flex justify-center mb-8">
             <div className="relative">
               <div
-                className={`w-32 h-32 rounded-full flex items-center justify-center transition-all duration-300 ${isSpeaking
-                  ? "bg-gradient-to-br from-blue-400 to-purple-500 shadow-xl"
-                  : isRecording
+                className={`w-32 h-32 rounded-full flex items-center justify-center transition-all duration-300 ${
+                  isSpeaking
+                    ? "bg-gradient-to-br from-blue-400 to-purple-500 shadow-xl"
+                    : isRecording
                     ? "bg-gradient-to-br from-red-400 to-pink-500 shadow-xl"
                     : "bg-gradient-to-br from-gray-300 to-gray-400"
-                  }`}
+                }`}
                 style={{
                   transform: `scale(${1 + audioLevel / 200})`,
                 }}
@@ -879,7 +934,7 @@ const VoiceInterview = () => {
                   <MicOff className="w-16 h-16 text-white" />
                 )}
               </div>
-
+              
               {/* Animated rings */}
               {(isSpeaking || isRecording) && (
                 <>

@@ -19,6 +19,7 @@ import {
     Clock
 } from "lucide-react";
 import API_BASE_URL from "./apiConfig";
+import LoadingSpinner from "./components/LoadingSpinner";
 
 const JobPosting = () => {
     const navigate = useNavigate();
@@ -250,10 +251,7 @@ const JobPosting = () => {
     if (!recruiterData) {
         return (
             <div className="h-screen flex items-center justify-center bg-gray-100">
-                <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#0a2a5e] mx-auto mb-4"></div>
-                    <p className="text-gray-600">Loading...</p>
-                </div>
+                <LoadingSpinner />
             </div>
         );
     }
@@ -611,7 +609,7 @@ const JobPosting = () => {
                                 disabled={isLoading}
                                 className="px-8 py-3 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all flex items-center gap-2"
                             >
-                                {isLoading ? <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div> : <Save className="w-5 h-5" />}
+                                {isLoading ? <LoadingSpinner size="sm" /> : <Save className="w-5 h-5" />}
                                 {selectedJobId ? "Update Job" : "Publish Job"}
                             </button>
                         )}

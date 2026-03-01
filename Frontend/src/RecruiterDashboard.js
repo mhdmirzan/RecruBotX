@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import API_BASE_URL from "./apiConfig";
 import RecruiterSidebar from "./components/RecruiterSidebar";
+import LoadingSpinner from "./components/LoadingSpinner";
 
 const RecruiterDashboard = () => {
   const navigate = useNavigate();
@@ -91,10 +92,7 @@ const RecruiterDashboard = () => {
   if (!recruiterData) {
     return (
       <div className="h-screen flex items-center justify-center bg-gray-100">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#0a2a5e] mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading dashboard...</p>
-        </div>
+        <LoadingSpinner label="Loading dashboard…" />
       </div>
     );
   }
