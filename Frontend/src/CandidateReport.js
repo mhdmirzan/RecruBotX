@@ -76,9 +76,25 @@ const CandidateReport = () => {
         }
     };
 
-    const handleViewCV = () => {
+    const handleViewCV = async () => {
         if (report && report.sessionId) {
-            window.open(`${API_BASE_URL}/interview/cv-file/${report.sessionId}`, "_blank");
+            try {
+                const response = await fetch(`${API_BASE_URL}/interview/cv-file/${report.sessionId}`);
+                if (!response.ok) {
+                    if (response.status === 404) {
+                        alert("CV file not found on the server (it may have been deleted).");
+                    } else {
+                        alert("Failed to load CV file.");
+                    }
+                    return;
+                }
+                const blob = await response.blob();
+                const fileURL = URL.createObjectURL(blob);
+                window.open(fileURL, "_blank");
+            } catch (err) {
+                console.error("Error viewing CV:", err);
+                alert("Failed to access the CV file.");
+            }
         } else {
             alert("CV not available for this session.");
         }
@@ -115,44 +131,55 @@ const CandidateReport = () => {
         return lines.map((line, idx) => {
             const trimmed = line.trim();
             if (!trimmed) return null;
+            if (trimmed.toLowerCase().includes('candidate evaluation report')) return null;
 
             // Check for Hiring Recommendation
             const cleanedTrimmed = trimmed.replace(/^\d+\.\s*/, '');
             if (cleanedTrimmed.toLowerCase().startsWith('hiring recommendation')) {
                 const parts = cleanedTrimmed.split(':');
-                if (parts.length >= 2) {
-                    const label = parts[0].trim();
-                    const value = parts.slice(1).join(':').trim();
+                const label = parts[0].trim();
+                let value = parts.slice(1).join(':').trim();
 
-                    let bgClass = "bg-blue-50";
-                    let borderClass = "border-blue-200";
-                    let textClass = "text-blue-700";
-                    let badgeBgClass = "bg-blue-600";
-
-                    const valLower = value.toLowerCase();
-                    if (valLower.includes("reject") || valLower.includes("not recommend")) {
-                        bgClass = "bg-red-50"; borderClass = "border-red-200"; textClass = "text-red-800"; badgeBgClass = "bg-red-600";
-                    } else if (valLower.includes("strongly")) {
-                        bgClass = "bg-green-50"; borderClass = "border-green-300"; textClass = "text-green-800"; badgeBgClass = "bg-green-600";
-                    } else if (valLower.includes("hire") || valLower.includes("recommend")) {
-                        bgClass = "bg-emerald-50"; borderClass = "border-emerald-200"; textClass = "text-emerald-800"; badgeBgClass = "bg-emerald-500";
-                    } else if (valLower.includes("consider")) {
-                        bgClass = "bg-amber-50"; borderClass = "border-amber-200"; textClass = "text-amber-800"; badgeBgClass = "bg-amber-500";
+                // If value is empty, the LLM might have put it on the next line as a bullet point.
+                if (!value && idx + 1 < lines.length) {
+                    let nextLine = lines[idx + 1].trim();
+                    if (nextLine) {
+                        value = nextLine.replace(/^[-*]\s*/, '').trim();
+                        lines[idx + 1] = ""; // Prevent the next line from rendering separately
                     }
-
-                    return (
-                        <div key={idx} className={`my-6 p-5 rounded-2xl border ${bgClass} ${borderClass} flex items-center justify-between shadow-sm`}>
-                            <span className={`font-bold text-lg ${textClass}`}>{label}:</span>
-                            <span className={`px-5 py-2 rounded-xl text-white font-black shadow-sm ${badgeBgClass}`}>
-                                {value}
-                            </span>
-                        </div>
-                    );
                 }
+
+                if (!value) value = "Pending";
+
+                let bgClass = "bg-blue-50";
+                let borderClass = "border-blue-200";
+                let textClass = "text-blue-700";
+                let badgeBgClass = "bg-blue-600";
+
+                const valLower = value.toLowerCase();
+                if (valLower.includes("reject") || valLower.includes("not recommend")) {
+                    bgClass = "bg-red-50"; borderClass = "border-red-200"; textClass = "text-red-800"; badgeBgClass = "bg-red-600";
+                } else if (valLower.includes("strongly")) {
+                    bgClass = "bg-green-50"; borderClass = "border-green-300"; textClass = "text-green-800"; badgeBgClass = "bg-green-600";
+                } else if (valLower.includes("hire") || valLower.includes("recommend")) {
+                    bgClass = "bg-emerald-50"; borderClass = "border-emerald-200"; textClass = "text-emerald-800"; badgeBgClass = "bg-emerald-500";
+                } else if (valLower.includes("consider")) {
+                    bgClass = "bg-amber-50"; borderClass = "border-amber-200"; textClass = "text-amber-800"; badgeBgClass = "bg-amber-500";
+                }
+
+                return (
+                    <div key={idx} className={`my-6 p-5 rounded-2xl border ${bgClass} ${borderClass} flex items-center justify-between shadow-sm`}>
+                        <span className={`font-bold text-lg ${textClass}`}>{label}:</span>
+                        <span className={`px-5 py-2 rounded-xl text-white font-black shadow-sm ${badgeBgClass}`}>
+                            {value}
+                        </span>
+                    </div>
+                );
             }
 
-            if (trimmed.toLowerCase().startsWith('strengths:') || trimmed.toLowerCase().startsWith('weaknesses:') || trimmed.toLowerCase().startsWith('areas for improvement:')) {
-                return <h5 key={idx} className="font-bold text-gray-800 mt-5 mb-3">{trimmed}</h5>;
+            const lowerCleaned = cleanedTrimmed.toLowerCase();
+            if (lowerCleaned.startsWith('strength') || lowerCleaned.startsWith('weakness') || lowerCleaned.startsWith('areas for improvement')) {
+                return <h5 key={idx} className="font-bold text-gray-800 mt-5 mb-3 text-lg border-b border-gray-100 pb-2">{trimmed}</h5>;
             }
             if (trimmed.startsWith('*') || trimmed.startsWith('-')) {
                 return (
