@@ -7,6 +7,7 @@ import CandidateSidebar from "./components/CandidateSidebar";
 import UserProfileHeader from "./components/UserProfileHeader";
 import jsPDF from 'jspdf';
 import API_BASE_URL from "./apiConfig";
+import LoadingSpinner from "./components/LoadingSpinner";
 
 const AnalyzeResume = () => {
   const navigate = useNavigate();
@@ -417,10 +418,7 @@ const AnalyzeResume = () => {
   if (!user) {
     return (
       <div className="h-screen flex items-center justify-center bg-gray-100">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#0a2a5e] mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
-        </div>
+        <LoadingSpinner />
       </div>
     );
   }
@@ -497,7 +495,7 @@ const AnalyzeResume = () => {
               >
                 {loading ? (
                   <>
-                    <Loader2 className="animate-spin w-5 h-5" />
+                    <LoadingSpinner size="sm" />
                     Analyzing Your CV...
                   </>
                 ) : (
