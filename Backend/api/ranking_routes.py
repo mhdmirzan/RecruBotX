@@ -167,12 +167,22 @@ async def get_candidate_report(
             
         from bson import ObjectId
         # Fetch the CV doc to get the details entered before the interview
-        cv_data_doc = await db.interview_cvs.find_one({"_id": ObjectId(str(candidate_id))})
-        if cv_data_doc:
-            email = cv_data_doc.get("email_address")
-            phone = cv_data_doc.get("phone_number")
-            linkedin = cv_data_doc.get("linkedin_profile")
+        cv_data_doc = None
+        try:
+            cv_data_doc = await db.interview_cvs.find_one({"_id": ObjectId(str(candidate_id))})
+        except Exception:
+            pass
             
+        # Fallback for UUID string IDs or session matches (common in deployment db)
+        if not cv_data_doc:
+            cv_data_doc = await db.interview_cvs.find_one({"_id": str(candidate_id)})
+        if not cv_data_doc and session_doc:
+            cv_data_doc = await db.interview_cvs.find_one({"session_id": session_doc.get("session_id")})
+            
+        if cv_data_doc:
+            email = cv_data_doc.get("email_address") or cv_data_doc.get("email")
+            phone = cv_data_doc.get("phone_number") or cv_data_doc.get("phone")
+            linkedin = cv_data_doc.get("linkedin_profile") or cv_data_doc.get("linkedin")
     # Extract strengths and weaknesses from evaluation details
     eval_details = ranking.get("evaluation_details", {})
     strengths = []
