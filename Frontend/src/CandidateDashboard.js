@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { LogOut, FileText, Search, LayoutDashboard, Cog, Briefcase, Calendar, MapPin, CheckCircle, Clock, Send, ArrowRight, ChevronRight, Zap, DollarSign, Home, X, BarChart3, AlertTriangle, XCircle, Users } from "lucide-react";
+import { Briefcase, MapPin, Clock, Send, ArrowRight, ChevronRight, Zap, DollarSign, Home, X, AlertTriangle, XCircle, Users } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { getCurrentUser, logoutUser } from "./utils/userDatabase";
 import API_BASE_URL from "./apiConfig";
@@ -20,33 +20,9 @@ const CandidateDashboard = () => {
   const [selectedJob, setSelectedJob] = useState(null);
   const [showJobModal, setShowJobModal] = useState(false);
 
-  // Mock recent activities (top 3)
-  const [recentActivities] = useState([
-    {
-      id: 1,
-      action: "Application Submitted",
-      description: "Applied to Software Engineer at Tech Corp",
-      date: new Date("2024-12-28T14:30:00"),
-      type: "application",
-      icon: Send
-    },
-    {
-      id: 2,
-      action: "Interview Scheduled",
-      description: "Technical interview with Data Solutions Inc",
-      date: new Date("2024-12-27T10:15:00"),
-      type: "interview",
-      icon: Calendar
-    },
-    {
-      id: 3,
-      action: "Resume Updated",
-      description: "Updated resume with new skills and experience",
-      date: new Date("2024-12-26T16:45:00"),
-      type: "update",
-      icon: CheckCircle
-    }
-  ]);
+  // Dynamic recent job activity
+  const [recentJobActivity, setRecentJobActivity] = useState([]);
+  const [isLoadingActivity, setIsLoadingActivity] = useState(true);
 
   // Fetch job postings from database
   useEffect(() => {
@@ -94,14 +70,29 @@ const CandidateDashboard = () => {
     fetchJobPostings();
   }, []); // Fetch on mount
 
-  // Get current user on component mount
+  // Get current user on component mount + fetch activity
   useEffect(() => {
     const currentUser = getCurrentUser();
     if (!currentUser) {
-      // Redirect to login if not authenticated
       navigate("/candidate/signin");
     } else {
       setUser(currentUser);
+      // Fetch recent job activity for this candidate
+      const fetchActivity = async () => {
+        try {
+          setIsLoadingActivity(true);
+          const res = await fetch(`${API_BASE_URL}/jobs/candidate/${currentUser.id}/applied-jobs-activity`);
+          if (res.ok) {
+            const data = await res.json();
+            setRecentJobActivity(data.applications || []);
+          }
+        } catch (err) {
+          console.error("Error fetching job activity:", err);
+        } finally {
+          setIsLoadingActivity(false);
+        }
+      };
+      fetchActivity();
     }
   }, [navigate]);
 
@@ -170,16 +161,6 @@ const CandidateDashboard = () => {
       case "Active": return "bg-green-100 text-green-700";
       case "Closed": return "bg-gray-100 text-gray-700";
       default: return "bg-gray-100 text-gray-700";
-    }
-  };
-
-  // Get activity icon color
-  const getActivityIconColor = (type) => {
-    switch (type) {
-      case "application": return "bg-[#0a2a5e]/10 text-[#0a2a5e]";
-      case "interview": return "bg-green-100 text-green-600";
-      case "update": return "bg-purple-100 text-purple-600";
-      default: return "bg-gray-100 text-gray-600";
     }
   };
 
@@ -442,36 +423,61 @@ const CandidateDashboard = () => {
                 onClick={handleCVScreening}
                 className="w-full bg-gradient-to-r from-[#0a2a5e] to-[#0d3b82] text-white px-6 py-3 rounded-xl font-semibold hover:from-[#061a3d] hover:to-[#0a2a5e] transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 group"
               >
-                <span>Go to CV Screening</span>
+                <span>Go to CV Review</span>
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </button>
             </div>
 
-            {/* Recent Activity Card */}
+            {/* Recent Job Activity Card */}
             <div className="bg-white rounded-2xl shadow-lg p-6 flex-1 overflow-hidden flex flex-col">
-              <h3 className="text-lg font-bold text-gray-800 mb-4">Recent Activity</h3>
-              <div className="flex-1 overflow-y-auto space-y-4">
-                {recentActivities.map((activity) => {
-                  const IconComponent = activity.icon;
-                  return (
-                    <div
-                      key={activity.id}
-                      className="flex gap-3 pb-4 border-b border-gray-100 last:border-0"
-                    >
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${getActivityIconColor(activity.type)}`}>
-                        <IconComponent className="w-5 h-5" />
-                      </div>
-                      <div className="flex-1">
-                        <h4 className="font-semibold text-gray-800 text-sm">{activity.action}</h4>
-                        <p className="text-gray-600 text-xs mt-1">{activity.description}</p>
-                        <div className="flex items-center gap-1 mt-2 text-xs text-gray-500">
-                          <Clock className="w-3 h-3" />
-                          <span>{getRelativeTime(activity.date)}</span>
-                        </div>
-                      </div>
+              <h3 className="text-lg font-bold text-gray-800 mb-4">Recent Job Activity</h3>
+              <div className="flex-1 overflow-y-auto theme-scrollbar space-y-3">
+                {isLoadingActivity ? (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#0a2a5e]"></div>
+                  </div>
+                ) : recentJobActivity.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-8 text-center">
+                    <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mb-3">
+                      <Briefcase className="w-6 h-6 text-gray-400" />
                     </div>
-                  );
-                })}
+                    <p className="text-gray-500 text-sm font-medium">No applications yet</p>
+                    <p className="text-gray-400 text-xs mt-1">Jobs you apply to will appear here</p>
+                  </div>
+                ) : (
+                  recentJobActivity.map((app, idx) => {
+                    // Cross-reference with loaded job postings to get details
+                    const job = jobPostings.find(j => j.id === app.jobId);
+                    const appliedAt = new Date(app.appliedAt);
+                    return (
+                      <div
+                        key={app.jobId + idx}
+                        className="flex gap-3 pb-3 border-b border-gray-100 last:border-0"
+                      >
+                        <div className="w-9 h-9 rounded-full bg-[#0a2a5e]/10 flex items-center justify-center flex-shrink-0">
+                          <Send className="w-4 h-4 text-[#0a2a5e]" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-semibold text-gray-800 text-sm truncate">
+                            {job ? job.title : "Job Position"}
+                          </h4>
+                          {job && (
+                            <p className="text-[#0a2a5e] text-xs font-medium truncate">
+                              {job.position}{job.company ? ` • ${job.company}` : ""}
+                            </p>
+                          )}
+                          <div className="flex items-center gap-1 mt-1 text-xs text-gray-400">
+                            <Clock className="w-3 h-3" />
+                            <span>{getRelativeTime(appliedAt)}</span>
+                          </div>
+                        </div>
+                        <span className="flex-shrink-0 text-xs font-semibold px-2 py-0.5 rounded-full bg-green-100 text-green-700 self-start mt-0.5">
+                          Applied
+                        </span>
+                      </div>
+                    );
+                  })
+                )}
               </div>
             </div>
           </div>
@@ -481,127 +487,119 @@ const CandidateDashboard = () => {
       {/* Job Details Modal */}
       {showJobModal && selectedJob && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          {/* Backdrop with Blur */}
           <div
             className="absolute inset-0 bg-black/60 backdrop-blur-md"
             onClick={() => setShowJobModal(false)}
           ></div>
 
-          {/* Modal Content */}
-          <div className="relative bg-white w-full max-w-4xl max-h-[90vh] rounded-3xl overflow-hidden shadow-2xl flex flex-col animate-in fade-in zoom-in duration-300">
-            {/* Header */}
-            <div className="bg-gradient-to-r from-[#0a2a5e] to-[#0d3b82] p-8 text-white relative">
+          <div className="relative bg-white w-full max-w-2xl max-h-[92vh] rounded-3xl overflow-hidden shadow-2xl flex flex-col" style={{animation: 'modalPop 0.25s cubic-bezier(0.34,1.56,0.64,1)'}}>
+            {/* ── Header ── */}
+            <div className="bg-gradient-to-br from-[#0a2a5e] to-[#0d3b82] px-8 pt-8 pb-7 text-white relative">
               <button
                 onClick={() => setShowJobModal(false)}
-                className="absolute top-6 right-6 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+                className="absolute top-5 right-5 w-9 h-9 flex items-center justify-center rounded-full bg-white/15 hover:bg-white/25 transition-colors"
               >
-                <X className="w-6 h-6" />
+                <X className="w-5 h-5" />
               </button>
-
-              <div>
-                <h2 className="text-3xl font-bold mb-2">{selectedJob.company}</h2>
-                <div className="flex flex-wrap gap-3 items-center">
-                  <span className="text-xl text-blue-200 font-medium">{selectedJob.position}</span>
-                  <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${getStatusColor(selectedJob.status)}`}>
-                    {selectedJob.status}
-                  </span>
+              <h2 className="text-3xl font-bold leading-tight">{selectedJob.title}</h2>
+              <p className="text-blue-200 text-base mt-1">{selectedJob.position} • {selectedJob.location}</p>
+              {selectedJob.company && (
+                <p className="text-blue-100 text-sm mt-0.5 font-semibold">{selectedJob.company}</p>
+              )}
+              {selectedJob.deadline && (
+                <div className={`mt-4 inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-semibold ${
+                  isJobExpired(selectedJob) ? 'bg-red-500/25 text-red-200' :
+                  getDeadlineInfo(selectedJob).urgent ? 'bg-orange-500/25 text-orange-200' :
+                  'bg-white/15 text-blue-100'
+                }`}>
+                  <Clock className="w-4 h-4" />
+                  {isJobExpired(selectedJob) ? "Deadline Passed" :
+                    `Deadline: ${selectedJob.deadline.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}`}
                 </div>
-              </div>
+              )}
             </div>
 
-            {/* Scrollable Body */}
-            <div className="flex-1 overflow-y-auto p-8 space-y-8">
-              {/* Quick Info Grid */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-6 p-6 bg-gray-50 rounded-2xl border border-gray-100">
-                <div className="flex flex-col gap-1">
-                  <span className="text-xs text-gray-500 font-semibold uppercase tracking-wider">Location</span>
-                  <div className="flex items-center gap-2 text-gray-800 font-medium">
-                    <MapPin className="w-5 h-5 text-[#0a2a5e]" />
-                    {selectedJob.location}
-                  </div>
+            {/* ── Scrollable Body ── */}
+            <div className="flex-1 overflow-y-auto theme-scrollbar p-7 space-y-5">
+              {/* Info Cards */}
+              <div className="grid grid-cols-4 gap-3">
+                <div className="bg-gray-50 rounded-2xl px-4 py-3 border border-gray-100">
+                  <p className="text-[10px] text-gray-400 uppercase tracking-widest font-bold mb-1">Salary</p>
+                  <p className="font-semibold text-gray-800 text-sm leading-snug">{selectedJob.salaryRange || "—"}</p>
                 </div>
-                <div className="flex flex-col gap-1">
-                  <span className="text-xs text-gray-500 font-semibold uppercase tracking-wider">Salary</span>
-                  <div className="flex items-center gap-2 text-gray-800 font-medium">
-                    <DollarSign className="w-5 h-5 text-[#0a2a5e]" />
-                    {selectedJob.salaryRange}
-                  </div>
+                <div className="bg-gray-50 rounded-2xl px-4 py-3 border border-gray-100">
+                  <p className="text-[10px] text-gray-400 uppercase tracking-widest font-bold mb-1">Experience</p>
+                  <p className="font-semibold text-gray-800 text-sm leading-snug">{selectedJob.experienceRange || "—"}</p>
                 </div>
-                <div className="flex flex-col gap-1">
-                  <span className="text-xs text-gray-500 font-semibold uppercase tracking-wider">Experience</span>
-                  <div className="flex items-center gap-2 text-gray-800 font-medium">
-                    <Briefcase className="w-5 h-5 text-[#0a2a5e]" />
-                    {selectedJob.experienceRange || "Not specified"}
-                  </div>
+                <div className="bg-gray-50 rounded-2xl px-4 py-3 border border-gray-100">
+                  <p className="text-[10px] text-gray-400 uppercase tracking-widest font-bold mb-1">Domain</p>
+                  <p className="font-semibold text-gray-800 text-sm leading-snug">{selectedJob.industryDomain || "General"}</p>
                 </div>
-                <div className="flex flex-col gap-1">
-                  <span className="text-xs text-gray-500 font-semibold uppercase tracking-wider">Industry</span>
-                  <div className="flex items-center gap-2 text-gray-800 font-medium">
-                    <BarChart3 className="w-5 h-5 text-[#0a2a5e]" />
-                    {selectedJob.industryDomain || "General"}
-                  </div>
+                <div className="bg-[#0a2a5e]/5 rounded-2xl px-4 py-3 border border-[#0a2a5e]/15">
+                  <p className="text-[10px] text-[#0a2a5e] uppercase tracking-widest font-bold mb-1">Vacancies</p>
+                  <p className="font-bold text-[#0a2a5e] text-xl leading-snug">{selectedJob.numberOfVacancies || 1}</p>
                 </div>
               </div>
 
-              {/* Job Description Section */}
-              <div className="space-y-4">
-                <h3 className="flex items-center gap-2 text-xl font-bold text-gray-800 border-b pb-2">
-                  <FileText className="w-6 h-6 text-[#0a2a5e]" />
-                  Job Description
-                </h3>
-                {selectedJob.deadline && (
-                  <div className={`p-4 rounded-xl border-l-4 font-medium mb-4 flex items-center gap-3 ${isJobExpired(selectedJob) ? 'bg-red-50 border-red-500 text-red-700' :
-                      getDeadlineInfo(selectedJob).urgent ? 'bg-orange-50 border-orange-500 text-orange-700' :
-                        'bg-blue-50 border-blue-500 text-blue-700'
-                    }`}>
-                    {isJobExpired(selectedJob) ? <XCircle className="w-5 h-5" /> : <Clock className="w-5 h-5" />}
-                    <span>
-                      {isJobExpired(selectedJob) ? "Applications are closed for this position." :
-                        `Apply before ${selectedJob.deadline.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" })}`}
-                    </span>
+              {/* Deadline Section */}
+              {selectedJob.deadline && (
+                <div className={`flex items-center gap-4 px-5 py-4 rounded-2xl border ${
+                  isJobExpired(selectedJob) ? 'bg-red-50 border-red-200' :
+                  getDeadlineInfo(selectedJob).urgent ? 'bg-orange-50 border-orange-200' :
+                  'bg-blue-50 border-blue-200'
+                }`}>
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+                    isJobExpired(selectedJob) ? 'bg-red-100' :
+                    getDeadlineInfo(selectedJob).urgent ? 'bg-orange-100' :
+                    'bg-blue-100'
+                  }`}>
+                    <Clock className={`w-5 h-5 ${isJobExpired(selectedJob) ? 'text-red-600' : getDeadlineInfo(selectedJob).urgent ? 'text-orange-600' : 'text-blue-600'}`} />
                   </div>
-                )}
+                  <div>
+                    <p className={`font-bold text-base ${isJobExpired(selectedJob) ? 'text-red-700' : getDeadlineInfo(selectedJob).urgent ? 'text-orange-700' : 'text-blue-700'}`}>
+                      {isJobExpired(selectedJob) ? "Applications Closed" :
+                        `Apply before ${selectedJob.deadline.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" })}`}
+                    </p>
+                    <p className={`text-sm mt-0.5 ${isJobExpired(selectedJob) ? 'text-red-400' : getDeadlineInfo(selectedJob).urgent ? 'text-orange-400' : 'text-blue-400'}`}>
+                      {selectedJob.deadline.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Job Description */}
+              <div>
+                <h3 className="text-base font-bold text-gray-800 mb-3">Job Description</h3>
                 <div
-                  className="prose max-w-none text-gray-700 leading-relaxed custom-job-content"
+                  className="text-gray-600 leading-relaxed text-sm modal-job-desc"
                   dangerouslySetInnerHTML={{ __html: selectedJob.jobDescription || '<p class="text-gray-400 italic">No description provided for this position.</p>' }}
                 />
               </div>
             </div>
 
-            {/* Footer with Apply Button */}
-            <div className="p-6 bg-gray-50 border-t border-gray-100 flex justify-center">
+            {/* ── Footer ── */}
+            <div className="px-7 py-5 bg-white border-t border-gray-100 flex justify-end">
               <button
                 disabled={isJobExpired(selectedJob)}
                 onClick={() => {
                   setShowJobModal(false);
                   navigate(`/candidate/apply/${selectedJob.id}`);
                 }}
-                className={`group relative flex items-center gap-3 px-10 py-3 rounded-2xl font-bold text-lg transition-all shadow-xl hover:-translate-y-1 active:translate-y-0 ${
-                  isJobExpired(selectedJob) 
-                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed hover:translate-y-0 shadow-none' 
-                  : 'bg-gradient-to-r from-[#0a2a5e] to-[#0d3b82] text-white hover:from-[#061a3d] hover:to-[#0a2a5e] hover:shadow-2xl'
+                className={`flex items-center gap-2 px-8 py-3 rounded-2xl font-bold transition-all ${
+                  isJobExpired(selectedJob)
+                    ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                    : 'bg-[#0a2a5e] hover:bg-[#0d3b82] text-white shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0'
                 }`}
               >
-                <span>{isJobExpired(selectedJob) ? 'Job Closed' : 'Apply'}</span>
-                {!isJobExpired(selectedJob) && <Send className="w-5 h-5 group-hover:translate-x-[0.3px] group-hover:-translate-y-[0.3px] transition-transform" />}
+                {isJobExpired(selectedJob) ? 'Job Closed' : <><span>Apply Now</span><Send className="w-4 h-4" /></>}
               </button>
             </div>
           </div>
 
-          <style dangerouslySetInnerHTML={{
-            __html: `
-            .custom-job-content ul {
-              list-style-type: disc !important;
-              padding-left: 1.5rem !important;
-              margin-top: 1rem !important;
-              margin-bottom: 1rem !important;
-            }
-            .custom-job-content li {
-              margin-bottom: 0.5rem !important;
-            }
-            .custom-job-content b, .custom-job-content strong {
-              font-weight: 700 !important;
-            }
+          <style dangerouslySetInnerHTML={{__html: `
+            .modal-job-desc ul { list-style-type: disc !important; padding-left: 1.5rem !important; margin: 0.75rem 0 !important; }
+            .modal-job-desc li { margin-bottom: 0.4rem !important; }
+            .modal-job-desc b, .modal-job-desc strong { font-weight: 700 !important; }
           `}} />
         </div>
       )}

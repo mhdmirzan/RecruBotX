@@ -69,7 +69,7 @@ const AboutPage = () => {
         },
         {
             name: "Mohammed Mirzan",
-            role: "Backend Developer & LLM Expert",
+            role: "AI & Data Engineer",
             description: "Architecting the backend infrastructure and integrating large language models for intelligent interview conversations.",
             color: "from-blue-500 to-indigo-600",
             image: mirzanImg

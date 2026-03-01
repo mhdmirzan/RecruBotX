@@ -335,24 +335,24 @@ const CandidateJobs = () => {
             {/* Job Info Modal */}
             {showJobModal && selectedJob && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-                    <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowJobModal(false)}></div>
-                    <div className="relative bg-white w-full max-w-4xl max-h-[90vh] rounded-3xl overflow-hidden shadow-2xl flex flex-col animate-in fade-in zoom-in duration-300">
-                        <div className="bg-gradient-to-r from-[#0a2a5e] to-[#0d3b82] p-8 text-white relative">
-                            <button onClick={() => setShowJobModal(false)} className="absolute top-6 right-6 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors">
-                                <X className="w-6 h-6" />
+                    <div className="absolute inset-0 bg-black/60 backdrop-blur-md" onClick={() => setShowJobModal(false)}></div>
+                    <div className="relative bg-white w-full max-w-2xl max-h-[92vh] rounded-3xl overflow-hidden shadow-2xl flex flex-col" style={{animation: 'modalPop 0.25s cubic-bezier(0.34,1.56,0.64,1)'}}>
+                        {/* ── Header ── */}
+                        <div className="bg-gradient-to-br from-[#0a2a5e] to-[#0d3b82] px-8 pt-8 pb-7 text-white relative">
+                            <button onClick={() => setShowJobModal(false)} className="absolute top-5 right-5 w-9 h-9 flex items-center justify-center rounded-full bg-white/15 hover:bg-white/25 transition-colors">
+                                <X className="w-5 h-5" />
                             </button>
-                            <h2 className="text-3xl font-bold mb-1">{selectedJob.title}</h2>
-                            <p className="text-blue-200 text-lg">{selectedJob.position} • {selectedJob.location}</p>
+                            <h2 className="text-3xl font-bold leading-tight">{selectedJob.title}</h2>
+                            <p className="text-blue-200 text-base mt-1">{selectedJob.position} • {selectedJob.location}</p>
                             {selectedJob.company && (
-                                <p className="text-blue-100 text-sm mt-1 font-semibold">{selectedJob.company}</p>
+                                <p className="text-blue-100 text-sm mt-0.5 font-semibold">{selectedJob.company}</p>
                             )}
-
-                            {/* Deadline in Modal Header */}
                             {selectedJob.deadline && (
-                                <div className={`mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold ${isJobExpired(selectedJob) ? 'bg-red-500/20 text-red-200' :
-                                        getDeadlineInfo(selectedJob).urgent ? 'bg-orange-500/20 text-orange-200 animate-pulse' :
-                                            'bg-white/10 text-blue-100'
-                                    }`}>
+                                <div className={`mt-4 inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-semibold ${
+                                    isJobExpired(selectedJob) ? 'bg-red-500/25 text-red-200' :
+                                    getDeadlineInfo(selectedJob).urgent ? 'bg-orange-500/25 text-orange-200' :
+                                    'bg-white/15 text-blue-100'
+                                }`}>
                                     <Clock className="w-4 h-4" />
                                     {isJobExpired(selectedJob) ? "Deadline Passed" :
                                         `Deadline: ${selectedJob.deadline.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}`}
@@ -360,84 +360,78 @@ const CandidateJobs = () => {
                             )}
                         </div>
 
-                        <div className="flex-1 overflow-y-auto p-8 space-y-6">
-                            <div className="grid grid-cols-4 gap-4">
-                                <div className="p-4 bg-gray-50 rounded-xl">
-                                    <p className="text-xs text-gray-500 uppercase font-bold">Salary</p>
-                                    <p className="font-semibold text-gray-800">{selectedJob.salaryRange}</p>
+                        {/* ── Scrollable Body ── */}
+                        <div className="flex-1 overflow-y-auto theme-scrollbar p-7 space-y-5">
+                            {/* Info Cards */}
+                            <div className="grid grid-cols-4 gap-3">
+                                <div className="bg-gray-50 rounded-2xl px-4 py-3 border border-gray-100">
+                                    <p className="text-[10px] text-gray-400 uppercase tracking-widest font-bold mb-1">Salary</p>
+                                    <p className="font-semibold text-gray-800 text-sm leading-snug">{selectedJob.salaryRange || "—"}</p>
                                 </div>
-                                <div className="p-4 bg-gray-50 rounded-xl">
-                                    <p className="text-xs text-gray-500 uppercase font-bold">Experience</p>
-                                    <p className="font-semibold text-gray-800">{selectedJob.experienceRange || "Not specified"}</p>
+                                <div className="bg-gray-50 rounded-2xl px-4 py-3 border border-gray-100">
+                                    <p className="text-[10px] text-gray-400 uppercase tracking-widest font-bold mb-1">Experience</p>
+                                    <p className="font-semibold text-gray-800 text-sm leading-snug">{selectedJob.experienceRange || "—"}</p>
                                 </div>
-                                <div className="p-4 bg-gray-50 rounded-xl">
-                                    <p className="text-xs text-gray-500 uppercase font-bold">Domain</p>
-                                    <p className="font-semibold text-gray-800">{selectedJob.industryDomain || "General"}</p>
+                                <div className="bg-gray-50 rounded-2xl px-4 py-3 border border-gray-100">
+                                    <p className="text-[10px] text-gray-400 uppercase tracking-widest font-bold mb-1">Domain</p>
+                                    <p className="font-semibold text-gray-800 text-sm leading-snug">{selectedJob.industryDomain || "General"}</p>
                                 </div>
-                                <div className="p-4 bg-indigo-50 rounded-xl border border-indigo-100">
-                                    <p className="text-xs text-indigo-500 uppercase font-bold">Vacancies</p>
-                                    <p className="font-bold text-indigo-700 text-lg">{selectedJob.numberOfVacancies || 1}</p>
+                                <div className="bg-[#0a2a5e]/5 rounded-2xl px-4 py-3 border border-[#0a2a5e]/15">
+                                    <p className="text-[10px] text-[#0a2a5e] uppercase tracking-widest font-bold mb-1">Vacancies</p>
+                                    <p className="font-bold text-[#0a2a5e] text-xl leading-snug">{selectedJob.numberOfVacancies || 1}</p>
                                 </div>
                             </div>
 
-                            {/* Prominent Deadline Section */}
+                            {/* Deadline Section */}
                             {selectedJob.deadline && (
-                                <div className={`p-5 rounded-2xl border-2 flex items-center gap-4 ${isJobExpired(selectedJob) ? 'bg-red-50 border-red-300' :
-                                        getDeadlineInfo(selectedJob).urgent ? 'bg-orange-50 border-orange-300' :
-                                            'bg-blue-50 border-blue-200'
+                                <div className={`flex items-center gap-4 px-5 py-4 rounded-2xl border ${
+                                    isJobExpired(selectedJob) ? 'bg-red-50 border-red-200' :
+                                    getDeadlineInfo(selectedJob).urgent ? 'bg-orange-50 border-orange-200' :
+                                    'bg-blue-50 border-blue-200'
+                                }`}>
+                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+                                        isJobExpired(selectedJob) ? 'bg-red-100' :
+                                        getDeadlineInfo(selectedJob).urgent ? 'bg-orange-100' :
+                                        'bg-blue-100'
                                     }`}>
-                                    <div className={`w-12 h-12 rounded-full flex items-center justify-center ${isJobExpired(selectedJob) ? 'bg-red-100' :
-                                            getDeadlineInfo(selectedJob).urgent ? 'bg-orange-100' :
-                                                'bg-blue-100'
-                                        }`}>
-                                        <Clock className={`w-6 h-6 ${isJobExpired(selectedJob) ? 'text-red-600' :
-                                                getDeadlineInfo(selectedJob).urgent ? 'text-orange-600' :
-                                                    'text-blue-600'
-                                            }`} />
+                                        <Clock className={`w-5 h-5 ${isJobExpired(selectedJob) ? 'text-red-600' : getDeadlineInfo(selectedJob).urgent ? 'text-orange-600' : 'text-blue-600'}`} />
                                     </div>
                                     <div>
-                                        <p className={`font-bold text-lg ${isJobExpired(selectedJob) ? 'text-red-700' :
-                                                getDeadlineInfo(selectedJob).urgent ? 'text-orange-700' :
-                                                    'text-blue-700'
-                                            }`}>
+                                        <p className={`font-bold text-base ${isJobExpired(selectedJob) ? 'text-red-700' : getDeadlineInfo(selectedJob).urgent ? 'text-orange-700' : 'text-blue-700'}`}>
                                             {isJobExpired(selectedJob) ? "Applications Closed" :
                                                 `Apply before ${selectedJob.deadline.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" })}`}
                                         </p>
-                                        <p className={`text-sm ${isJobExpired(selectedJob) ? 'text-red-500' :
-                                                getDeadlineInfo(selectedJob).urgent ? 'text-orange-500' :
-                                                    'text-blue-500'
-                                            }`}>
-                                            {getDeadlineInfo(selectedJob).text}
+                                        <p className={`text-sm mt-0.5 ${isJobExpired(selectedJob) ? 'text-red-400' : getDeadlineInfo(selectedJob).urgent ? 'text-orange-400' : 'text-blue-400'}`}>
+                                            {selectedJob.deadline.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
                                         </p>
                                     </div>
                                 </div>
                             )}
 
-                            <div className="prose max-w-none">
-                                <h3 className="text-lg font-bold text-gray-800 mb-2">Job Description</h3>
+                            {/* Job Description */}
+                            <div>
+                                <h3 className="text-base font-bold text-gray-800 mb-3">Job Description</h3>
                                 <div
-                                    className="text-gray-600 leading-relaxed"
+                                    className="text-gray-600 leading-relaxed text-sm modal-job-desc"
                                     dangerouslySetInnerHTML={{ __html: selectedJob.jobDescription || '<p class="text-gray-400 italic">No description provided.</p>' }}
                                 />
                             </div>
                         </div>
 
-                        <div className="p-6 bg-gray-50 border-t border-gray-100 flex justify-end">
+                        {/* ── Footer ── */}
+                        <div className="px-7 py-5 bg-white border-t border-gray-100 flex justify-end">
                             {isApplied(selectedJob.id) ? (
-                                <div className="flex items-center gap-2 px-8 py-3 bg-green-100 text-green-700 rounded-xl font-bold">
-                                    <CheckCircle2 className="w-5 h-5" /> You have already applied
+                                <div className="flex items-center gap-2 px-6 py-3 bg-green-100 text-green-700 rounded-2xl font-bold text-sm">
+                                    <CheckCircle2 className="w-4 h-4" /> Already Applied
                                 </div>
                             ) : isJobExpired(selectedJob) || !selectedJob.isActive ? (
-                                <div className="flex items-center gap-2 px-8 py-3 bg-red-100 text-red-700 rounded-xl font-bold">
-                                    <XCircle className="w-5 h-5" /> This job is closed
+                                <div className="flex items-center gap-2 px-6 py-3 bg-red-100 text-red-700 rounded-2xl font-bold text-sm">
+                                    <XCircle className="w-4 h-4" /> Job Closed
                                 </div>
                             ) : (
                                 <button
-                                    onClick={() => {
-                                        setShowJobModal(false);
-                                        navigate(`/candidate/apply/${selectedJob.id}`);
-                                    }}
-                                    className="bg-[#0a2a5e] text-white px-8 py-3 rounded-xl font-bold hover:bg-[#0d3b82] transition-colors flex items-center gap-2 shadow-lg"
+                                    onClick={() => { setShowJobModal(false); navigate(`/candidate/apply/${selectedJob.id}`); }}
+                                    className="flex items-center gap-2 bg-[#0a2a5e] hover:bg-[#0d3b82] text-white px-8 py-3 rounded-2xl font-bold transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0"
                                 >
                                     Apply Now <Send className="w-4 h-4" />
                                 </button>

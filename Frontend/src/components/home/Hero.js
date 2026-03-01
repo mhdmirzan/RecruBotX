@@ -1,11 +1,11 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowRight, User, Briefcase, Sparkles, Play } from "lucide-react";
-import Img1 from "../../assets/images/home/2.jpg";
-import Img2 from "../../assets/images/home/4.jpeg";
-import Img3 from "../../assets/images/home/5.png";
-import Img4 from "../../assets/images/home/3.jpg";
+import { ArrowRight, User, Briefcase } from "lucide-react";
+import Img1 from "../../assets/images/general/1.png";
+import Img2 from "../../assets/images/general/2.png";
+import Img3 from "../../assets/images/general/3.png";
+import Img4 from "../../assets/images/general/5.png";
 
 const Hero = () => {
   return (
@@ -26,13 +26,17 @@ const Hero = () => {
         >
           {/* Badge */}
           <motion.div
-            initial={{ opacity: 0, y: -20 }}
+            initial={{ opacity: 0, y: -16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500/10 to-indigo-500/10 border border-blue-200 rounded-full text-blue-600 text-sm font-medium mb-6"
+            className="mb-7"
           >
-            <Sparkles className="w-4 h-4" />
-            AI-Powered Recruitment Platform
+            <div className="inline-block">
+              <span className="text-sm font-medium text-blue-600 tracking-wide">
+                ✦ AI-Powered Recruitment Platform
+              </span>
+              <div className="h-px bg-gradient-to-r from-blue-600 to-transparent mt-2" />
+            </div>
           </motion.div>
 
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight mb-6">
@@ -77,91 +81,33 @@ const Hero = () => {
           initial={{ opacity: 0, x: 40 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.7, delay: 0.2 }}
-          className="relative"
+          className="relative w-full"
         >
-          {/* Decorative frame */}
+          {/* Decorative glow */}
           <div className="absolute -inset-4 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-3xl opacity-10 blur-xl" />
 
-          <div className="relative grid grid-cols-2 gap-4">
-            <motion.div
-              whileHover={{ scale: 1.03, rotate: -1 }}
-              transition={{ duration: 0.3 }}
-              className="relative overflow-hidden rounded-2xl shadow-xl"
-            >
-              <img
-                src={Img1}
-                alt="Interview"
-                className="w-full h-48 object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
-            </motion.div>
-
-            <motion.div
-              whileHover={{ scale: 1.03, rotate: 1 }}
-              transition={{ duration: 0.3 }}
-              className="relative overflow-hidden rounded-2xl shadow-xl mt-6"
-            >
-              <img
-                src={Img2}
-                alt="AI Interview"
-                className="w-full h-48 object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
-            </motion.div>
-
-            <motion.div
-              whileHover={{ scale: 1.03, rotate: 1 }}
-              transition={{ duration: 0.3 }}
-              className="relative overflow-hidden rounded-2xl shadow-xl -mt-6"
-            >
-              <img
-                src={Img3}
-                alt="Tech Interview"
-                className="w-full h-48 object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
-            </motion.div>
-
-            <motion.div
-              whileHover={{ scale: 1.03, rotate: -1 }}
-              transition={{ duration: 0.3 }}
-              className="relative overflow-hidden rounded-2xl shadow-xl"
-            >
-              <img
-                src={Img4}
-                alt="Candidate"
-                className="w-full h-48 object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
-
-              {/* Play button overlay */}
-              <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity duration-300">
-                <div className="w-14 h-14 bg-white/90 rounded-full flex items-center justify-center shadow-lg cursor-pointer hover:scale-110 transition-transform">
-                  <Play className="w-6 h-6 text-blue-600 ml-1" fill="currentColor" />
-                </div>
-              </div>
-            </motion.div>
+          <div className="relative grid grid-cols-2 gap-3 sm:gap-4">
+            {[
+              { src: Img1, alt: "Team Meeting" },
+              { src: Img2, alt: "AI Recruitment" },
+              { src: Img3, alt: "AI Handshake" },
+              { src: Img4, alt: "Candidate Review" },
+            ].map((img, i) => (
+              <motion.div
+                key={i}
+                whileHover={{ scale: 1.03 }}
+                transition={{ duration: 0.3 }}
+                className="relative overflow-hidden rounded-2xl shadow-lg aspect-[4/3]"
+              >
+                <img
+                  src={img.src}
+                  alt={img.alt}
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
+              </motion.div>
+            ))}
           </div>
-
-          {/* Floating badge */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.6 }}
-            className="absolute -bottom-4 -left-4 bg-white px-5 py-3 rounded-xl shadow-xl border border-gray-100"
-          >
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-full flex items-center justify-center">
-                <Sparkles className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-gray-800">
-                  AI-Powered
-                </p>
-                <p className="text-xs text-gray-500">Smart Analysis</p>
-              </div>
-            </div>
-          </motion.div>
         </motion.div>
       </div>
     </section>

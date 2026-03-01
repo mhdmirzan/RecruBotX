@@ -75,7 +75,6 @@ const RecruiterSigninPage = () => {
                 ...result.user,
                 companyName: result.user.companyName || ""
             }));
-            alert(`Welcome back, ${result.user.firstName}!`);
             navigate("/recruiter/dashboard");
         } else {
             setError(result.message);
