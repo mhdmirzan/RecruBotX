@@ -60,3 +60,27 @@ class LLMService:
             response_format={"type": "json_object"}
         )
         return completion.choices[0].message.content
+
+    async def evaluate_answer_groq(self, question: str, answer: str) -> Dict[str, float]:
+        from agents.interview_agent.prompts import INTERVIEW_ANSWER_EVALUATION_PROMPT
+        import json
+        
+        prompt = INTERVIEW_ANSWER_EVALUATION_PROMPT.format(question=question, answer=answer)
+        try:
+            res_str = await self.generate_json_response(prompt)
+            result = json.loads(res_str)
+            return {
+                "technical_accuracy": float(result.get("technical_accuracy", 0)),
+                "depth_of_explanation": float(result.get("depth_of_explanation", 0)),
+                "clarity": float(result.get("clarity", 0)),
+                "confidence_level": float(result.get("confidence_level", 0))
+            }
+        except Exception as e:
+            print(f"Error evaluating answer: {e}")
+            return {
+                "technical_accuracy": 0,
+                "depth_of_explanation": 0,
+                "clarity": 0,
+                "confidence_level": 0
+            }
+

@@ -37,6 +37,73 @@ Rules:
 Focus for {stage}: {stage_instructions}
 """
 
+INTERVIEW_ANSWER_EVALUATION_PROMPT = """
+You are a strict AI technical interview evaluator.
+
+Evaluate the candidate answer objectively.
+
+Do NOT be generous.
+Do NOT be overly harsh.
+Base evaluation strictly on correctness and depth.
+
+Return ONLY valid JSON.
+No explanation.
+No markdown.
+
+Scoring (0-10 scale):
+
+- technical_accuracy
+- depth_of_explanation
+- clarity
+- confidence_level
+
+Return format:
+
+{{
+  "technical_accuracy": number,
+  "depth_of_explanation": number,
+  "clarity": number,
+  "confidence_level": number
+}}
+
+Question:
+{question}
+
+Candidate Answer:
+{answer}
+"""
+
+FINAL_FEEDBACK_REPORT_PROMPT = """
+You are a professional hiring evaluation system.
+
+Generate a structured candidate evaluation report.
+
+Be objective, professional, and concise.
+Maximum 250 words.
+Plain text only.
+No markdown formatting.
+
+Candidate Scores:
+
+CV Score: {cv_score}
+Technical Interview Score: {technical_score}
+Communication Score: {communication_score}
+Confidence Score: {confidence_score}
+Final Overall Score: {final_score}
+Interview Status: {status}
+
+Generate:
+
+1. Strengths (bullet points)
+2. Weaknesses (bullet points)
+3. Areas for Improvement (bullet points)
+4. Hiring Recommendation:
+   - Strong Hire
+   - Hire
+   - Consider
+   - Reject
+"""
+
 STAGE_INSTRUCTIONS = {
     "introduction": "Enthusiastically welcome the candidate by name to the RecruBotX AI Interview for their job role. Introduce yourself representing RecruBotX. Do NOT ask them to introduce themselves or talk about their background yet. Simply explain the format and ask if they are ready to begin.",
     "warmup": "Ask a broad question like 'Tell me about yourself' or ask about their background from the CV. Keep it light.",

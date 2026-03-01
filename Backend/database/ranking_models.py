@@ -34,9 +34,16 @@ class CandidateRankingModel(BaseModel):
     candidate_name: str
     email: str = ""  # Email extracted from CV
     rank: int
-    score: float  # Overall final score out of 100
+    score: float = 0.0  # Overall final score out of 100
     cv_score: float = 0.0  # CV screening score out of 100
+    cv_technical_score: float = 0.0
+    cv_experience_score: float = 0.0
+    cv_project_score: float = 0.0
+    cv_education_score: float = 0.0
     interview_score: float = 0.0  # Interview performance score out of 100
+    technical_score: float = 0.0
+    communication_score: float = 0.0
+    confidence_score: float = 0.0
     facial_recognition_score: float = 0.0  # Facial analysis score out of 100
     completion: int  # Completion percentage
     interview_status: str  # "Shortlisted", "Review", "Not Selected"

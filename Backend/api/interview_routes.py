@@ -12,6 +12,7 @@ from database.job_posting_crud import get_job_posting_by_id, create_job_cv_file,
 from cv_screener.cv_parser import parse_cv_file
 from cv_screener.cv_extractor import extract_cv_information
 from database.crud import create_interview_cv
+from database.ranking_crud import create_candidate_ranking
 
 # Import the new service
 from services.interview_service import InterviewService, InterviewServiceContext
@@ -135,6 +136,54 @@ async def start_interview(
         service = get_interview_service()
         
         new_session_id = await service.initialize_session(context, job_id, str(candidate_obj_id))
+        
+        import asyncio
+        from cv_screener.gemini_screener import GeminiCVScreener
+        
+        async def background_cv_scoring(job_id: str, candidate_id: str, candidate_name: str, email: str, job_desc: str, cv_data: dict, cv_text: str):
+            try:
+                screener = GeminiCVScreener()
+                result = await screener.screen_cv_master(
+                    job_description=job_desc,
+                    cv_content=str(cv_data),
+                    file_name=safe_filename
+                )
+                
+                job_rec = await get_job_posting_by_id(db, job_id)
+                recruiter_id = job_rec.get("recruiter_id", "") if job_rec else ""
+                
+                await create_candidate_ranking(
+                    db=db,
+                    job_posting_id=job_id,
+                    recruiter_id=recruiter_id,
+                    candidate_name=candidate_name,
+                    rank=999, # Will be calculated on dashboard query
+                    score=0, # final score calculated after interview
+                    candidate_id=candidate_id,
+                    email=email,
+                    cv_score=result["overall_cv_score"],
+                    cv_technical_score=result["technical_score"],
+                    cv_experience_score=result["experience_score"],
+                    cv_project_score=result["project_score"],
+                    cv_education_score=result["education_score"],
+                    interview_score=0,
+                    technical_score=0,
+                    communication_score=0,
+                    confidence_score=0,
+                    facial_recognition_score=0,
+                    completion=10, # Interview started
+                    interview_status="In Progress",
+                    cv_data={"text": cv_text[:500], "full_analysis": result},
+                    evaluation_details={"background_screening": result}
+                )
+            except Exception as e:
+                print(f"Background CV scoring failed: {e}")
+
+        # Fire and forget background CV scoring
+        asyncio.create_task(
+            background_cv_scoring(job_id, str(candidate_obj_id), candidate_name, email_address, job_description, cv_json, cv_text)
+        )
+
         
         # Get the first question asynchronously
         # We process 'INIT' to trigger the greeting behavior

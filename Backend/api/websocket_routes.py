@@ -116,11 +116,16 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str):
                                 })
 
                             if session.stage.value == "finished":
+                                # Notify frontend we're calculating
+                                await manager.send_json(session_id, {
+                                    "type": "interview_concluding",
+                                    "payload": "Calculating results..."
+                                })
                                 # Handle interview end
-                                await service.finalize_interview(session_id)
+                                report_dict = await service.finalize_interview(session_id)
                                 await manager.send_json(session_id, {
                                     "type": "report",
-                                    "payload": {"status": "Complete"}
+                                    "payload": report_dict
                                 })
                                 
                 elif msg_type == "text_data":
@@ -154,11 +159,16 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str):
                                 })
 
                             if session.stage.value == "finished":
+                                # Notify frontend we're calculating
+                                await manager.send_json(session_id, {
+                                    "type": "interview_concluding",
+                                    "payload": "Calculating results..."
+                                })
                                 # Handle interview end
-                                await service.finalize_interview(session_id)
+                                report_dict = await service.finalize_interview(session_id)
                                 await manager.send_json(session_id, {
                                     "type": "report",
-                                    "payload": {"status": "Complete"}
+                                    "payload": report_dict
                                 })
                                     
                 elif msg_type == "interrupt":
