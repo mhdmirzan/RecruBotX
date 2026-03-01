@@ -104,8 +104,10 @@ const RecruiterInterviewReports = () => {
                                     <tr className="bg-[#0a2a5e] text-white text-sm">
                                         <th className="py-4 px-5 text-left font-semibold w-10">#</th>
                                         <th className="py-4 px-5 text-left font-semibold">Candidate Name</th>
-                                        <th className="py-4 px-5 text-left font-semibold">Email Address</th>
-                                        <th className="py-4 px-5 text-left font-semibold">Phone Number</th>
+                                        <th className="py-4 px-5 text-left font-semibold">Date Applied</th>
+                                        <th className="py-4 px-5 text-left font-semibold">Avg Score</th>
+                                        <th className="py-4 px-5 text-left font-semibold">Recommendation</th>
+                                        <th className="py-4 px-5 text-left font-semibold">Interview Report</th>
                                         <th className="py-4 px-5 text-left font-semibold">Date Applied</th>
                                         <th className="py-4 px-5 text-left font-semibold">Avg Score</th>
                                         <th className="py-4 px-5 text-left font-semibold">CV</th>
@@ -121,26 +123,47 @@ const RecruiterInterviewReports = () => {
                                             <td className="py-4 px-5 font-semibold text-gray-800">
                                                 {report.candidate_name || "—"}
                                             </td>
-                                            <td className="py-4 px-5 text-gray-600">
-                                                {report.email_address || <span className="text-gray-400">—</span>}
-                                            </td>
-                                            <td className="py-4 px-5 text-gray-600">
-                                                {report.phone_number || <span className="text-gray-400">—</span>}
-                                            </td>
                                             <td className="py-4 px-5 text-gray-600">{report.date_applied}</td>
                                             <td className="py-4 px-5">
                                                 {report.avg_score !== null && report.avg_score !== undefined ? (
-                                                    <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold border ${
-                                                        report.avg_score >= 80
+                                                    <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold border ${report.avg_score >= 80
                                                             ? "text-green-600 border-green-400 bg-green-50"
                                                             : report.avg_score >= 60
-                                                            ? "text-yellow-600 border-yellow-400 bg-yellow-50"
-                                                            : "text-red-600 border-red-400 bg-red-50"
-                                                    }`}>
+                                                                ? "text-yellow-600 border-yellow-400 bg-yellow-50"
+                                                                : "text-red-600 border-red-400 bg-red-50"
+                                                        }`}>
                                                         {Math.round(report.avg_score)}/100
                                                     </span>
                                                 ) : (
                                                     <span className="text-orange-500 font-medium text-xs">In Progress</span>
+                                                )}
+                                            </td>
+                                            <td className="py-4 px-5">
+                                                {report.avg_score !== null && report.avg_score !== undefined ? (
+                                                    <span className={`inline-block px-3 py-1 text-xs font-semibold rounded-md ${report.avg_score >= 80 ? "bg-green-100 text-green-700" :
+                                                            report.avg_score >= 60 ? "bg-blue-100 text-blue-700" :
+                                                                "bg-red-100 text-red-700"
+                                                        }`}>
+                                                        {report.avg_score >= 80 ? "Strongly Recommended" :
+                                                            report.avg_score >= 60 ? "Recommended" :
+                                                                "Not Recommended"}
+                                                    </span>
+                                                ) : (
+                                                    <span className="text-gray-400 text-xs">—</span>
+                                                )}
+                                            </td>
+                                            <td className="py-4 px-5">
+                                                {report.ranking_id ? (
+                                                    <button
+                                                        onClick={() => navigate(`/recruiter/report/${report.ranking_id}`)}
+                                                        className="flex items-center gap-1 text-[#0a2a5e] hover:text-[#061a3d] font-medium transition-colors"
+                                                        title="View Report"
+                                                    >
+                                                        <FileText className="w-4 h-4" />
+                                                        <span className="text-xs">View Report</span>
+                                                    </button>
+                                                ) : (
+                                                    <span className="text-gray-400 text-xs">Processing...</span>
                                                 )}
                                             </td>
                                             <td className="py-4 px-5">
