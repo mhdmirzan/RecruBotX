@@ -146,13 +146,16 @@ const CandidateReport = () => {
                 const label = parts[0].trim();
                 let fullValue = parts.slice(1).join(':').trim();
 
-                // Sometimes the value is on the next line
-                if (!fullValue && idx + 1 < lines.length) {
+                // Consume all remaining lines into the explanation until the end (or another major section starts)
+                while (idx + 1 < lines.length) {
                     let nextLine = lines[idx + 1].trim();
-                    if (nextLine && !nextLine.toLowerCase().match(/^(strength|weakness|area|hiring)/)) {
-                        fullValue = nextLine.replace(/^[-*]\s*/, '').trim();
-                        lines[idx + 1] = ""; // Skip next line
+                    if (nextLine && nextLine.toLowerCase().match(/^(strength|weakness|area)/)) {
+                        break;
                     }
+                    if (nextLine) {
+                        fullValue += (fullValue ? "\n\n" : "") + nextLine.replace(/^[-*]\s*/, '').trim();
+                    }
+                    idx++; // Advance index to skip processing this line normally
                 }
 
                 if (!fullValue) fullValue = "Pending";
@@ -180,9 +183,10 @@ const CandidateReport = () => {
 
                 // Remove the exact status word from the explanation to avoid redundancy, but keep the rest
                 let explanation = fullValue;
-                const statusRegexResult = new RegExp(`^${status}[\\.\\s-]*`, "i").exec(explanation);
-                if (statusRegexResult) {
-                    explanation = explanation.substring(statusRegexResult[0].length).trim();
+                const exactStatusRegex = new RegExp(`(^|\\n|\\s)${status}[\\.\\s-]*$`, "i");
+                if (exactStatusRegex.test(explanation)) {
+                    // Try to strip it from the end if it's there
+                    explanation = explanation.replace(new RegExp(`(^|\\n|\\s)${status}[\\.\\s-]*$`, "i"), "").trim();
                 }
 
                 elements.push(
@@ -194,7 +198,9 @@ const CandidateReport = () => {
                             </span>
                         </div>
                         {explanation && (
-                            <p className={`text-md mt-2 ${textClass} opacity-90 leading-relaxed`}>{explanation}</p>
+                            <div className={`mt-3 ${textClass} opacity-90 leading-relaxed text-md`}>
+                                {explanation.split("\n\n").map((para, i) => <p key={i} className={i > 0 ? "mt-2" : ""}>{para}</p>)}
+                            </div>
                         )}
                     </div>
                 );
