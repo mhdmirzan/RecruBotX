@@ -339,8 +339,11 @@ const CandidateJobs = () => {
                             <button onClick={() => setShowJobModal(false)} className="absolute top-5 right-5 w-9 h-9 flex items-center justify-center rounded-full bg-white/15 hover:bg-white/25 transition-colors">
                                 <X className="w-5 h-5" />
                             </button>
-                            <h2 className="text-3xl font-bold leading-tight">{selectedJob.company}</h2>
-                            <p className="text-blue-200 text-base mt-1">{selectedJob.title} • {selectedJob.position} • {selectedJob.location}</p>
+                            <h2 className="text-3xl font-bold leading-tight">{selectedJob.title}</h2>
+                            <p className="text-blue-200 text-base mt-1">{selectedJob.position} • {selectedJob.location}</p>
+                            {selectedJob.company && (
+                                <p className="text-blue-100 text-sm mt-0.5 font-semibold">{selectedJob.company}</p>
+                            )}
                             {selectedJob.deadline && (
                                 <div className={`mt-4 inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-semibold ${
                                     isJobExpired(selectedJob) ? 'bg-red-500/25 text-red-200' :
