@@ -193,7 +193,15 @@ class InterviewService:
         session.transcript.append({"role": "interviewer", "content": full_response})
         
         # Determine if finished based on LLM output
-        if "interview is now concluded" in full_response.lower() or "thank you for your time" in full_response.lower():
+        response_lower = full_response.lower()
+        if any(phrase in response_lower for phrase in [
+            "interview is now concluded", 
+            "thank you for your time", 
+            "interview is concluded",
+            "concluding the interview",
+            "ending the interview",
+            "interview concluded"
+        ]):
             session.stage = InterviewStage.FINISHED
             
         await self.db.interview_sessions.update_one(
