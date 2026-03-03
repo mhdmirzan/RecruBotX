@@ -8,7 +8,8 @@ import {
     User,
     Clock,
     ChevronRight,
-    ChevronLeft // Add ChevronLeft for restore button
+    ChevronLeft, // Add ChevronLeft for restore button
+    X
 } from 'lucide-react';
 import { ConversationState } from '../../services/ConversationStateMachine';
 import { correctGrammar } from '../../utils/grammarUtils';
@@ -36,7 +37,8 @@ const LiveInterviewSession = ({
     jobRole,
     onInterrupt,
     liveCaption, /* Accept liveCaption from App parent */
-    onEndInterview
+    onEndInterview,
+    isConnected
 }) => {
     // State
     const [isTranscriptVisible, setIsTranscriptVisible] = useState(true);
@@ -129,8 +131,22 @@ const LiveInterviewSession = ({
                         </span>
                     </div>
 
-                    <div className="bg-black/40 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 pointer-events-auto">
+                    <div className="bg-black/40 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 pointer-events-auto flex items-center gap-3">
                         <span className="text-sm font-medium text-slate-200">{jobRole} Interview</span>
+                        {isConnected !== undefined && (
+                            <>
+                                <div className="w-px h-4 bg-white/20 mx-1"></div>
+                                {isConnected ? (
+                                    <span className="flex items-center gap-2 text-green-400 font-medium text-sm">
+                                        <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span> Connected
+                                    </span>
+                                ) : (
+                                    <span className="flex items-center gap-2 text-orange-400 font-medium text-sm">
+                                        <span className="w-2 h-2 rounded-full bg-orange-500"></span> Connecting...
+                                    </span>
+                                )}
+                            </>
+                        )}
                     </div>
                 </div>
 
@@ -236,8 +252,8 @@ const LiveInterviewSession = ({
             >
                 <div className="p-4 border-b border-slate-700 flex justify-between items-center bg-slate-800/50 min-w-[384px]"> {/* min-w to prevent content squishing during transition */}
                     <h3 className="font-semibold text-slate-200">Transcript</h3>
-                    <button onClick={() => setIsTranscriptVisible(false)} className="text-slate-400 hover:text-white">
-                        <ChevronRight className="w-5 h-5" />
+                    <button onClick={() => setIsTranscriptVisible(false)} className="bg-slate-700/50 p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700 transition-colors" title="Hide Transcript">
+                        <X className="w-5 h-5" />
                     </button>
                 </div>
 
