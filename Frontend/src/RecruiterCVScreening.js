@@ -210,13 +210,13 @@ const RecruiterCVScreening = () => {
                 {/* Header */}
                 <div className="mb-4 flex-shrink-0 flex justify-between items-center">
                     <div>
-                        <h2 className="text-3xl font-bold text-gray-800">CV Review</h2>
+                        <h2 className="text-3xl font-bold text-gray-800">Resume Analyzer</h2>
                         <p className="text-gray-500 text-md mt-1 py-4">AI-powered resume analysis and candidate shortlisting.</p>
                     </div>
-                    {/* View All Screenings + User Profile - Top Right */}
+                    {/* All Resume Analyses + User Profile - Top Right */}
                     <div className="flex items-center gap-4">
                         <NavLink to="/recruiter/all-screenings" className="px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 flex items-center gap-2 shadow-sm">
-                            <Eye className="w-4 h-4" /> View All Screenings
+                            <Eye className="w-4 h-4" /> All Resume Analyses
                         </NavLink>
                     </div>
                 </div>

@@ -172,7 +172,7 @@ const Evaluation = () => {
                             }`
                         }
                     >
-                        <Search className="w-5 h-5" /> CV Review
+                        <Search className="w-5 h-5" /> Resume Analyzer
                     </NavLink>
 
                     <NavLink

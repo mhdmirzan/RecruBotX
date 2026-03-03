@@ -27,7 +27,7 @@ const candidateTourSteps = [
   },
   {
     target: "[data-tour='c-cv-review']",
-    title: "CV Review",
+    title: "Resume Analyzer",
     description: "Get instant AI feedback on your resume's strengths and gaps before you apply.",
   },
   {
@@ -504,7 +504,7 @@ const CandidateDashboard = () => {
                 onClick={handleCVScreening}
                 className="w-full bg-gradient-to-r from-[#0a2a5e] to-[#0d3b82] text-white px-6 py-3 rounded-xl font-semibold hover:from-[#061a3d] hover:to-[#0a2a5e] transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 group"
               >
-                <span>Go to CV Review</span>
+                <span>Go to Resume Analyzer</span>
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </button>
             </div>

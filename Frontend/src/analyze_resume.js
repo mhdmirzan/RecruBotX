@@ -239,7 +239,7 @@ const AnalyzeResume = () => {
     // CV Screening subtitle
     doc.setFontSize(14);
     doc.setFont(undefined, 'normal');
-    doc.text('CV Review Analysis Report', margin, 30);
+    doc.text('Resume Analyzer Analysis Report', margin, 30);
 
     // Date
     doc.setFontSize(10);
@@ -434,7 +434,7 @@ const AnalyzeResume = () => {
         {/* Top Header */}
         <div className="mb-6 flex-shrink-0 flex justify-between items-center">
           <div>
-            <h2 className="text-3xl font-bold text-[#0a2a5e]">CV Review</h2>
+            <h2 className="text-3xl font-bold text-[#0a2a5e]">Resume Analyzer</h2>
             <p className="text-gray-500 text-md mt-1 py-2">Upload your resume and paste the job description to analyze compatibility.</p>
           </div>
         </div>

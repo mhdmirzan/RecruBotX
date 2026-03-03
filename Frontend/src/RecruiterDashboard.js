@@ -34,7 +34,7 @@ const recruiterTourSteps = [
   },
   {
     target: "[data-tour='r-cv-review']",
-    title: "CV Review",
+    title: "Resume Analyzer",
     description: "Upload CVs and let AI rank, score, and filter candidates — so you focus on the best.",
   },
   {

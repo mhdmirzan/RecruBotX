@@ -176,7 +176,7 @@ const RecruiterAllScreenings = () => {
                             <ArrowLeft className="w-6 h-6 text-gray-600" />
                         </button>
                         <div>
-                            <h2 className="text-3xl font-bold text-[#0a2a5e]">All CV Reviews</h2>
+                            <h2 className="text-3xl font-bold text-[#0a2a5e]">All Resume Analyzers</h2>
                             <p className="text-gray-500 mt-1">
                                 {screenings.length} screening batch{screenings.length !== 1 ? "es" : ""}
                                 {selectedScreening && ` • Viewing candidates`}
@@ -203,7 +203,7 @@ const RecruiterAllScreenings = () => {
                                 onClick={() => navigate("/recruiter/cv-screening")}
                                 className="mt-4 px-6 py-3 bg-[#0a2a5e] text-white rounded-xl hover:bg-[#061a3d] transition-all"
                             >
-                                Go to CV Review
+                                Go to Resume Analyzer
                             </button>
                         </div>
                     ) : (
@@ -223,7 +223,7 @@ const RecruiterAllScreenings = () => {
                                                 <div className="flex items-center justify-between">
                                                     <div className="flex-1">
                                                         <div className="flex items-center gap-3 mb-2">
-                                                            <h3 className="text-xl font-bold text-gray-800">CV Review Batch</h3>
+                                                            <h3 className="text-xl font-bold text-gray-800">Resume Analyzer Batch</h3>
                                                             <span className="px-3 py-1 bg-purple-50 text-purple-700 text-xs font-semibold rounded-full">Screening</span>
                                                         </div>
                                                         <p className="text-sm text-gray-600 mb-2">
