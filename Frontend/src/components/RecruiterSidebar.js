@@ -64,7 +64,7 @@ const RecruiterSidebar = () => {
                 </NavLink>
 
                 <NavLink data-tour="r-cv-review" to="/recruiter/cv-screening" className={navItemClass}>
-                    <Search className="w-5 h-5" /> CV Review
+                    <Search className="w-5 h-5" /> Resume Analyzer
                 </NavLink>
 
                 <NavLink data-tour="r-settings" to="/recruiter/settings" className={navItemClass}>
