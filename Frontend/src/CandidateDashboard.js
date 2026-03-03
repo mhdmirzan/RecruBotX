@@ -540,11 +540,11 @@ const CandidateDashboard = () => {
                         </div>
                         <div className="flex-1 min-w-0">
                           <h4 className="font-semibold text-gray-800 text-sm truncate">
-                            {job ? job.title : "Job Position"}
+                            {job ? job.company : "Company"}
                           </h4>
                           {job && (
-                            <p className="text-[#0a2a5e] text-xs font-medium truncate">
-                              {job.position}{job.company ? ` • ${job.company}` : ""}
+                            <p className="text-gray-500 text-xs font-medium truncate">
+                              {job.title} • {job.position}
                             </p>
                           )}
                           <div className="flex items-center gap-1 mt-1 text-xs text-gray-400">
