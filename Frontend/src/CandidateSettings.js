@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { Camera, Eye, EyeOff, Check, X } from "lucide-react";
 import { getCurrentUser, updateCurrentUser } from "./utils/userDatabase";
 import CandidateSidebar from "./components/CandidateSidebar";
-import UserProfileHeader from "./components/UserProfileHeader";
 
 const CandidateSettings = () => {
   const navigate = useNavigate();
@@ -51,9 +50,21 @@ const CandidateSettings = () => {
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        showToast("Image size should be less than 5MB", "error");
+        return;
+      }
       const reader = new FileReader();
       reader.onloadend = () => {
-        setFormData({ ...formData, profileImage: reader.result });
+        const base64String = reader.result;
+        setFormData({ ...formData, profileImage: base64String });
+        // Immediately persist to localStorage for consistency
+        const updatedData = {
+          ...user,
+          profileImage: base64String,
+        };
+        updateCurrentUser(updatedData);
       };
       reader.readAsDataURL(file);
     }
@@ -89,7 +100,7 @@ const CandidateSettings = () => {
       firstName: formData.firstName,
       lastName: formData.lastName,
       email: formData.email,
-      profileImage: formData.profileImage,
+      profileImage: formData.profileImage, // Already persisted on upload, but include for consistency
     };
 
     const updatedUser = updateCurrentUser(updatedData);
@@ -97,7 +108,7 @@ const CandidateSettings = () => {
       setUser(updatedUser);
       showToast("Settings saved successfully!", "success");
       // Clear password fields
-      setFormData({ ...formData, newPassword: "", confirmPassword: "" });
+      setFormData(prev => ({ ...prev, newPassword: "", confirmPassword: "" }));
     } else {
       showToast("Failed to save settings!", "error");
     }
@@ -135,9 +146,6 @@ const CandidateSettings = () => {
             <h2 className="text-3xl font-bold text-[#0a2a5e]">Account Settings</h2>
             <p className="text-gray-500 text-md mt-1 py-2">Manage your profile and account preferences</p>
           </div>
-
-          {/* User Profile - Top Right */}
-          <UserProfileHeader user={user} />
         </div>
 
         {/* Settings Form - Full Page Scrollable Content Area */}

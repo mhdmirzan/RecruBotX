@@ -1,13 +1,94 @@
 import React, { useState, useEffect } from "react";
-import { Briefcase, MapPin, Clock, Send, ArrowRight, ChevronRight, Zap, DollarSign, Home, X, AlertTriangle, XCircle, Users } from "lucide-react";
+import { Briefcase, MapPin, Clock, Send, ArrowRight, ChevronRight, Zap, DollarSign, Home, X, AlertTriangle, XCircle, Users, Compass } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { getCurrentUser, logoutUser } from "./utils/userDatabase";
 import API_BASE_URL from "./apiConfig";
 import CandidateSidebar from "./components/CandidateSidebar";
+import TourOverlay from "./components/TourOverlay";
+import TourRecommendation from "./components/TourRecommendation";
+
+const CANDIDATE_TOUR_KEY = "candidate_tour_done";
+
+const candidateTourSteps = [
+  {
+    target: "[data-tour='c-dashboard']",
+    title: "Dashboard",
+    description: "Your home base. See available jobs and track recent activity at a glance.",
+  },
+  {
+    target: "[data-tour='c-jobs']",
+    title: "Job Applications",
+    description: "Browse every role you've applied for and keep tabs on your application status.",
+  },
+  {
+    target: "[data-tour='c-resume']",
+    title: "Create Resume",
+    description: "Pick a template and build a tailored resume — AI-assisted from start to finish.",
+  },
+  {
+    target: "[data-tour='c-cv-review']",
+    title: "CV Review",
+    description: "Get instant AI feedback on your resume's strengths and gaps before you apply.",
+  },
+  {
+    target: "[data-tour='c-settings']",
+    title: "Settings",
+    description: "Update your profile, password, and personal preferences anytime.",
+  },
+  {
+    target: "[data-tour='c-job-apps-panel']",
+    title: "Job Applications Panel",
+    description: "All open positions available to you live here. Browse and find your next opportunity.",
+  },
+  {
+    target: "[data-tour='c-cv-rec']",
+    title: "Get CV Recommendations",
+    description: "Run your resume through AI analysis against a job description and get actionable suggestions to boost your chances.",
+  },
+  {
+    target: "[data-tour='c-recent-activity']",
+    title: "Recent Job Activity",
+    description: "A live feed of every job you've applied to — with timestamps so you always know where you stand.",
+  },
+  {
+    target: "[data-tour='c-tour-btn']",
+    title: "You're all set!",
+    description: "Use this button anytime to replay the tour and rediscover what RecruBotX can do for you.",
+  },
+];
 
 const CandidateDashboard = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
+  const [showTour, setShowTour] = useState(false);
+  const [showTourRecommendation, setShowTourRecommendation] = useState(false);
+
+  // Show tour recommendation if tour not completed
+  useEffect(() => {
+    if (!localStorage.getItem(CANDIDATE_TOUR_KEY)) {
+      setShowTourRecommendation(true);
+    }
+  }, []);
+
+  // Listen for tour event dispatched by the sidebar
+  useEffect(() => {
+    const handleStartTour = () => {
+      setShowTour(true);
+      setShowTourRecommendation(false); // Dismiss recommendation when tour starts
+    };
+    window.addEventListener("rbx:start-tour", handleStartTour);
+    return () => window.removeEventListener("rbx:start-tour", handleStartTour);
+  }, []);
+
+  const handleTourFinish = () => {
+    localStorage.setItem(CANDIDATE_TOUR_KEY, "1");
+    setShowTour(false);
+    setShowTourRecommendation(false);
+  };
+
+  const handleDismissRecommendation = () => {
+    setShowTourRecommendation(false);
+  };
 
   // Filter states
   const [interviewField, setInterviewField] = useState("all");
@@ -210,13 +291,20 @@ const CandidateDashboard = () => {
 
   return (
     <div className="h-screen w-screen flex bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden fixed inset-0">
+      {showTourRecommendation && (
+        <TourRecommendation
+          targetSelector="[data-tour='c-tour-btn']"
+          onDismiss={handleDismissRecommendation}
+        />
+      )}
+      {showTour && <TourOverlay steps={candidateTourSteps} onFinish={handleTourFinish} />}
       {/* Sidebar - Always Visible, No Scroll */}
       <CandidateSidebar />
 
       {/* Main Content - Non-scrollable */}
       <main className="flex-1 h-screen flex flex-col overflow-hidden py-8 px-8">
         {/* Welcome Banner with User Profile */}
-        <div className="bg-gradient-to-r from-[#0a2a5e] to-[#0d3b82] text-white rounded-2xl p-6 shadow-lg mb-6 flex-shrink-0">
+        <div data-tour="c-welcome-banner" className="bg-gradient-to-r from-[#0a2a5e] to-[#0d3b82] text-white rounded-2xl p-6 shadow-lg mb-6 flex-shrink-0">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
 
@@ -229,22 +317,15 @@ const CandidateDashboard = () => {
               </div>
             </div>
 
-            {/* User Profile - Inside Banner */}
-            <div className="flex items-center gap-3">
-              <div className="text-right">
-                <h3 className="font-bold text-white">
-                  {user.firstName} {user.lastName}
-                </h3>
-                <p className="text-sm text-blue-200">{user.email}</p>
-              </div>
-              <div className="w-14 h-14 bg-white rounded-full flex items-center justify-center text-[#0a2a5e] font-bold text-xl shadow-lg overflow-hidden">
-                {user.profileImage ? (
-                  <img src={user.profileImage} alt="Profile" className="w-full h-full object-cover" />
-                ) : (
-                  <>{user.firstName?.charAt(0)}{user.lastName?.charAt(0)}</>
-                )}
-              </div>
-            </div>
+            {/* Tour Button */}
+            <button
+              data-tour="c-tour-btn"
+              onClick={() => window.dispatchEvent(new CustomEvent("rbx:start-tour"))}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition-colors text-white text-xs font-medium"
+            >
+              <Compass className="w-3.5 h-3.5" />
+              Take a Tour
+            </button>
           </div>
         </div>
 
@@ -252,11 +333,11 @@ const CandidateDashboard = () => {
         <div className="flex-1 grid grid-cols-5 gap-6 overflow-hidden">
           {/* LEFT SECTION - Job Applications (60% - 3 columns) */}
           <div className="col-span-3 flex flex-col overflow-hidden">
-            <div className="bg-white rounded-2xl shadow-lg p-6 h-full flex flex-col overflow-hidden">
+            <div data-tour="c-job-apps-panel" className="bg-white rounded-2xl shadow-lg p-6 h-full flex flex-col overflow-hidden">
               <h3 className="text-xl font-bold text-gray-800 mb-4">Job Applications</h3>
 
               {/* Filters Section */}
-              <div className="mb-4 grid grid-cols-3 gap-4">
+              <div data-tour="c-job-filters" className="mb-4 grid grid-cols-3 gap-4">
                 {/* Interview Field Filter */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -318,7 +399,7 @@ const CandidateDashboard = () => {
               </div>
 
               {/* Job Postings List */}
-              <div className="flex-1 overflow-y-auto space-y-3">
+              <div data-tour="c-job-list" className="flex-1 overflow-y-auto space-y-3">
                 {isLoadingJobs ? (
                   <div className="text-center py-12">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#0a2a5e] mx-auto mb-4"></div>
@@ -406,7 +487,7 @@ const CandidateDashboard = () => {
           {/* RIGHT SECTION (40% - 2 columns) */}
           <div className="col-span-2 flex flex-col gap-6 overflow-hidden">
             {/* CV Screening Info Card */}
-            <div className="bg-gradient-to-br from-[#0a2a5e]/5 to-[#0d3b82]/5 rounded-2xl shadow-lg p-6 flex-shrink-0 border border-[#0a2a5e]/10">
+            <div data-tour="c-cv-rec" className="bg-gradient-to-br from-[#0a2a5e]/5 to-[#0d3b82]/5 rounded-2xl shadow-lg p-6 flex-shrink-0 border border-[#0a2a5e]/10">
               <div className="flex items-start gap-3 mb-4">
                 <div className="w-12 h-12 bg-gradient-to-br from-[#0a2a5e] to-[#2b4c8c] rounded-xl flex items-center justify-center flex-shrink-0">
                   <Zap className="w-6 h-6 text-white" />
@@ -429,7 +510,7 @@ const CandidateDashboard = () => {
             </div>
 
             {/* Recent Job Activity Card */}
-            <div className="bg-white rounded-2xl shadow-lg p-6 flex-1 overflow-hidden flex flex-col">
+            <div data-tour="c-recent-activity" className="bg-white rounded-2xl shadow-lg p-6 flex-1 overflow-hidden flex flex-col">
               <h3 className="text-lg font-bold text-gray-800 mb-4">Recent Job Activity</h3>
               <div className="flex-1 overflow-y-auto theme-scrollbar space-y-3">
                 {isLoadingActivity ? (

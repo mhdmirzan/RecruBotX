@@ -4,8 +4,6 @@ import { ArrowRight, Check } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { getCurrentUser } from "../utils/userDatabase";
 import CandidateSidebar from "../components/CandidateSidebar";
-import LoadingSpinner from "../components/LoadingSpinner";
-import UserProfileHeader from "../components/UserProfileHeader";
 
 
 import template1 from "./Double column.jpg";
@@ -46,7 +44,10 @@ export default function TemplateSelect() {
   if (!user) {
     return (
       <div className="h-screen flex items-center justify-center bg-gray-100">
-        <LoadingSpinner />
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#0a2a5e] mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
       </div>
     );
   }
@@ -68,8 +69,6 @@ export default function TemplateSelect() {
               Select a professional template that best represents your style and career level.
             </p>
           </div>
-
-          <UserProfileHeader user={user} />
         </div>
 
         {/* Card */}

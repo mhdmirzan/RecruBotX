@@ -4,7 +4,6 @@ import { Upload, FileText, Loader2, Sparkles, User, Award, Target, ArrowRight, C
 import { useNavigate } from "react-router-dom";
 import { getCurrentUser } from "./utils/userDatabase";
 import CandidateSidebar from "./components/CandidateSidebar";
-import UserProfileHeader from "./components/UserProfileHeader";
 import jsPDF from 'jspdf';
 import API_BASE_URL from "./apiConfig";
 
@@ -438,9 +437,6 @@ const AnalyzeResume = () => {
             <h2 className="text-3xl font-bold text-[#0a2a5e]">CV Review</h2>
             <p className="text-gray-500 text-md mt-1 py-2">Upload your resume and paste the job description to analyze compatibility.</p>
           </div>
-
-          {/* User Profile - Top Right */}
-          <UserProfileHeader user={user} />
         </div>
 
         {/* Scrollable Content */}

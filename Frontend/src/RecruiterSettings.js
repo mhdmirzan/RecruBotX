@@ -61,9 +61,22 @@ const RecruiterSettings = () => {
     const handleImageUpload = (e) => {
         const file = e.target.files[0];
         if (file) {
+            // Validate file size (max 5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                showToast("Image size should be less than 5MB", "error");
+                return;
+            }
             const reader = new FileReader();
             reader.onloadend = () => {
-                setFormData(prev => ({ ...prev, profileImage: reader.result }));
+                const base64String = reader.result;
+                setFormData(prev => ({ ...prev, profileImage: base64String }));
+                // Immediately persist to localStorage for consistency
+                const updatedUser = {
+                    ...recruiterData,
+                    profileImage: base64String,
+                };
+                localStorage.setItem("recruiterUser", JSON.stringify(updatedUser));
+                setRecruiterData(updatedUser);
             };
             reader.readAsDataURL(file);
         }
@@ -97,7 +110,7 @@ const RecruiterSettings = () => {
             lastName: formData.lastName,
             companyName: formData.companyName,
             email: formData.email,
-            profileImage: formData.profileImage
+            profileImage: formData.profileImage // Already persisted on upload, but include for consistency
         };
 
         localStorage.setItem("recruiterUser", JSON.stringify(updatedUser));
