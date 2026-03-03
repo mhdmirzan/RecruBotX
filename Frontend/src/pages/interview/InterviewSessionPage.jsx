@@ -350,6 +350,7 @@ function App() {
         onInterrupt={handleInterrupt}
         liveCaption={liveCaption}
         onEndInterview={handleEndInterview}
+        isConnected={isConnected}
       />
 
       <AudioRecorder

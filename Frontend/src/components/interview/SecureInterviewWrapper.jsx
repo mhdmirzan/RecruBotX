@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 
 const SecureInterviewWrapper = ({ sessionId, candidateId, onTerminate, children }) => {
     const [isInterviewActive, setIsInterviewActive] = useState(false);
+    const [isStarting, setIsStarting] = useState(false);
     const [violationCount, setViolationCount] = useState(0);
     const [showWarning, setShowWarning] = useState(false);
 
@@ -41,15 +42,24 @@ const SecureInterviewWrapper = ({ sessionId, candidateId, onTerminate, children 
     }, []);
 
     const startInterview = async () => {
-        if (containerRef.current) {
-            try {
+        setIsStarting(true);
+        try {
+            // First, pre-request camera and microphone to prevent permission popups from triggering security violations later
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+            // Stop the tracks immediately so we don't hold them unnecessarily. The child components will legitimately re-request them (which will now auto-approve).
+            stream.getTracks().forEach(track => track.stop());
+
+            if (containerRef.current) {
                 await containerRef.current.requestFullscreen();
                 setIsInterviewActive(true);
                 setViolationCount(0);
                 setShowWarning(false);
-            } catch (err) {
-                alert('Fullscreen is required to start the interview. Please allow fullscreen access.');
             }
+        } catch (err) {
+            console.error("Failed to start interview:", err);
+            alert('Camera, Microphone, and Fullscreen permissions are strictly required to start the interview. Please allow them in your browser settings.');
+        } finally {
+            setIsStarting(false);
         }
     };
 
@@ -130,9 +140,10 @@ const SecureInterviewWrapper = ({ sessionId, candidateId, onTerminate, children 
                     </p>
                     <button
                         onClick={startInterview}
-                        className="px-6 py-3 text-lg font-semibold bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-700 transition"
+                        disabled={isStarting}
+                        className={`px-6 py-3 text-lg font-semibold text-white rounded-lg shadow-md transition ${isStarting ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`}
                     >
-                        Start Interview
+                        {isStarting ? "Requesting Permissions..." : "Start Interview"}
                     </button>
                 </div>
             ) : (

@@ -252,19 +252,6 @@ const LiveInterviewRoute = () => {
             onTerminate={confirmEndInterview}
         >
             <div className="min-h-screen bg-gray-50 flex flex-col relative w-full h-full">
-                {/* Connection Status Overlay (Optional, but keeping it visible as a tiny badge) */}
-                <div className="absolute top-4 right-4 z-50 text-sm bg-white/80 backdrop-blur px-3 py-1.5 rounded-full shadow-sm">
-                    {isConnected ? (
-                        <span className="flex items-center gap-2 text-green-600 font-semibold">
-                            <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span> Connected
-                        </span>
-                    ) : (
-                        <span className="flex items-center gap-2 text-orange-500 font-semibold">
-                            <span className="w-2 h-2 rounded-full bg-orange-500"></span> Connecting...
-                        </span>
-                    )}
-                </div>
-
                 <div className="flex-1 overflow-hidden relative">
                     <LiveInterviewSession
                         messages={messages}
@@ -275,6 +262,7 @@ const LiveInterviewRoute = () => {
                         onInterrupt={handleInterrupt}
                         liveCaption={liveCaption}
                         onEndInterview={handleEndInterview}
+                        isConnected={isConnected}
                     />
 
                     <AudioRecorder
