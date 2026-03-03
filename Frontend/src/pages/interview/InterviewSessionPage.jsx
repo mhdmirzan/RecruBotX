@@ -13,6 +13,7 @@ function App() {
   const [isConnected, setIsConnected] = useState(false);
   const [sessionActive, setSessionActive] = useState(false);
   const [isConcluding, setIsConcluding] = useState(false);
+  const isWrappingUp = useRef(false);
   const [messages, setMessages] = useState([]);
   const [interimText, setInterimText] = useState('');
   const [liveCaption, setLiveCaption] = useState(''); // Live caption state
@@ -190,14 +191,20 @@ function App() {
 
       case 'report':
         logDebug('📊 Report Received');
-        setIsConcluding(false);
+        isWrappingUp.current = true;
         setReportData(data.payload);
-        setSessionActive(false); // Switch to report view
+        if (!audioRef.current || audioRef.current.paused) {
+          setIsConcluding(false);
+          setSessionActive(false); // Switch to report view
+        }
         break;
 
       case 'interview_concluding':
         logDebug('⏳ Interview Concluding... Generating Report');
-        setIsConcluding(true);
+        isWrappingUp.current = true;
+        if (!audioRef.current || audioRef.current.paused) {
+          setIsConcluding(true);
+        }
         break;
 
       case 'response_complete':
@@ -233,10 +240,21 @@ function App() {
       audio.onended = () => {
         URL.revokeObjectURL(url);
         audioRef.current = null;
-        // Delay listening to prevent self-hearing (echo cancellation buffer)
-        setTimeout(() => {
-          conversationStateMachine.transition(ConversationState.LISTENING, { source: 'audio_finished' });
-        }, 800);
+
+        if (isWrappingUp.current) {
+          // If we have report data already, skip loading screen and show report
+          if (reportData) {
+            setIsConcluding(false);
+            setSessionActive(false);
+          } else {
+            setIsConcluding(true);
+          }
+        } else {
+          // Delay listening to prevent self-hearing (echo cancellation buffer)
+          setTimeout(() => {
+            conversationStateMachine.transition(ConversationState.LISTENING, { source: 'audio_finished' });
+          }, 800);
+        }
       };
 
       audio.play().catch(e => {

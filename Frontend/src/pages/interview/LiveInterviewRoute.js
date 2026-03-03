@@ -152,8 +152,20 @@ const LiveInterviewRoute = () => {
                 break;
             case 'report':
                 // Instead of abruptly closing, flag that we are wrapping up.
-                // The actual navigation will happen after the last audio chunk finishes playing.
+                // The actual navigation will happen after the last audio chunk finishes playing,
+                // or immediately if audio has already finished.
                 isWrappingUp.current = true;
+                if (!audioRef.current || audioRef.current.paused) {
+                    ws.current?.close();
+                    navigate("/candidate/interview-complete", { state: { sessionId, candidateName, jobTitle } });
+                }
+                break;
+            case 'interview_concluding':
+                isWrappingUp.current = true;
+                if (!audioRef.current || audioRef.current.paused) {
+                    ws.current?.close();
+                    navigate("/candidate/interview-complete", { state: { sessionId, candidateName, jobTitle } });
+                }
                 break;
             default:
                 break;
