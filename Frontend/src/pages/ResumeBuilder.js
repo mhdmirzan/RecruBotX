@@ -3,8 +3,6 @@ import { Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { getCurrentUser } from "../utils/userDatabase";
 import CandidateSidebar from "../components/CandidateSidebar";
-import LoadingSpinner from "../components/LoadingSpinner";
-import UserProfileHeader from "../components/UserProfileHeader";
 import DownloadButton from "../components/DownloadButton";
 
 // Import Builder Components
@@ -61,7 +59,10 @@ const ResumeBuilder = () => {
   if (!user) {
     return (
       <div className="h-screen flex items-center justify-center bg-gray-100">
-        <LoadingSpinner />
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#0a2a5e] mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
       </div>
     );
   }
@@ -79,8 +80,6 @@ const ResumeBuilder = () => {
             <h2 className="text-3xl font-bold text-[#0a2a5e]">Build Your Resume</h2>
             <p className="text-gray-500 text-md mt-1 py-2">Fill in your details and watch your professional resume come to life.</p>
           </div>
-
-          <UserProfileHeader user={user} />
         </div>
 
         {/* Builder Content - Dynamic based on template */}

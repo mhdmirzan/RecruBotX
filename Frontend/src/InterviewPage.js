@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Upload, User, Mail, Phone, Linkedin, ArrowRight, CheckCircle, AlertCircle, ArrowLeft, XCircle, Clock } from "lucide-react";
 import CandidateSidebar from "./components/CandidateSidebar";
-import UserProfileHeader from "./components/UserProfileHeader";
 import API_BASE_URL from "./apiConfig";
 import { getCurrentUser } from "./utils/userDatabase";
 
@@ -170,7 +169,6 @@ const InterviewPage = () => {
                             <p className="text-gray-500 text-sm">Fill in your details to start the interview process</p>
                         </div>
                     </div>
-                    <UserProfileHeader user={user} />
                 </div>
 
                 {/* Scrollable Content */}

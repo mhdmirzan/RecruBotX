@@ -11,11 +11,68 @@ import {
   Settings,
   LogOut,
   Trash2,
-  Search
+  Search,
+  Compass
 } from "lucide-react";
 import API_BASE_URL from "./apiConfig";
 import RecruiterSidebar from "./components/RecruiterSidebar";
-import LoadingSpinner from "./components/LoadingSpinner";
+import TourOverlay from "./components/TourOverlay";
+import TourRecommendation from "./components/TourRecommendation";
+
+const RECRUITER_TOUR_KEY = "recruiter_tour_done";
+
+const recruiterTourSteps = [
+  {
+    target: "[data-tour='r-dashboard']",
+    title: "Dashboard",
+    description: "Your command center. Track active jobs, candidate pipelines, and screening metrics at a glance.",
+  },
+  {
+    target: "[data-tour='r-job-posting']",
+    title: "Job Posting",
+    description: "Create and publish new positions with custom requirements, questions, and deadlines.",
+  },
+  {
+    target: "[data-tour='r-cv-review']",
+    title: "CV Review",
+    description: "Upload CVs and let AI rank, score, and filter candidates — so you focus on the best.",
+  },
+  {
+    target: "[data-tour='r-settings']",
+    title: "Settings",
+    description: "Update your company profile, branding, and account preferences.",
+  },
+  {
+    target: "[data-tour='r-stat-active-jobs']",
+    title: "Active Jobs",
+    description: "The total number of live job postings currently accepting candidates.",
+  },
+  {
+    target: "[data-tour='r-stat-candidates']",
+    title: "Total Candidates",
+    description: "The cumulative count of CVs submitted across all your active job postings.",
+  },
+  {
+    target: "[data-tour='r-stat-interviews']",
+    title: "AI Interviews",
+    description: "Jobs that have received at least one CV — ready for AI-powered interview sessions.",
+  },
+  {
+    target: "[data-tour='r-stat-cvs']",
+    title: "CVs Screened",
+    description: "CVs processed for postings currently in 'Screening' status — your shortlisting pipeline.",
+  },
+  {
+    target: "[data-tour='r-recent-jobs']",
+    title: "Recent Job Postings",
+    description: "Your 6 most recent job ads. View interview reports or delete posts you no longer need.",
+  },
+  {
+    target: "[data-tour='r-tour-btn']",
+    title: "You're all set!",
+    description: "Tap this button anytime to replay the tour and explore RecruBotX features again.",
+  },
+];
 
 const RecruiterDashboard = () => {
   const navigate = useNavigate();
@@ -27,6 +84,35 @@ const RecruiterDashboard = () => {
     aiInterviews: 0,
     cvsScreened: 0
   });
+  const [showTour, setShowTour] = useState(false);
+  const [showTourRecommendation, setShowTourRecommendation] = useState(false);
+
+  // Show tour recommendation if tour not completed
+  useEffect(() => {
+    if (!localStorage.getItem(RECRUITER_TOUR_KEY)) {
+      setShowTourRecommendation(true);
+    }
+  }, []);
+
+  // Listen for tour event dispatched by the sidebar
+  useEffect(() => {
+    const handleStartTour = () => {
+      setShowTour(true);
+      setShowTourRecommendation(false); // Dismiss recommendation when tour starts
+    };
+    window.addEventListener("rbx:start-tour", handleStartTour);
+    return () => window.removeEventListener("rbx:start-tour", handleStartTour);
+  }, []);
+
+  const handleTourFinish = () => {
+    localStorage.setItem(RECRUITER_TOUR_KEY, "1");
+    setShowTour(false);
+    setShowTourRecommendation(false);
+  };
+
+  const handleDismissRecommendation = () => {
+    setShowTourRecommendation(false);
+  };
 
   useEffect(() => {
     const storedUser = localStorage.getItem("recruiterUser");
@@ -92,13 +178,23 @@ const RecruiterDashboard = () => {
   if (!recruiterData) {
     return (
       <div className="h-screen flex items-center justify-center bg-gray-100">
-        <LoadingSpinner label="Loading dashboard…" />
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#0a2a5e] mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading dashboard...</p>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="h-screen w-screen flex bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden fixed inset-0">
+      {showTourRecommendation && (
+        <TourRecommendation
+          targetSelector="[data-tour='r-tour-btn']"
+          onDismiss={handleDismissRecommendation}
+        />
+      )}
+      {showTour && <TourOverlay steps={recruiterTourSteps} onFinish={handleTourFinish} />}
       {/* Sidebar */}
       <RecruiterSidebar />
 
@@ -106,19 +202,31 @@ const RecruiterDashboard = () => {
       <main className="flex-1 h-screen flex flex-col overflow-hidden py-8 px-8">
         {/* Welcome Banner with User Profile */}
         <motion.div
+          data-tour="r-welcome-banner"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="bg-gradient-to-r from-[#0a2a5e] to-[#0d3b82] rounded-2xl p-6 mb-6 text-white shadow-lg flex-shrink-0"
         >
-          <div>
-            <h2 className="text-2xl font-bold">Welcome back, {recruiterData.firstName}!</h2>
-            <p className="text-blue-100 mt-1">Manage your hiring pipeline and find the best talent efficiently.</p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-bold">Welcome back, {recruiterData.firstName}!</h2>
+              <p className="text-blue-100 mt-1">Manage your hiring pipeline and find the best talent efficiently.</p>
+            </div>
+            <button
+              data-tour="r-tour-btn"
+              onClick={() => window.dispatchEvent(new CustomEvent("rbx:start-tour"))}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition-colors text-white text-xs font-medium"
+            >
+              <Compass className="w-3.5 h-3.5" />
+              Take a Tour
+            </button>
           </div>
         </motion.div>
 
         {/* Stats Cards - Fixed */}
         <div className="grid grid-cols-4 gap-6 mb-6 flex-shrink-0">
           <motion.div
+            data-tour="r-stat-active-jobs"
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.1 }}
@@ -136,6 +244,7 @@ const RecruiterDashboard = () => {
           </motion.div>
 
           <motion.div
+            data-tour="r-stat-candidates"
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.2 }}
@@ -153,6 +262,7 @@ const RecruiterDashboard = () => {
           </motion.div>
 
           <motion.div
+            data-tour="r-stat-interviews"
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.3 }}
@@ -170,6 +280,7 @@ const RecruiterDashboard = () => {
           </motion.div>
 
           <motion.div
+            data-tour="r-stat-cvs"
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.4 }}
@@ -188,7 +299,7 @@ const RecruiterDashboard = () => {
         </div>
 
         {/* Recent Job Postings - Fixed height container with scrollable content */}
-        <div className="bg-white rounded-2xl shadow-lg flex-1 flex flex-col overflow-hidden">
+        <div data-tour="r-recent-jobs" className="bg-white rounded-2xl shadow-lg flex-1 flex flex-col overflow-hidden">
           <div className="flex items-center gap-2 p-6 pb-4 flex-shrink-0 border-b border-gray-100">
             <Briefcase className="w-6 h-6 text-[#0a2a5e]" />
             <h3 className="text-xl font-bold text-gray-800">Recent Job Postings</h3>

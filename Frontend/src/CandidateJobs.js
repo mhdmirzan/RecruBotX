@@ -3,7 +3,6 @@ import { Search, Briefcase, MapPin, DollarSign, Calendar, ChevronRight, Send, Fi
 import { NavLink, useNavigate } from "react-router-dom";
 import { getCurrentUser, logoutUser } from "./utils/userDatabase";
 import API_BASE_URL from "./apiConfig";
-import UserProfileHeader from "./components/UserProfileHeader";
 import CandidateSidebar from "./components/CandidateSidebar";
 
 const CandidateJobs = () => {
@@ -175,8 +174,6 @@ const CandidateJobs = () => {
                         <h2 className="text-3xl font-bold text-[#0a2a5e]">Job Applications</h2>
                         <p className="text-gray-500 text-md mt-1 py-2">Explore and apply to open positions</p>
                     </div>
-
-                    <UserProfileHeader user={user} />
                 </div>
 
                 {/* Filters & Content */}
