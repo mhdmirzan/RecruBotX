@@ -20,6 +20,7 @@ const LiveInterviewRoute = () => {
     const [messages, setMessages] = useState([]);
     const [liveCaption, setLiveCaption] = useState("");
     const [isEndModalOpen, setIsEndModalOpen] = useState(false);
+    const [hasStarted, setHasStarted] = useState(false);
 
     const wordBufferRef = useRef([]);
     const captionIntervalRef = useRef(null);
@@ -66,7 +67,7 @@ const LiveInterviewRoute = () => {
 
     // --- WebSocket Logic ---
     useEffect(() => {
-        if (!sessionId) return;
+        if (!sessionId || !hasStarted) return;
 
         const unsubscribe = conversationStateMachine.subscribe((event) => {
             setCurrentState(event.to);
@@ -122,7 +123,7 @@ const LiveInterviewRoute = () => {
             if (ws.current) ws.current.close();
             if (audioRef.current) audioRef.current.pause();
         };
-    }, [sessionId, candidateName, jobTitle]);
+    }, [sessionId, candidateName, jobTitle, hasStarted]);
 
     const handleWebSocketMessage = (data) => {
         switch (data.type) {
@@ -262,6 +263,7 @@ const LiveInterviewRoute = () => {
             sessionId={sessionId}
             candidateId={candidateName}
             onTerminate={confirmEndInterview}
+            onStart={() => setHasStarted(true)}
         >
             <div className="min-h-screen bg-gray-50 flex flex-col relative w-full h-full">
                 <div className="flex-1 overflow-hidden relative">

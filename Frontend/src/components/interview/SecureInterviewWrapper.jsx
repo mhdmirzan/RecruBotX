@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 
-const SecureInterviewWrapper = ({ sessionId, candidateId, onTerminate, children }) => {
+const SecureInterviewWrapper = ({ sessionId, candidateId, onTerminate, onStart, children }) => {
     const [isInterviewActive, setIsInterviewActive] = useState(false);
     const [isStarting, setIsStarting] = useState(false);
     const [violationCount, setViolationCount] = useState(0);
@@ -54,6 +54,7 @@ const SecureInterviewWrapper = ({ sessionId, candidateId, onTerminate, children 
                 setIsInterviewActive(true);
                 setViolationCount(0);
                 setShowWarning(false);
+                if (onStart) onStart();
             }
         } catch (err) {
             console.error("Failed to start interview:", err);

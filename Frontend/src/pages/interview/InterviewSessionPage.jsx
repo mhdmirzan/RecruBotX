@@ -12,6 +12,7 @@ function App() {
   const [currentState, setCurrentState] = useState(ConversationState.IDLE);
   const [isConnected, setIsConnected] = useState(false);
   const [sessionActive, setSessionActive] = useState(false);
+  const [hasStarted, setHasStarted] = useState(false);
   const [isConcluding, setIsConcluding] = useState(false);
   const isWrappingUp = useRef(false);
   const [messages, setMessages] = useState([]);
@@ -86,6 +87,7 @@ function App() {
 
   // --- WebSocket Logic ---
   useEffect(() => {
+    if (!hasStarted) return;
     const unsubscribe = conversationStateMachine.subscribe((event) => {
       setCurrentState(event.to);
       setDebugInfo(prev => ({ ...prev, status: event.to }));
@@ -142,7 +144,7 @@ function App() {
       if (ws.current) ws.current.close();
       if (audioRef.current) audioRef.current.pause();
     };
-  }, []);
+  }, [hasStarted]);
 
   // --- Message Handling ---
   const handleWebSocketMessage = (data) => {
@@ -358,6 +360,7 @@ function App() {
     <SecureInterviewWrapper
       candidateId={config.candidate_name}
       onTerminate={handleEndInterview}
+      onStart={() => setHasStarted(true)}
     >
       <LiveInterviewSession
         messages={messages}
