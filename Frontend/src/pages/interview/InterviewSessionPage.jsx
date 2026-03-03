@@ -5,6 +5,7 @@ import AudioRecorder from '../../components/interview/AudioRecorder';
 import DebugPanel from '../../components/interview/DebugPanel';
 import { conversationStateMachine, ConversationState } from '../../services/ConversationStateMachine';
 import CandidateDashboard from '../../components/interview/CandidateDashboard';
+import SecureInterviewWrapper from '../../components/interview/SecureInterviewWrapper';
 import API_BASE_URL from '../../apiConfig';
 
 function App() {
@@ -336,7 +337,10 @@ function App() {
 
   // 4. Live Interview Screen
   return (
-    <>
+    <SecureInterviewWrapper
+      candidateId={config.candidate_name}
+      onTerminate={handleEndInterview}
+    >
       <LiveInterviewSession
         messages={messages}
         status={currentState}
@@ -354,7 +358,7 @@ function App() {
         isRecording={currentState === ConversationState.LISTENING}
         isDetectingInterrupt={currentState === ConversationState.AI_SPEAKING}
       />
-    </>
+    </SecureInterviewWrapper>
   );
 }
 
