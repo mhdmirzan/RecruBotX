@@ -300,9 +300,14 @@ const RecruiterDashboard = () => {
 
         {/* Recent Job Postings - Fixed height container with scrollable content */}
         <div data-tour="r-recent-jobs" className="bg-white rounded-2xl shadow-lg flex-1 flex flex-col overflow-hidden">
-          <div className="flex items-center gap-2 p-6 pb-4 flex-shrink-0 border-b border-gray-100">
-            <Briefcase className="w-6 h-6 text-[#0a2a5e]" />
-            <h3 className="text-xl font-bold text-gray-800">Recent Job Postings</h3>
+          <div className="flex items-center justify-between gap-2 p-6 pb-4 flex-shrink-0 border-b border-gray-100">
+            <div className="flex items-center gap-2">
+              <Briefcase className="w-6 h-6 text-[#0a2a5e]" />
+              <h3 className="text-xl font-bold text-gray-800">Recent Job Postings</h3>
+            </div>
+            <NavLink to="/recruiter/all-jobs" className="px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 flex items-center gap-2 shadow-sm whitespace-nowrap">
+              <Briefcase className="w-4 h-4" /> View All Jobs
+            </NavLink>
           </div>
 
           {jobPostings.length === 0 ? (
