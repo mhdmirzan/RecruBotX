@@ -140,10 +140,20 @@ async def get_candidate_report(
     # Get job posting for JD
     job = await get_job_posting_by_id(db, ranking["job_posting_id"])
     
+    # Calculate actual rank dynamically
+    from database.ranking_crud import get_rankings_by_job
+    all_rankings = await get_rankings_by_job(db, ranking["job_posting_id"])
+    sorted_rankings = sorted(all_rankings, key=lambda x: x.get('score', 0), reverse=True)
+    actual_rank = ranking.get("rank", 999) # Fallback to stored rank
+    for idx, r in enumerate(sorted_rankings):
+        if str(r.get("_id")) == ranking_id:
+            actual_rank = idx + 1
+            break
+
     # Get evaluation report
     evaluation = await db.evaluation_reports.find_one({"candidate_ranking_id": ranking_id})
     
-    # Get session_id to link cv properly and pull personal details
+    # Get session_id to link cv properly
     session_id = None
     email = None
     phone = None
@@ -210,8 +220,8 @@ async def get_candidate_report(
         "cvScore": f"{ranking.get('cv_score', 0):.0f}/100",
         "interviewScore": f"{ranking.get('interview_score', 0):.0f}/100",
         "facialRecognitionScore": f"{ranking.get('facial_recognition_score', 0):.0f}/100",
-        "rank": ranking["rank"],
-        "completion": f"{ranking['completion']}%",
+        "rank": actual_rank,
+        "completion": f"{ranking.get('completion', 100)}%",
         "interviewStatus": ranking["interview_status"],
         "date": ranking["created_at"].strftime("%d-%m-%Y"),
         "skills": skills,

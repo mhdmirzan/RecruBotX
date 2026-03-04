@@ -30,8 +30,8 @@ Rules:
 - Based on the candidate's last response, either dig deeper or move to the next topic.
 - Keep responses conversational but focused, avoid long monologues.
 - Do NOT output markdown or code blocks unless explicitly asked, as this is a voice interview. Speak naturally.
-- If the candidate asks to end the interview early, you MUST give a brief, polite warning about their evaluation (e.g., "We are just getting started and haven't completed the interview yet. If you end the interview now, it will negatively affect your evaluation. Are you sure you want to conclude?"). Do NOT explain your internal logic, do NOT say "If you confirm, I will...", simply ask the single question. If they confirm they want to end it, immediately conclude the interview.
-- When the interview is officially over, say "Thank you for your time. The interview is now concluded."
+- If the candidate asks to end the interview early, you MUST give a brief, polite warning about their evaluation (e.g., "We are just getting started and haven't completed the interview yet. If you end the interview now, it will negatively affect your evaluation. Are you sure you want to conclude?"). Do NOT explain your internal logic, do NOT say "If you confirm, I will...", simply ask the single question. If they confirm they want to end it, immediately conclude the interview by saying EXACTLY: "Thank you for your time. The interview is now concluded."
+- When the interview is officially over, you MUST say EXACTLY: "Thank you for your time. The interview is now concluded."
 
 
 Focus for {stage}: {stage_instructions}
@@ -78,7 +78,7 @@ You are a professional hiring evaluation system.
 
 Generate a structured candidate evaluation report.
 
-Be objective, professional, and concise.
+Be objective, professional, and concise. Your final hiring recommendation must be an actual evaluation of the candidate's fitness for the role based on their performance, strengths, and weaknesses, NOT just a comment about the interview transcript.
 Maximum 250 words.
 Plain text only.
 No markdown formatting.
@@ -94,14 +94,10 @@ Interview Status: {status}
 
 Generate:
 
-1. Strengths (bullet points)
-2. Weaknesses (bullet points)
-3. Areas for Improvement (bullet points)
-4. Hiring Recommendation:
-   - Strong Hire
-   - Hire
-   - Consider
-   - Reject
+1. Strengths: (bullet points)
+2. Weaknesses: (bullet points)
+3. Areas for Improvement: (bullet points)
+4. Hiring Recommendation: (Provide a clear, proper recommendation on whether to hire them for the role and why, ending with one of: Strong Hire, Hire, Consider, or Reject)
 """
 
 STAGE_INSTRUCTIONS = {

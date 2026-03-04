@@ -5,13 +5,16 @@ import AudioRecorder from '../../components/interview/AudioRecorder';
 import DebugPanel from '../../components/interview/DebugPanel';
 import { conversationStateMachine, ConversationState } from '../../services/ConversationStateMachine';
 import CandidateDashboard from '../../components/interview/CandidateDashboard';
+import SecureInterviewWrapper from '../../components/interview/SecureInterviewWrapper';
 import API_BASE_URL from '../../apiConfig';
 
 function App() {
   const [currentState, setCurrentState] = useState(ConversationState.IDLE);
   const [isConnected, setIsConnected] = useState(false);
   const [sessionActive, setSessionActive] = useState(false);
+  const [hasStarted, setHasStarted] = useState(false);
   const [isConcluding, setIsConcluding] = useState(false);
+  const isWrappingUp = useRef(false);
   const [messages, setMessages] = useState([]);
   const [interimText, setInterimText] = useState('');
   const [liveCaption, setLiveCaption] = useState(''); // Live caption state
@@ -84,6 +87,7 @@ function App() {
 
   // --- WebSocket Logic ---
   useEffect(() => {
+    if (!hasStarted) return;
     const unsubscribe = conversationStateMachine.subscribe((event) => {
       setCurrentState(event.to);
       setDebugInfo(prev => ({ ...prev, status: event.to }));
@@ -140,7 +144,7 @@ function App() {
       if (ws.current) ws.current.close();
       if (audioRef.current) audioRef.current.pause();
     };
-  }, []);
+  }, [hasStarted]);
 
   // --- Message Handling ---
   const handleWebSocketMessage = (data) => {
@@ -189,14 +193,20 @@ function App() {
 
       case 'report':
         logDebug('📊 Report Received');
-        setIsConcluding(false);
+        isWrappingUp.current = true;
         setReportData(data.payload);
-        setSessionActive(false); // Switch to report view
+        if (!audioRef.current || audioRef.current.paused) {
+          setIsConcluding(false);
+          setSessionActive(false); // Switch to report view
+        }
         break;
 
       case 'interview_concluding':
         logDebug('⏳ Interview Concluding... Generating Report');
-        setIsConcluding(true);
+        isWrappingUp.current = true;
+        if (!audioRef.current || audioRef.current.paused) {
+          setIsConcluding(true);
+        }
         break;
 
       case 'response_complete':
@@ -232,10 +242,21 @@ function App() {
       audio.onended = () => {
         URL.revokeObjectURL(url);
         audioRef.current = null;
-        // Delay listening to prevent self-hearing (echo cancellation buffer)
-        setTimeout(() => {
-          conversationStateMachine.transition(ConversationState.LISTENING, { source: 'audio_finished' });
-        }, 800);
+
+        if (isWrappingUp.current) {
+          // If we have report data already, skip loading screen and show report
+          if (reportData) {
+            setIsConcluding(false);
+            setSessionActive(false);
+          } else {
+            setIsConcluding(true);
+          }
+        } else {
+          // Delay listening to prevent self-hearing (echo cancellation buffer)
+          setTimeout(() => {
+            conversationStateMachine.transition(ConversationState.LISTENING, { source: 'audio_finished' });
+          }, 800);
+        }
       };
 
       audio.play().catch(e => {
@@ -292,16 +313,10 @@ function App() {
   const handleEndInterview = () => {
     if (window.confirm("Are you sure you want to end the interview?")) {
       if (ws.current?.readyState === WebSocket.OPEN) {
-        ws.current.send(JSON.stringify({ type: 'end_interview' }));
-        setTimeout(() => {
-          if (ws.current) ws.current.close();
-          setSessionActive(false);
-          window.location.reload();
-        }, 500);
-      } else {
-        setSessionActive(false);
-        window.location.reload();
+        ws.current.close();
       }
+      setSessionActive(false);
+      window.location.reload();
     }
   };
 
@@ -342,7 +357,11 @@ function App() {
 
   // 4. Live Interview Screen
   return (
-    <>
+    <SecureInterviewWrapper
+      candidateId={config.candidate_name}
+      onTerminate={handleEndInterview}
+      onStart={() => setHasStarted(true)}
+    >
       <LiveInterviewSession
         messages={messages}
         status={currentState}
@@ -352,6 +371,7 @@ function App() {
         onInterrupt={handleInterrupt}
         liveCaption={liveCaption}
         onEndInterview={handleEndInterview}
+        isConnected={isConnected}
       />
 
       <AudioRecorder
@@ -360,7 +380,7 @@ function App() {
         isRecording={currentState === ConversationState.LISTENING}
         isDetectingInterrupt={currentState === ConversationState.AI_SPEAKING}
       />
-    </>
+    </SecureInterviewWrapper>
   );
 }
 

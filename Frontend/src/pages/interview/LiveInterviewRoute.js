@@ -4,6 +4,7 @@ import { ArrowLeft, AlertTriangle } from "lucide-react";
 
 import LiveInterviewSession from "../../components/interview/LiveInterviewSession";
 import AudioRecorder from "../../components/interview/AudioRecorder";
+import SecureInterviewWrapper from "../../components/interview/SecureInterviewWrapper";
 import { conversationStateMachine, ConversationState } from "../../services/ConversationStateMachine";
 import API_BASE_URL from "../../apiConfig";
 
@@ -19,6 +20,7 @@ const LiveInterviewRoute = () => {
     const [messages, setMessages] = useState([]);
     const [liveCaption, setLiveCaption] = useState("");
     const [isEndModalOpen, setIsEndModalOpen] = useState(false);
+    const [hasStarted, setHasStarted] = useState(false);
 
     const wordBufferRef = useRef([]);
     const captionIntervalRef = useRef(null);
@@ -65,7 +67,7 @@ const LiveInterviewRoute = () => {
 
     // --- WebSocket Logic ---
     useEffect(() => {
-        if (!sessionId) return;
+        if (!sessionId || !hasStarted) return;
 
         const unsubscribe = conversationStateMachine.subscribe((event) => {
             setCurrentState(event.to);
@@ -121,7 +123,7 @@ const LiveInterviewRoute = () => {
             if (ws.current) ws.current.close();
             if (audioRef.current) audioRef.current.pause();
         };
-    }, [sessionId, candidateName, jobTitle]);
+    }, [sessionId, candidateName, jobTitle, hasStarted]);
 
     const handleWebSocketMessage = (data) => {
         switch (data.type) {
@@ -149,11 +151,22 @@ const LiveInterviewRoute = () => {
             case 'transcription':
                 setMessages(prev => [...prev, { role: 'candidate', content: data.payload }]);
                 break;
-            case 'interview_concluding':
             case 'report':
                 // Instead of abruptly closing, flag that we are wrapping up.
-                // The actual navigation will happen after the last audio chunk finishes playing.
+                // The actual navigation will happen after the last audio chunk finishes playing,
+                // or immediately if audio has already finished.
                 isWrappingUp.current = true;
+                if (!audioRef.current || audioRef.current.paused) {
+                    ws.current?.close();
+                    navigate("/candidate/interview-complete", { state: { sessionId, candidateName, jobTitle } });
+                }
+                break;
+            case 'interview_concluding':
+                isWrappingUp.current = true;
+                if (!audioRef.current || audioRef.current.paused) {
+                    ws.current?.close();
+                    navigate("/candidate/interview-complete", { state: { sessionId, candidateName, jobTitle } });
+                }
                 break;
             default:
                 break;
@@ -238,101 +251,77 @@ const LiveInterviewRoute = () => {
     const confirmEndInterview = () => {
         setIsEndModalOpen(false);
         if (ws.current?.readyState === WebSocket.OPEN) {
-            ws.current.send(JSON.stringify({ type: 'end_interview' }));
-            setTimeout(() => {
-                if (ws.current) ws.current.close();
-                navigate("/candidate/interview-complete", { state: { sessionId, candidateName, jobTitle, aborted: true } });
-            }, 500);
-        } else {
-            navigate("/candidate/interview-complete", { state: { sessionId, candidateName, jobTitle, aborted: true } });
+            ws.current.close();
         }
+        navigate("/candidate/interview-complete", { state: { sessionId, candidateName, jobTitle, aborted: true } });
     };
 
     if (!sessionId) return null;
 
     return (
-        <div className="min-h-screen bg-gray-50 flex flex-col">
-            {/* Minimal Header */}
-            <div className="bg-white p-4 shadow-sm flex items-center gap-4">
-                <button
-                    onClick={() => {
-                        if (window.confirm("Are you sure you want to leave? Your interview will be ended.")) {
-                            if (ws.current?.readyState === WebSocket.OPEN) ws.current.close();
-                            navigate(-1);
-                        }
-                    }}
-                    className="p-2 hover:bg-gray-100 rounded-full text-gray-500 transition-colors"
-                >
-                    <ArrowLeft className="w-5 h-5" />
-                </button>
-                <h1 className="text-xl font-bold text-[#0a2a5e]">RecruBotX AI Interview</h1>
-                <div className="ml-auto text-sm">
-                    {isConnected ? (
-                        <span className="flex items-center gap-2 text-green-600 font-semibold">
-                            <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span> Connected
-                        </span>
-                    ) : (
-                        <span className="flex items-center gap-2 text-orange-500 font-semibold">
-                            <span className="w-2 h-2 rounded-full bg-orange-500"></span> Testing Connection...
-                        </span>
-                    )}
+        <SecureInterviewWrapper
+            sessionId={sessionId}
+            candidateId={candidateName}
+            onTerminate={confirmEndInterview}
+            onStart={() => setHasStarted(true)}
+        >
+            <div className="min-h-screen bg-gray-50 flex flex-col relative w-full h-full">
+                <div className="flex-1 overflow-hidden relative">
+                    <LiveInterviewSession
+                        messages={messages}
+                        status={currentState}
+                        interimText={""}
+                        candidateName={candidateName || "Candidate"}
+                        jobRole={jobTitle || "Role"}
+                        onInterrupt={handleInterrupt}
+                        liveCaption={liveCaption}
+                        onEndInterview={handleEndInterview}
+                        isConnected={isConnected}
+                    />
+
+                    <AudioRecorder
+                        onAudioData={handleAudioData}
+                        onInterrupt={handleInterrupt}
+                        isRecording={currentState === ConversationState.LISTENING}
+                        isDetectingInterrupt={currentState === ConversationState.AI_SPEAKING}
+                    />
                 </div>
-            </div>
 
-            <div className="flex-1 overflow-hidden relative">
-                <LiveInterviewSession
-                    messages={messages}
-                    status={currentState}
-                    interimText={""}
-                    candidateName={candidateName || "Candidate"}
-                    jobRole={jobTitle || "Role"}
-                    onInterrupt={handleInterrupt}
-                    liveCaption={liveCaption}
-                    onEndInterview={handleEndInterview}
-                />
-
-                <AudioRecorder
-                    onAudioData={handleAudioData}
-                    onInterrupt={handleInterrupt}
-                    isRecording={currentState === ConversationState.LISTENING}
-                    isDetectingInterrupt={currentState === ConversationState.AI_SPEAKING}
-                />
-            </div>
-
-            {/* Premium End Interview Confirmation Modal */}
-            {isEndModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm transition-opacity">
-                    <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-100 animate-in fade-in zoom-in duration-200">
-                        <div className="bg-red-50 p-6 flex flex-col items-center justify-center border-b border-red-100">
-                            <div className="bg-white p-3 rounded-full shadow-sm mb-4">
-                                <AlertTriangle className="w-10 h-10 text-red-500" />
+                {/* Premium End Interview Confirmation Modal */}
+                {isEndModalOpen && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm transition-opacity">
+                        <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-100 animate-in fade-in zoom-in duration-200">
+                            <div className="bg-red-50 p-6 flex flex-col items-center justify-center border-b border-red-100">
+                                <div className="bg-white p-3 rounded-full shadow-sm mb-4">
+                                    <AlertTriangle className="w-10 h-10 text-red-500" />
+                                </div>
+                                <h2 className="text-xl font-bold text-slate-800 text-center">Terminate Interview Early?</h2>
                             </div>
-                            <h2 className="text-xl font-bold text-slate-800 text-center">Terminate Interview Early?</h2>
-                        </div>
-                        <div className="p-6 text-center">
-                            <p className="text-slate-600 mb-6">
-                                We are just getting started! Ending the interview now before completing all questions will <span className="font-semibold text-red-600">negatively impact your evaluation</span>.
-                                <br /><br />Are you sure you want to conclude?
-                            </p>
-                            <div className="flex flex-col sm:flex-row gap-3">
-                                <button
-                                    onClick={() => setIsEndModalOpen(false)}
-                                    className="flex-1 py-3 px-4 bg-slate-100 text-slate-700 font-semibold rounded-xl hover:bg-slate-200 transition-colors"
-                                >
-                                    No, Continue Interview
-                                </button>
-                                <button
-                                    onClick={confirmEndInterview}
-                                    className="flex-1 py-3 px-4 bg-red-600 text-white font-semibold rounded-xl hover:bg-red-700 shadow-md hover:shadow-lg transition-all"
-                                >
-                                    Yes, End Now
-                                </button>
+                            <div className="p-6 text-center">
+                                <p className="text-slate-600 mb-6">
+                                    We are just getting started! Ending the interview now before completing all questions will <span className="font-semibold text-red-600">negatively impact your evaluation</span>.
+                                    <br /><br />Are you sure you want to conclude?
+                                </p>
+                                <div className="flex flex-col sm:flex-row gap-3">
+                                    <button
+                                        onClick={() => setIsEndModalOpen(false)}
+                                        className="flex-1 py-3 px-4 bg-slate-100 text-slate-700 font-semibold rounded-xl hover:bg-slate-200 transition-colors"
+                                    >
+                                        No, Continue Interview
+                                    </button>
+                                    <button
+                                        onClick={confirmEndInterview}
+                                        className="flex-1 py-3 px-4 bg-red-600 text-white font-semibold rounded-xl hover:bg-red-700 shadow-md hover:shadow-lg transition-all"
+                                    >
+                                        Yes, End Now
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            )}
-        </div>
+                )}
+            </div>
+        </SecureInterviewWrapper>
     );
 };
 

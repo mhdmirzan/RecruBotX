@@ -332,8 +332,8 @@ const CandidateJobs = () => {
 
                                             {/* Deadline Banner */}
                                             <div className={`flex items-center gap-2 px-3 py-2 rounded-xl mb-4 text-sm font-semibold ${expired ? 'bg-red-50 text-red-600' :
-                                                    deadlineInfo.urgent ? 'bg-orange-50 text-orange-700 animate-pulse' :
-                                                        'bg-gray-50 text-gray-600'
+                                                deadlineInfo.urgent ? 'bg-orange-50 text-orange-700 animate-pulse' :
+                                                    'bg-gray-50 text-gray-600'
                                                 }`}>
                                                 {expired ? <XCircle className="w-4 h-4" /> : deadlineInfo.urgent ? <AlertTriangle className="w-4 h-4" /> : <Clock className="w-4 h-4" />}
                                                 <span>{expired ? "Deadline passed" : `Deadline: ${deadlineInfo.text}`}</span>
@@ -345,8 +345,8 @@ const CandidateJobs = () => {
                                                     setShowJobModal(true);
                                                 }}
                                                 className={`w-full py-3 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 ${expired ? 'bg-gray-100 text-gray-400 cursor-not-allowed' :
-                                                        applied ? 'bg-green-50 text-green-700 cursor-default' :
-                                                            'bg-gray-50 text-[#0a2a5e] hover:bg-[#0a2a5e] hover:text-white'
+                                                    applied ? 'bg-green-50 text-green-700 cursor-default' :
+                                                        'bg-gray-50 text-[#0a2a5e] hover:bg-[#0a2a5e] hover:text-white'
                                                     }`}
                                                 disabled={expired}
                                             >
@@ -367,7 +367,7 @@ const CandidateJobs = () => {
             {showJobModal && selectedJob && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
                     <div className="absolute inset-0 bg-black/60 backdrop-blur-md" onClick={() => setShowJobModal(false)}></div>
-                    <div className="relative bg-white w-full max-w-2xl max-h-[92vh] rounded-3xl overflow-hidden shadow-2xl flex flex-col" style={{animation: 'modalPop 0.25s cubic-bezier(0.34,1.56,0.64,1)'}}>
+                    <div className="relative bg-white w-full max-w-2xl max-h-[92vh] rounded-3xl overflow-hidden shadow-2xl flex flex-col" style={{ animation: 'modalPop 0.25s cubic-bezier(0.34,1.56,0.64,1)' }}>
                         {/* ── Header ── */}
                         <div className="bg-gradient-to-br from-[#0a2a5e] to-[#0d3b82] px-8 pt-8 pb-7 text-white relative">
                             <button onClick={() => setShowJobModal(false)} className="absolute top-5 right-5 w-9 h-9 flex items-center justify-center rounded-full bg-white/15 hover:bg-white/25 transition-colors">
@@ -379,11 +379,10 @@ const CandidateJobs = () => {
                                 <p className="text-blue-100 text-sm mt-0.5 font-semibold">{selectedJob.company}</p>
                             )}
                             {selectedJob.deadline && (
-                                <div className={`mt-4 inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-semibold ${
-                                    isJobExpired(selectedJob) ? 'bg-red-500/25 text-red-200' :
-                                    getDeadlineInfo(selectedJob).urgent ? 'bg-orange-500/25 text-orange-200' :
-                                    'bg-white/15 text-blue-100'
-                                }`}>
+                                <div className={`mt-4 inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-semibold ${isJobExpired(selectedJob) ? 'bg-red-500/25 text-red-200' :
+                                        getDeadlineInfo(selectedJob).urgent ? 'bg-orange-500/25 text-orange-200' :
+                                            'bg-white/15 text-blue-100'
+                                    }`}>
                                     <Clock className="w-4 h-4" />
                                     {isJobExpired(selectedJob) ? "Deadline Passed" :
                                         `Deadline: ${selectedJob.deadline.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}`}
