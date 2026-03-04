@@ -39,7 +39,7 @@ REACT_APP_API_URL=http://localhost:8000
 - "Analyze Resume" feature to screen CVs against job descriptions.
 
 ### 3. Candidate Dashboard
-- View all active job applications.
+- View all active job vacancies.
 - Track interview status and dates.
 - Interactive job details modal with background blur.
 - Quick navigation to CV screening and resume builder.

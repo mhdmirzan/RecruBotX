@@ -168,7 +168,7 @@ class DatabaseManager:
                 [("action_type", 1), ("timestamp", -1)], background=True
             )
 
-            # Job applications indexes — unique per candidate+job, fast lookups
+            # Job vacancies indexes — unique per candidate+job, fast lookups
             await self.db.job_applications.create_index(
                 [("job_id", 1), ("candidate_id", 1)],
                 unique=True,
