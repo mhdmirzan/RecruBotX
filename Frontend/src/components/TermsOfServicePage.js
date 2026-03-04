@@ -39,7 +39,7 @@ const TermsOfServicePage = () => {
                     heading: "For Candidates", items: [
                         "AI-conducted video interviews",
                         "Resume analysis and improvement suggestions",
-                        "Job application tracking",
+                        "Job vacancy tracking",
                         "Resume builder tools"
                     ]
                 },

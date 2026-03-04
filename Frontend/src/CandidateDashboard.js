@@ -17,7 +17,7 @@ const candidateTourSteps = [
   },
   {
     target: "[data-tour='c-jobs']",
-    title: "Job Applications",
+    title: "Job Vacancies",
     description: "Browse every role you've applied for and keep tabs on your application status.",
   },
   {
@@ -37,7 +37,7 @@ const candidateTourSteps = [
   },
   {
     target: "[data-tour='c-job-apps-panel']",
-    title: "Job Applications Panel",
+    title: "Job Vacancies Panel",
     description: "All open positions available to you live here. Browse and find your next opportunity.",
   },
   {
@@ -331,10 +331,10 @@ const CandidateDashboard = () => {
 
         {/* 2-Column Grid Layout */}
         <div className="flex-1 grid grid-cols-5 gap-6 overflow-hidden">
-          {/* LEFT SECTION - Job Applications (60% - 3 columns) */}
+          {/* LEFT SECTION - Job Vacancies (60% - 3 columns) */}
           <div className="col-span-3 flex flex-col overflow-hidden">
             <div data-tour="c-job-apps-panel" className="bg-white rounded-2xl shadow-lg p-6 h-full flex flex-col overflow-hidden">
-              <h3 className="text-xl font-bold text-gray-800 mb-4">Job Applications</h3>
+              <h3 className="text-xl font-bold text-gray-800 mb-4">Job Vacancies</h3>
 
               {/* Filters Section */}
               <div data-tour="c-job-filters" className="mb-4 grid grid-cols-3 gap-4">
@@ -408,7 +408,7 @@ const CandidateDashboard = () => {
                 ) : getFilteredAndSortedJobs().length === 0 ? (
                   <div className="text-center py-12">
                     <Briefcase className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                    <p className="text-gray-500 text-lg font-medium">No job applications found</p>
+                    <p className="text-gray-500 text-lg font-medium">No job vacancies found</p>
                     <p className="text-gray-400 text-sm mt-2">Try adjusting your filters</p>
                   </div>
                 ) : (

@@ -202,7 +202,7 @@ async def count_cv_files_for_job(
     return await db.job_cv_files.count_documents({"job_posting_id": job_posting_id})
 
 
-# ==================== Job Applications (One-Per-Candidate) ====================
+# ==================== Job Vacancies (One-Per-Candidate) ====================
 
 async def record_application(
     db: AsyncIOMotorDatabase,
@@ -269,7 +269,7 @@ async def get_candidate_applications_with_dates(
     db: AsyncIOMotorDatabase,
     candidate_id: str
 ) -> List[Dict[str, Any]]:
-    """Get all job applications for a candidate with their applied_at timestamps."""
+    """Get all job vacancies for a candidate with their applied_at timestamps."""
     apps = []
     cursor = db.job_applications.find(
         {"candidate_id": candidate_id},

@@ -171,7 +171,7 @@ const CandidateJobs = () => {
                 {/* Header */}
                 <div className="mb-6 flex-shrink-0 flex justify-between items-center">
                     <div>
-                        <h2 className="text-3xl font-bold text-[#0a2a5e]">Job Applications</h2>
+                        <h2 className="text-3xl font-bold text-[#0a2a5e]">Job Vacancies</h2>
                         <p className="text-gray-500 text-md mt-1 py-2">Explore and apply to open positions</p>
                     </div>
                 </div>

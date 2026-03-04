@@ -165,7 +165,7 @@ const InterviewPage = () => {
                             <ArrowLeft className="w-5 h-5" />
                         </button>
                         <div>
-                            <h2 className="text-2xl font-bold text-gray-800">Job Application</h2>
+                            <h2 className="text-2xl font-bold text-gray-800">Job Vacancy</h2>
                             <p className="text-gray-500 text-sm">Fill in your details to start the interview process</p>
                         </div>
                     </div>

@@ -63,7 +63,7 @@ const FAQPage = () => {
         {
             category: "candidates",
             q: "How is my interview data used and stored?",
-            a: "Your interview recordings and data are securely stored and only accessible to the hiring organization. We use enterprise-grade encryption and comply with GDPR and other data protection regulations. Your data is never sold to third parties or used for any purpose other than the specific job application. You can request deletion of your data at any time."
+            a: "Your interview recordings and data are securely stored and only accessible to the hiring organization. We use enterprise-grade encryption and comply with GDPR and other data protection regulations. Your data is never sold to third parties or used for any purpose other than the specific job vacancy. You can request deletion of your data at any time."
         },
         {
             category: "candidates",
