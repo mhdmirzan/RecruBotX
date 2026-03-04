@@ -57,6 +57,39 @@ const candidateTourSteps = [
   },
 ];
 
+// Renders job description: HTML-aware (new rich-text editor) with plain-text fallback
+const formatJobDescription = (text) => {
+  if (!text || !text.trim()) {
+    return '<p class="text-gray-400 italic">No description provided.</p>';
+  }
+  // If content is already HTML (from rich-text editor), render it directly
+  if (/<[a-z][\s\S]*>/i.test(text)) {
+    return text;
+  }
+  // Fallback: parse plain-text format for older descriptions
+  const lines = text.split('\n');
+  let html = ''; let inList = false;
+  for (const raw of lines) {
+    const line = raw.trim();
+    if (!line) { if (inList) { html += '</ul>'; inList = false; } continue; }
+    const isHeader = /^.{2,80}:$/.test(line) && !/^[-*\u2022\u25cf\u25aa\d]/.test(line);
+    const isBullet = /^[-*\u2022\u25cf\u25aa]\s+.+/.test(line) || /^\d+[.)]\s+.+/.test(line);
+    if (isHeader) {
+      if (inList) { html += '</ul>'; inList = false; }
+      html += `<p class="font-bold underline underline-offset-2 text-gray-800 mt-4 mb-1.5 text-sm">${line.replace(/:$/, '')}</p>`;
+    } else if (isBullet) {
+      if (!inList) { html += '<ul class="pl-4 mb-2 mt-1" style="list-style-type:disc">'; inList = true; }
+      const content = line.replace(/^[-*\u2022\u25cf\u25aa]\s+/, '').replace(/^\d+[.)]\s+/, '');
+      html += `<li class="text-gray-600 text-sm mb-1">${content}</li>`;
+    } else {
+      if (inList) { html += '</ul>'; inList = false; }
+      html += `<p class="text-gray-600 text-sm leading-relaxed mb-1.5">${line}</p>`;
+    }
+  }
+  if (inList) html += '</ul>';
+  return html || '<p class="text-gray-400 italic">No description provided.</p>';
+};
+
 const CandidateDashboard = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
@@ -624,24 +657,36 @@ const CandidateDashboard = () => {
 
               {/* Deadline Section */}
               {selectedJob.deadline && (
-                <div className={`flex items-center gap-4 px-5 py-4 rounded-2xl border ${
-                  isJobExpired(selectedJob) ? 'bg-red-50 border-red-200' :
-                  getDeadlineInfo(selectedJob).urgent ? 'bg-orange-50 border-orange-200' :
-                  'bg-blue-50 border-blue-200'
-                }`}>
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
-                    isJobExpired(selectedJob) ? 'bg-red-100' :
-                    getDeadlineInfo(selectedJob).urgent ? 'bg-orange-100' :
-                    'bg-blue-100'
+                <div className={`flex items-center gap-4 px-6 py-5 rounded-2xl border-2 ${
+                  isJobExpired(selectedJob) ? 'bg-red-50 border-red-300' :
+                  getDeadlineInfo(selectedJob).urgent ? 'bg-orange-50 border-orange-300' :
+                  'bg-[#0a2a5e]/5 border-[#0a2a5e]/20'
+                } shadow-sm`}>
+                  <div className={`w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 ${
+                    isJobExpired(selectedJob) ? 'bg-red-200' :
+                    getDeadlineInfo(selectedJob).urgent ? 'bg-orange-200' :
+                    'bg-[#0a2a5e]/15'
                   }`}>
-                    <Clock className={`w-5 h-5 ${isJobExpired(selectedJob) ? 'text-red-600' : getDeadlineInfo(selectedJob).urgent ? 'text-orange-600' : 'text-blue-600'}`} />
+                    <Clock className={`w-6 h-6 ${
+                      isJobExpired(selectedJob) ? 'text-red-700' :
+                      getDeadlineInfo(selectedJob).urgent ? 'text-orange-700' :
+                      'text-[#0a2a5e]'
+                    }`} />
                   </div>
-                  <div>
-                    <p className={`font-bold text-base ${isJobExpired(selectedJob) ? 'text-red-700' : getDeadlineInfo(selectedJob).urgent ? 'text-orange-700' : 'text-blue-700'}`}>
+                  <div className="flex-1">
+                    <p className={`font-bold text-lg ${
+                      isJobExpired(selectedJob) ? 'text-red-800' :
+                      getDeadlineInfo(selectedJob).urgent ? 'text-orange-800' :
+                      'text-[#0a2a5e]'
+                    }`}>
                       {isJobExpired(selectedJob) ? "Applications Closed" :
                         `Apply before ${selectedJob.deadline.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" })}`}
                     </p>
-                    <p className={`text-sm mt-0.5 ${isJobExpired(selectedJob) ? 'text-red-400' : getDeadlineInfo(selectedJob).urgent ? 'text-orange-400' : 'text-blue-400'}`}>
+                    <p className={`text-sm mt-1 ${
+                      isJobExpired(selectedJob) ? 'text-red-600' :
+                      getDeadlineInfo(selectedJob).urgent ? 'text-orange-600' :
+                      'text-[#0a2a5e]/60'
+                    }`}>
                       {selectedJob.deadline.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
                     </p>
                   </div>
@@ -651,9 +696,15 @@ const CandidateDashboard = () => {
               {/* Job Description */}
               <div>
                 <h3 className="text-base font-bold text-gray-800 mb-3">Job Description</h3>
+                <style dangerouslySetInnerHTML={{__html: `
+                    .jd-preview ul { list-style-type: disc !important; padding-left: 1.4rem !important; margin: 0.4rem 0 !important; }
+                    .jd-preview li { margin-bottom: 0.25rem !important; }
+                    .jd-preview b, .jd-preview strong { font-weight: 700 !important; }
+                    .jd-preview u { text-decoration: underline !important; }
+                `}} />
                 <div
-                  className="text-gray-600 leading-relaxed text-sm modal-job-desc"
-                  dangerouslySetInnerHTML={{ __html: selectedJob.jobDescription || '<p class="text-gray-400 italic">No description provided for this position.</p>' }}
+                  className="jd-preview text-gray-600 leading-relaxed text-sm"
+                  dangerouslySetInnerHTML={{ __html: formatJobDescription(selectedJob.jobDescription) }}
                 />
               </div>
             </div>
@@ -676,12 +727,6 @@ const CandidateDashboard = () => {
               </button>
             </div>
           </div>
-
-          <style dangerouslySetInnerHTML={{__html: `
-            .modal-job-desc ul { list-style-type: disc !important; padding-left: 1.5rem !important; margin: 0.75rem 0 !important; }
-            .modal-job-desc li { margin-bottom: 0.4rem !important; }
-            .modal-job-desc b, .modal-job-desc strong { font-weight: 700 !important; }
-          `}} />
         </div>
       )}
     </div>

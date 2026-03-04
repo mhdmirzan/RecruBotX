@@ -5,6 +5,40 @@ import { getCurrentUser, logoutUser } from "./utils/userDatabase";
 import API_BASE_URL from "./apiConfig";
 import CandidateSidebar from "./components/CandidateSidebar";
 
+// Converts plain-text job descriptions into structured HTML with section headers and bullet points
+const formatJobDescription = (text) => {
+    if (!text || !text.trim()) {
+        return '<p class="text-gray-400 italic">No description provided.</p>';
+    }
+    const lines = text.split('\n');
+    let html = '';
+    let inList = false;
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (!line) {
+            if (inList) { html += '</ul>'; inList = false; }
+            continue;
+        }
+        // Section header: line ending with colon, not starting with a bullet
+        const isHeader = /^.{2,80}:$/.test(line) && !/^[-*•●▪\d]/.test(line);
+        // Bullet: starts with -, *, •, ●, ▪ or a number followed by . or )
+        const isBullet = /^[-*•●▪]\s+.+/.test(line) || /^\d+[.)]\s+.+/.test(line);
+        if (isHeader) {
+            if (inList) { html += '</ul>'; inList = false; }
+            html += `<p class="font-bold text-gray-800 mt-4 mb-1.5 text-sm border-b border-gray-200 pb-1">${line.replace(/:$/, '')}</p>`;
+        } else if (isBullet) {
+            if (!inList) { html += '<ul class="space-y-1.5 pl-0 mb-2 mt-1">'; inList = true; }
+            const content = line.replace(/^[-*•●▪]\s+/, '').replace(/^\d+[.)]\s+/, '');
+            html += `<li class="flex items-start gap-2 text-gray-600 text-sm"><span class="mt-1.5 w-1.5 h-1.5 rounded-full bg-[#0a2a5e] flex-shrink-0"></span><span>${content}</span></li>`;
+        } else {
+            if (inList) { html += '</ul>'; inList = false; }
+            html += `<p class="text-gray-600 text-sm leading-relaxed mb-1.5">${line}</p>`;
+        }
+    }
+    if (inList) html += '</ul>';
+    return html || '<p class="text-gray-400 italic">No description provided.</p>';
+};
+
 const CandidateJobs = () => {
     const navigate = useNavigate();
     const [user, setUser] = useState(null);
@@ -380,22 +414,36 @@ const CandidateJobs = () => {
 
                             {/* Deadline Section */}
                             {selectedJob.deadline && (
-                                <div className={`flex items-center gap-4 px-5 py-4 rounded-2xl border ${isJobExpired(selectedJob) ? 'bg-red-50 border-red-200' :
-                                        getDeadlineInfo(selectedJob).urgent ? 'bg-orange-50 border-orange-200' :
-                                            'bg-blue-50 border-blue-200'
+                                <div className={`flex items-center gap-4 px-6 py-5 rounded-2xl border-2 ${
+                                    isJobExpired(selectedJob) ? 'bg-red-50 border-red-300' :
+                                    getDeadlineInfo(selectedJob).urgent ? 'bg-orange-50 border-orange-300' :
+                                    'bg-[#0a2a5e]/5 border-[#0a2a5e]/20'
+                                } shadow-sm`}>
+                                    <div className={`w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 ${
+                                        isJobExpired(selectedJob) ? 'bg-red-200' :
+                                        getDeadlineInfo(selectedJob).urgent ? 'bg-orange-200' :
+                                        'bg-[#0a2a5e]/15'
                                     }`}>
-                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${isJobExpired(selectedJob) ? 'bg-red-100' :
-                                            getDeadlineInfo(selectedJob).urgent ? 'bg-orange-100' :
-                                                'bg-blue-100'
-                                        }`}>
-                                        <Clock className={`w-5 h-5 ${isJobExpired(selectedJob) ? 'text-red-600' : getDeadlineInfo(selectedJob).urgent ? 'text-orange-600' : 'text-blue-600'}`} />
+                                        <Clock className={`w-6 h-6 ${
+                                            isJobExpired(selectedJob) ? 'text-red-700' :
+                                            getDeadlineInfo(selectedJob).urgent ? 'text-orange-700' :
+                                            'text-[#0a2a5e]'
+                                        }`} />
                                     </div>
-                                    <div>
-                                        <p className={`font-bold text-base ${isJobExpired(selectedJob) ? 'text-red-700' : getDeadlineInfo(selectedJob).urgent ? 'text-orange-700' : 'text-blue-700'}`}>
+                                    <div className="flex-1">
+                                        <p className={`font-bold text-lg ${
+                                            isJobExpired(selectedJob) ? 'text-red-800' :
+                                            getDeadlineInfo(selectedJob).urgent ? 'text-orange-800' :
+                                            'text-[#0a2a5e]'
+                                        }`}>
                                             {isJobExpired(selectedJob) ? "Applications Closed" :
                                                 `Apply before ${selectedJob.deadline.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" })}`}
                                         </p>
-                                        <p className={`text-sm mt-0.5 ${isJobExpired(selectedJob) ? 'text-red-400' : getDeadlineInfo(selectedJob).urgent ? 'text-orange-400' : 'text-blue-400'}`}>
+                                        <p className={`text-sm mt-1 ${
+                                            isJobExpired(selectedJob) ? 'text-red-600' :
+                                            getDeadlineInfo(selectedJob).urgent ? 'text-orange-600' :
+                                            'text-[#0a2a5e]/60'
+                                        }`}>
                                             {selectedJob.deadline.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
                                         </p>
                                     </div>
@@ -405,9 +453,15 @@ const CandidateJobs = () => {
                             {/* Job Description */}
                             <div>
                                 <h3 className="text-base font-bold text-gray-800 mb-3">Job Description</h3>
+                                <style dangerouslySetInnerHTML={{__html: `
+                                    .jd-preview ul { list-style-type: disc !important; padding-left: 1.4rem !important; margin: 0.4rem 0 !important; }
+                                    .jd-preview li { margin-bottom: 0.25rem !important; }
+                                    .jd-preview b, .jd-preview strong { font-weight: 700 !important; }
+                                    .jd-preview u { text-decoration: underline !important; }
+                                `}} />
                                 <div
-                                    className="text-gray-600 leading-relaxed text-sm modal-job-desc"
-                                    dangerouslySetInnerHTML={{ __html: selectedJob.jobDescription || '<p class="text-gray-400 italic">No description provided.</p>' }}
+                                    className="jd-preview text-gray-600 leading-relaxed text-sm"
+                                    dangerouslySetInnerHTML={{ __html: formatJobDescription(selectedJob.jobDescription) }}
                                 />
                             </div>
                         </div>

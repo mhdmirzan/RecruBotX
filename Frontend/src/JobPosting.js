@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import {
     LayoutDashboard,
@@ -56,6 +56,19 @@ const JobPosting = () => {
         type: "Behavioral",
         difficulty: "Medium"
     });
+
+    // Rich-text editor ref for the job description contentEditable
+    const editorRef = useRef(null);
+
+    // Sync editor DOM when loading an existing job or resetting, or when navigating to step 2
+    useEffect(() => {
+        if (currentStep === 2 && editorRef.current) {
+            const desired = formData.jobDescription || "";
+            if (editorRef.current.innerHTML !== desired) {
+                editorRef.current.innerHTML = desired;
+            }
+        }
+    }, [currentStep, selectedJobId]); // eslint-disable-line
 
     useEffect(() => {
         const storedUser = localStorage.getItem("recruiterUser");
@@ -165,7 +178,8 @@ const JobPosting = () => {
                 return false;
             }
         } else if (step === 2) {
-            if (!formData.jobDescription.trim()) {
+            const plainText = (formData.jobDescription || "").replace(/<[^>]*>/g, "").trim();
+            if (!plainText) {
                 setErrorMessage("Job Description is required.");
                 return false;
             }
@@ -433,19 +447,96 @@ const JobPosting = () => {
 
                         {/* STEP 2: JOB DESCRIPTION */}
                         {currentStep === 2 && (
-                            <div className="space-y-6 animate-in fade-in slide-in-from-right duration-300 h-full flex flex-col">
-                                <h3 className="text-xl font-bold text-gray-800 border-b pb-2 mb-4">Job Description</h3>
-                                <div className="flex-1 flex flex-col">
-                                    <label className="block font-medium text-gray-700 mb-2">Detailed Description <span className="text-red-500">*</span></label>
-                                    <textarea
-                                        name="jobDescription"
-                                        value={formData.jobDescription}
-                                        onChange={handleInputChange}
-                                        placeholder="Enter the full job description here. You can use markdown for formatting."
-                                        className="w-full flex-1 p-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#0a2a5e] outline-none resize-none font-mono text-sm"
-                                        required
-                                    ></textarea>
-                                    <p className="text-xs text-gray-500 mt-2">Check spelling and formatting before proceeding.</p>
+                            <div className="animate-in fade-in slide-in-from-right duration-300 h-full flex flex-col gap-3">
+                                <div className="flex items-center justify-between flex-shrink-0">
+                                    <h3 className="text-xl font-bold text-gray-800 border-b pb-2 flex-grow">Job Description</h3>                                    
+                                </div>
+
+                                {/* Inject scoped styles for editor + preview */}
+                                <style dangerouslySetInnerHTML={{__html: `
+                                    .jd-editor ul, .jd-preview ul { list-style-type: disc !important; padding-left: 1.4rem !important; margin: 0.4rem 0 !important; }
+                                    .jd-editor ol, .jd-preview ol { list-style-type: decimal !important; padding-left: 1.4rem !important; margin: 0.4rem 0 !important; }
+                                    .jd-editor li, .jd-preview li { margin-bottom: 0.25rem !important; }
+                                    .jd-editor b, .jd-editor strong, .jd-preview b, .jd-preview strong { font-weight: 700 !important; }
+                                    .jd-editor u, .jd-preview u { text-decoration: underline !important; }
+                                    .jd-editor p, .jd-preview p { margin-bottom: 0.4rem; }
+                                    .jd-editor:empty:before { content: attr(data-placeholder); color: #9ca3af; pointer-events: none; }
+                                `}} />
+
+                                {/* Editor Container */}
+                                <div className="flex-1 flex flex-col border border-gray-300 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-[#0a2a5e] focus-within:border-[#0a2a5e]">
+
+                                    {/* ── Toolbar ── */}
+                                    <div className="flex items-center gap-1 bg-gray-50 border-b border-gray-200 px-3 py-2 flex-shrink-0 flex-wrap">
+                                        <span className="text-[11px] text-gray-400 font-semibold uppercase tracking-wider mr-1">Format</span>
+
+                                        {/* Bold */}
+                                        <button type="button"
+                                            title="Bold (Ctrl+B)"
+                                            onMouseDown={(e) => {
+                                                e.preventDefault();
+                                                editorRef.current.focus();
+                                                document.execCommand('bold');
+                                                setFormData(prev => ({...prev, jobDescription: editorRef.current.innerHTML}));
+                                            }}
+                                            className="w-8 h-8 rounded font-bold text-gray-700 hover:bg-[#0a2a5e] hover:text-white transition-colors text-sm"
+                                        >B</button>
+
+                                        {/* Underline */}
+                                        <button type="button"
+                                            title="Underline (Ctrl+U)"
+                                            onMouseDown={(e) => {
+                                                e.preventDefault();
+                                                editorRef.current.focus();
+                                                document.execCommand('underline');
+                                                setFormData(prev => ({...prev, jobDescription: editorRef.current.innerHTML}));
+                                            }}
+                                            className="w-8 h-8 rounded underline text-gray-700 hover:bg-[#0a2a5e] hover:text-white transition-colors text-sm"
+                                        >U</button>
+
+                                        <div className="w-px h-5 bg-gray-300 mx-1" />
+
+                                        {/* Bullet List */}
+                                        <button type="button"
+                                            title="Bullet List"
+                                            onMouseDown={(e) => {
+                                                e.preventDefault();
+                                                editorRef.current.focus();
+                                                document.execCommand('insertUnorderedList');
+                                                setFormData(prev => ({...prev, jobDescription: editorRef.current.innerHTML}));
+                                            }}
+                                            className="flex items-center gap-1 px-2.5 h-8 rounded text-gray-700 hover:bg-[#0a2a5e] hover:text-white transition-colors text-sm font-medium"
+                                        >• Bullet</button>
+
+                                        <div className="w-px h-5 bg-gray-300 mx-1" />
+
+                                        {/* Clear Formatting */}
+                                        <button type="button"
+                                            title="Remove all formatting from selection"
+                                            onMouseDown={(e) => {
+                                                e.preventDefault();
+                                                editorRef.current.focus();
+                                                document.execCommand('removeFormat');
+                                                setFormData(prev => ({...prev, jobDescription: editorRef.current.innerHTML}));
+                                            }}
+                                            className="flex items-center gap-1 px-2.5 h-8 rounded text-gray-500 hover:bg-red-50 hover:text-red-600 transition-colors text-xs"
+                                        >✕ Clear format</button>
+                                    </div>
+
+                                    {/* ── Content Editable Area ── */}
+                                    <div
+                                        ref={editorRef}
+                                        contentEditable
+                                        suppressContentEditableWarning
+                                        data-placeholder="Start typing your job description...&#10;&#10;Select text then click B to bold, U to underline, or use • Bullet to add a bullet list."
+                                        className="jd-editor flex-1 p-4 outline-none text-sm text-gray-700 leading-relaxed overflow-y-auto"
+                                        style={{ minHeight: '180px' }}
+                                        onInput={() => {
+                                            if (editorRef.current) {
+                                                setFormData(prev => ({...prev, jobDescription: editorRef.current.innerHTML}));
+                                            }
+                                        }}
+                                    />
                                 </div>
                             </div>
                         )}
@@ -579,9 +670,16 @@ const JobPosting = () => {
                                 {/* Review Description */}
                                 <div>
                                     <h4 className="font-semibold text-gray-500 mb-2 uppercase tracking-wide">Description Preview</h4>
-                                    <div className="bg-gray-50 p-4 rounded-xl text-gray-700 text-sm max-h-48 overflow-y-auto whitespace-pre-wrap">
-                                        {formData.jobDescription}
-                                    </div>
+                                    <style dangerouslySetInnerHTML={{__html: `
+                                        .jd-preview ul { list-style-type: disc !important; padding-left: 1.4rem !important; margin: 0.4rem 0 !important; }
+                                        .jd-preview li { margin-bottom: 0.25rem !important; }
+                                        .jd-preview b, .jd-preview strong { font-weight: 700 !important; }
+                                        .jd-preview u { text-decoration: underline !important; }
+                                    `}} />
+                                    <div
+                                        className="jd-preview bg-gray-50 p-4 rounded-xl text-sm text-gray-700 max-h-48 overflow-y-auto leading-relaxed"
+                                        dangerouslySetInnerHTML={{ __html: formData.jobDescription || '<p class="text-gray-400 italic">No description entered yet.</p>' }}
+                                    />
                                 </div>
                             </div>
                         )}
