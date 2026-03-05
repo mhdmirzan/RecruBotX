@@ -378,7 +378,7 @@ function App() {
         onAudioData={handleAudioData}
         onInterrupt={handleInterrupt}
         isRecording={currentState === ConversationState.LISTENING}
-        isDetectingInterrupt={currentState === ConversationState.AI_SPEAKING}
+        isDetectingInterrupt={false}
       />
     </SecureInterviewWrapper>
   );

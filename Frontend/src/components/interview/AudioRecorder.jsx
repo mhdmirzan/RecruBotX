@@ -21,14 +21,6 @@ const AudioRecorder = ({
 
   const detectionStartTimeRef = useRef(0);
 
-  useEffect(() => {
-    if (isDetectingInterrupt && !isDetectingInterruptRef.current) {
-      detectionStartTimeRef.current = Date.now();
-    }
-    isRecordingRef.current = isRecording;
-    isDetectingInterruptRef.current = isDetectingInterrupt;
-  }, [isRecording, isDetectingInterrupt]);
-
   const [currentVolume, setCurrentVolume] = useState(0);
   const [micLabel, setMicLabel] = useState("");
   const [errorMessage, setErrorMessage] = useState(null);
@@ -40,6 +32,25 @@ const AudioRecorder = ({
   const silenceTimerRef = useRef(null);
   const streamRef = useRef(null);
   const animationFrameRef = useRef(null);
+
+  useEffect(() => {
+    if (isDetectingInterrupt && !isDetectingInterruptRef.current) {
+      detectionStartTimeRef.current = Date.now();
+    }
+
+    // If we transition from recording to NOT recording, we MUST stop the recorder immediately
+    // to discard any ongoing audio capture and prevent it from being sent later.
+    if (!isRecording && isRecordingRef.current) {
+      if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+      setIsSpeaking(false);
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+        mediaRecorderRef.current.stop();
+      }
+    }
+
+    isRecordingRef.current = isRecording;
+    isDetectingInterruptRef.current = isDetectingInterrupt;
+  }, [isRecording, isDetectingInterrupt]);
 
   // VAD Configuration
   const VAD_THRESHOLD = 8;          // Recording trigger
