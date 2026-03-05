@@ -4,7 +4,6 @@ import {
     ArrowLeft,
     Users,
     FileText,
-    Download,
     Video
 } from "lucide-react";
 import API_BASE_URL from "./apiConfig";
@@ -47,7 +46,12 @@ const RecruiterInterviewReports = () => {
             const response = await fetch(`${API_BASE_URL}/interview/reports/${jobId}`);
             if (response.ok) {
                 const data = await response.json();
-                setReports(data.reports || []);
+                const sortedReports = (data.reports || []).sort((a, b) => {
+                    const scoreA = a.avg_score != null ? a.avg_score : -1;
+                    const scoreB = b.avg_score != null ? b.avg_score : -1;
+                    return scoreB - scoreA;
+                });
+                setReports(sortedReports);
             }
         } catch (error) {
             console.error("Error fetching reports:", error);
@@ -56,9 +60,7 @@ const RecruiterInterviewReports = () => {
         }
     };
 
-    const handleDownloadCV = (sessionId) => {
-        window.open(`${API_BASE_URL}/interview/cv-file/${sessionId}`, "_blank");
-    };
+
 
     if (!recruiterData) return null;
 
@@ -105,10 +107,9 @@ const RecruiterInterviewReports = () => {
                                         <th className="py-4 px-5 text-left font-semibold w-10">#</th>
                                         <th className="py-4 px-5 text-left font-semibold">Candidate Name</th>
                                         <th className="py-4 px-5 text-left font-semibold">Date Applied</th>
-                                        <th className="py-4 px-5 text-left font-semibold">Avg Score</th>
+                                        <th className="py-4 px-5 text-left font-semibold">Performance Score</th>
                                         <th className="py-4 px-5 text-left font-semibold">Recommendation</th>
                                         <th className="py-4 px-5 text-center font-semibold">Interview Report</th>
-                                        <th className="py-4 px-5 text-center font-semibold">CV</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -162,20 +163,6 @@ const RecruiterInterviewReports = () => {
                                                     </button>
                                                 ) : (
                                                     <span className="text-gray-400 text-xs">Processing...</span>
-                                                )}
-                                            </td>
-                                            <td className="py-4 px-5 text-center">
-                                                {report.has_cv ? (
-                                                    <button
-                                                        onClick={() => handleDownloadCV(report.session_id)}
-                                                        className="inline-flex items-center gap-1.5 text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg transition-colors font-medium border border-slate-200"
-                                                        title="Download CV"
-                                                    >
-                                                        <Download className="w-4 h-4" />
-                                                        <span className="text-xs">CV</span>
-                                                    </button>
-                                                ) : (
-                                                    <span className="text-gray-400 text-xs">—</span>
                                                 )}
                                             </td>
                                         </tr>
