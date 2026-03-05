@@ -283,7 +283,7 @@ const LiveInterviewRoute = () => {
                         onAudioData={handleAudioData}
                         onInterrupt={handleInterrupt}
                         isRecording={currentState === ConversationState.LISTENING}
-                        isDetectingInterrupt={currentState === ConversationState.AI_SPEAKING}
+                        isDetectingInterrupt={false}
                     />
                 </div>
 
