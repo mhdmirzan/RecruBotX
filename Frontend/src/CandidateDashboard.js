@@ -5,7 +5,6 @@ import { getCurrentUser, logoutUser } from "./utils/userDatabase";
 import API_BASE_URL from "./apiConfig";
 import CandidateSidebar from "./components/CandidateSidebar";
 import TourOverlay from "./components/TourOverlay";
-import TourRecommendation from "./components/TourRecommendation";
 
 const CANDIDATE_TOUR_KEY = "candidate_tour_done";
 
@@ -94,20 +93,11 @@ const CandidateDashboard = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [showTour, setShowTour] = useState(false);
-  const [showTourRecommendation, setShowTourRecommendation] = useState(false);
-
-  // Show tour recommendation if tour not completed
-  useEffect(() => {
-    if (!localStorage.getItem(CANDIDATE_TOUR_KEY)) {
-      setShowTourRecommendation(true);
-    }
-  }, []);
 
   // Listen for tour event dispatched by the sidebar
   useEffect(() => {
     const handleStartTour = () => {
       setShowTour(true);
-      setShowTourRecommendation(false); // Dismiss recommendation when tour starts
     };
     window.addEventListener("rbx:start-tour", handleStartTour);
     return () => window.removeEventListener("rbx:start-tour", handleStartTour);
@@ -116,11 +106,6 @@ const CandidateDashboard = () => {
   const handleTourFinish = () => {
     localStorage.setItem(CANDIDATE_TOUR_KEY, "1");
     setShowTour(false);
-    setShowTourRecommendation(false);
-  };
-
-  const handleDismissRecommendation = () => {
-    setShowTourRecommendation(false);
   };
 
   // Filter states
@@ -324,12 +309,6 @@ const CandidateDashboard = () => {
 
   return (
     <div className="h-screen w-screen flex bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden fixed inset-0">
-      {showTourRecommendation && (
-        <TourRecommendation
-          targetSelector="[data-tour='c-tour-btn']"
-          onDismiss={handleDismissRecommendation}
-        />
-      )}
       {showTour && <TourOverlay steps={candidateTourSteps} onFinish={handleTourFinish} />}
       {/* Sidebar - Always Visible, No Scroll */}
       <CandidateSidebar />
@@ -606,7 +585,7 @@ const CandidateDashboard = () => {
             onClick={() => setShowJobModal(false)}
           ></div>
 
-          <div className="relative bg-white w-full max-w-2xl max-h-[92vh] rounded-3xl overflow-hidden shadow-2xl flex flex-col" style={{animation: 'modalPop 0.25s cubic-bezier(0.34,1.56,0.64,1)'}}>
+          <div className="relative bg-white w-full max-w-3xl max-h-[92vh] rounded-3xl overflow-hidden shadow-2xl flex flex-col" style={{animation: 'modalPop 0.25s cubic-bezier(0.34,1.56,0.64,1)'}}>
             {/* ── Header ── */}
             <div className="bg-gradient-to-br from-[#0a2a5e] to-[#0d3b82] px-8 pt-8 pb-7 text-white relative">
               <button
