@@ -131,8 +131,9 @@ const RecruiterDashboard = () => {
       if (!response.ok) throw new Error("Failed to fetch job postings");
       const data = await response.json();
 
-      // Sort by creation date (most recent first) and get top 6
-      const sortedJobs = data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      // Sort by creation date (most recent first), exclude CV Screening entries, and get top 6
+      const realJobs = data.filter(job => job.status !== "Screening");
+      const sortedJobs = realJobs.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
       setJobPostings(sortedJobs.slice(0, 6));
 
       // Update stats - now using cvFilesCount from backend (Reference Pattern)
