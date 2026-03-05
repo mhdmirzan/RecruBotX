@@ -20,6 +20,156 @@ import {
 } from "lucide-react";
 import API_BASE_URL from "./apiConfig";
 
+const CURRENCIES = [
+    { code: "USD", name: "US Dollar" },
+    { code: "EUR", name: "Euro" },
+    { code: "GBP", name: "British Pound" },
+    { code: "INR", name: "Indian Rupee" },
+    { code: "LKR", name: "Sri Lankan Rupee" },
+    { code: "AED", name: "UAE Dirham" },
+    { code: "SAR", name: "Saudi Riyal" },
+    { code: "QAR", name: "Qatari Riyal" },
+    { code: "KWD", name: "Kuwaiti Dinar" },
+    { code: "BHD", name: "Bahraini Dinar" },
+    { code: "OMR", name: "Omani Rial" },
+    { code: "JOD", name: "Jordanian Dinar" },
+    { code: "EGP", name: "Egyptian Pound" },
+    { code: "PKR", name: "Pakistani Rupee" },
+    { code: "BDT", name: "Bangladeshi Taka" },
+    { code: "NPR", name: "Nepalese Rupee" },
+    { code: "AUD", name: "Australian Dollar" },
+    { code: "CAD", name: "Canadian Dollar" },
+    { code: "SGD", name: "Singapore Dollar" },
+    { code: "MYR", name: "Malaysian Ringgit" },
+    { code: "JPY", name: "Japanese Yen" },
+    { code: "CNY", name: "Chinese Yuan" },
+    { code: "HKD", name: "Hong Kong Dollar" },
+    { code: "TWD", name: "Taiwan Dollar" },
+    { code: "KRW", name: "South Korean Won" },
+    { code: "THB", name: "Thai Baht" },
+    { code: "IDR", name: "Indonesian Rupiah" },
+    { code: "PHP", name: "Philippine Peso" },
+    { code: "VND", name: "Vietnamese Dong" },
+    { code: "NZD", name: "New Zealand Dollar" },
+    { code: "CHF", name: "Swiss Franc" },
+    { code: "SEK", name: "Swedish Krona" },
+    { code: "NOK", name: "Norwegian Krone" },
+    { code: "DKK", name: "Danish Krone" },
+    { code: "PLN", name: "Polish Zloty" },
+    { code: "CZK", name: "Czech Koruna" },
+    { code: "HUF", name: "Hungarian Forint" },
+    { code: "RON", name: "Romanian Leu" },
+    { code: "BGN", name: "Bulgarian Lev" },
+    { code: "HRK", name: "Croatian Kuna" },
+    { code: "RSD", name: "Serbian Dinar" },
+    { code: "TRY", name: "Turkish Lira" },
+    { code: "RUB", name: "Russian Ruble" },
+    { code: "UAH", name: "Ukrainian Hryvnia" },
+    { code: "GEL", name: "Georgian Lari" },
+    { code: "KZT", name: "Kazakhstani Tenge" },
+    { code: "AZN", name: "Azerbaijani Manat" },
+    { code: "BRL", name: "Brazilian Real" },
+    { code: "MXN", name: "Mexican Peso" },
+    { code: "ARS", name: "Argentine Peso" },
+    { code: "CLP", name: "Chilean Peso" },
+    { code: "COP", name: "Colombian Peso" },
+    { code: "PEN", name: "Peruvian Sol" },
+    { code: "VES", name: "Venezuelan Bolivar" },
+    { code: "ZAR", name: "South African Rand" },
+    { code: "NGN", name: "Nigerian Naira" },
+    { code: "KES", name: "Kenyan Shilling" },
+    { code: "GHS", name: "Ghanaian Cedi" },
+    { code: "ETB", name: "Ethiopian Birr" },
+    { code: "TZS", name: "Tanzanian Shilling" },
+    { code: "MAD", name: "Moroccan Dirham" },
+    { code: "TND", name: "Tunisian Dinar" },
+    { code: "DZD", name: "Algerian Dinar" },
+    { code: "ILS", name: "Israeli Shekel" },
+    { code: "IRR", name: "Iranian Rial" },
+    { code: "IQD", name: "Iraqi Dinar" },
+];
+
+const CurrencySelect = ({ value, onChange }) => {
+    const [open, setOpen] = React.useState(false);
+    const [search, setSearch] = React.useState("");
+    const ref = React.useRef(null);
+    const searchRef = React.useRef(null);
+
+    const selected = CURRENCIES.find(c => c.code === value) || CURRENCIES[0];
+    const filtered = search
+        ? CURRENCIES.filter(c =>
+            c.code.toLowerCase().includes(search.toLowerCase()) ||
+            c.name.toLowerCase().includes(search.toLowerCase())
+          )
+        : CURRENCIES;
+
+    React.useEffect(() => {
+        const handleClickOutside = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    React.useEffect(() => {
+        if (open && searchRef.current) searchRef.current.focus();
+    }, [open]);
+
+    return (
+        <div ref={ref} className="relative flex-shrink-0">
+            <button
+                type="button"
+                onClick={() => { setOpen(o => !o); setSearch(""); }}
+                className="flex items-center gap-1.5 px-3 py-3 border border-gray-300 rounded-xl bg-gray-50 font-semibold text-gray-700 hover:border-[#0a2a5e] focus:ring-2 focus:ring-[#0a2a5e] outline-none whitespace-nowrap min-w-[90px] justify-between"
+            >
+                <span>{selected.code}</span>
+                <svg className={`w-4 h-4 text-gray-400 transition-transform ${open ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+            </button>
+
+            {open && (
+                <div className="absolute z-50 mt-1 left-0 w-64 bg-white border border-gray-200 rounded-xl shadow-xl overflow-hidden">
+                    <div className="p-2 border-b border-gray-100">
+                        <input
+                            ref={searchRef}
+                            type="text"
+                            value={search}
+                            onChange={e => setSearch(e.target.value)}
+                            placeholder="Search currency..."
+                            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#0a2a5e] outline-none"
+                        />
+                    </div>
+                    <div className="max-h-56 overflow-y-auto">
+                        {filtered.length === 0 ? (
+                            <p className="text-center text-sm text-gray-400 py-4">No currencies found</p>
+                        ) : filtered.map(c => (
+                            <button
+                                key={c.code}
+                                type="button"
+                                onClick={() => { onChange(c.code); setOpen(false); setSearch(""); }}
+                                className={`w-full text-left flex items-center gap-2 px-3 py-2 text-sm hover:bg-[#0a2a5e]/5 transition-colors ${
+                                    c.code === value ? "bg-[#0a2a5e]/10 font-semibold text-[#0a2a5e]" : "text-gray-700"
+                                }`}
+                            >
+                                <span className="font-semibold w-12 flex-shrink-0">{c.code}</span>
+                                <span className="text-gray-400 truncate">{c.name}</span>
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
+
+const parseSalaryRange = (str) => {
+    if (!str) return { salaryCurrency: "USD", salaryMin: "", salaryMax: "" };
+    const found = CURRENCIES.find(c => str.startsWith(c.code + " ") || str.includes(" " + c.code + " "));
+    const code = found ? found.code : "USD";
+    const nums = str.match(/[\d,]+/g);
+    if (nums && nums.length >= 2) {
+        return { salaryCurrency: code, salaryMin: nums[0].replace(/,/g, ""), salaryMax: nums[1].replace(/,/g, "") };
+    }
+    return { salaryCurrency: code, salaryMin: "", salaryMax: "" };
+};
+
 const JobPosting = () => {
     const navigate = useNavigate();
     const [recruiterData, setRecruiterData] = useState(null);
@@ -36,7 +186,9 @@ const JobPosting = () => {
         workModel: "",
         status: "", // Employment Status
         location: "",
-        salaryRange: "",
+        salaryCurrency: "USD",
+        salaryMin: "",
+        salaryMax: "",
         experienceRange: "",
         industryDomain: "",
         numberOfVacancies: 1,
@@ -106,7 +258,7 @@ const JobPosting = () => {
                     workModel: selectedJob.workModel || "",
                     status: selectedJob.status || "",
                     location: selectedJob.location || "",
-                    salaryRange: selectedJob.salaryRange || "",
+                    ...parseSalaryRange(selectedJob.salaryRange || ""),
                     experienceRange: selectedJob.experienceRange || "",
                     industryDomain: selectedJob.industryDomain || "",
                     numberOfVacancies: selectedJob.numberOfVacancies || 1,
@@ -167,8 +319,12 @@ const JobPosting = () => {
 
     const validateStep = (step) => {
         if (step === 1) {
-            if (!formData.interviewField || !formData.positionLevel || !formData.workModel || !formData.status || !formData.location || !formData.salaryRange || !formData.experienceRange || !formData.industryDomain || !formData.deadline) {
+            if (!formData.interviewField || !formData.positionLevel || !formData.workModel || !formData.status || !formData.location || !formData.salaryMin || !formData.salaryMax || !formData.experienceRange || !formData.industryDomain || !formData.deadline) {
                 setErrorMessage("Please fill in all required fields in Job Details (including Deadline).");
+                return false;
+            }
+            if (Number(formData.salaryMin) >= Number(formData.salaryMax)) {
+                setErrorMessage("Maximum salary must be greater than minimum salary.");
                 return false;
             }
             // Validate deadline is in the future
@@ -211,9 +367,14 @@ const JobPosting = () => {
 
             const method = selectedJobId ? "PUT" : "POST";
 
+            const curr = CURRENCIES.find(c => c.code === formData.salaryCurrency) || CURRENCIES[0];
+            const salaryRange = `${curr.code} ${Number(formData.salaryMin).toLocaleString()} - ${curr.code} ${Number(formData.salaryMax).toLocaleString()}`;
+            const { salaryCurrency, salaryMin, salaryMax, ...restFormData } = formData;
+
             const payload = {
                 recruiterId: recruiterData.id,
-                ...formData
+                ...restFormData,
+                salaryRange,
             };
 
             const response = await fetch(url, {
@@ -413,16 +574,42 @@ const JobPosting = () => {
                                         <input type="text" name="location" value={formData.location} onChange={handleInputChange} placeholder="e.g. New York, NY" className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#0a2a5e] outline-none" required />
                                     </div>
                                     <div>
-                                        <label className="block font-medium text-gray-700 mb-2">Salary Range <span className="text-red-500">*</span></label>
-                                        <input type="text" name="salaryRange" value={formData.salaryRange} onChange={handleInputChange} placeholder="e.g. $80,000 - $120,000" className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#0a2a5e] outline-none" required />
-                                    </div>
-                                    <div>
                                         <label className="block font-medium text-gray-700 mb-2">Experience Range <span className="text-red-500">*</span></label>
                                         <input type="text" name="experienceRange" value={formData.experienceRange} onChange={handleInputChange} placeholder="e.g. 3-5 Years" className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#0a2a5e] outline-none" required />
                                     </div>
                                     <div>
                                         <label className="block font-medium text-gray-700 mb-2">Number of Vacancies <span className="text-red-500">*</span></label>
                                         <input type="number" name="numberOfVacancies" value={formData.numberOfVacancies} onChange={handleInputChange} min="1" placeholder="e.g. 2" className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#0a2a5e] outline-none" required />
+                                    </div>
+                                    <div className="col-span-2">
+                                        <label className="block font-medium text-gray-700 mb-2">Salary Range <span className="text-red-500">*</span></label>
+                                        <div className="flex gap-2 items-center">
+                                            <CurrencySelect
+                                                value={formData.salaryCurrency}
+                                                onChange={(code) => setFormData(prev => ({ ...prev, salaryCurrency: code }))}
+                                            />
+                                            <input
+                                                type="number"
+                                                name="salaryMin"
+                                                value={formData.salaryMin}
+                                                onChange={handleInputChange}
+                                                placeholder="Min (e.g. 80000)"
+                                                min="0"
+                                                className="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#0a2a5e] outline-none"
+                                                required
+                                            />
+                                            <span className="text-gray-400 font-semibold px-1">—</span>
+                                            <input
+                                                type="number"
+                                                name="salaryMax"
+                                                value={formData.salaryMax}
+                                                onChange={handleInputChange}
+                                                placeholder="Max (e.g. 120000)"
+                                                min="0"
+                                                className="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#0a2a5e] outline-none"
+                                                required
+                                            />
+                                        </div>
                                     </div>
                                 </div>
 
@@ -646,7 +833,7 @@ const JobPosting = () => {
                                             <p><span className="font-medium text-gray-900">Level:</span> {formData.positionLevel}</p>
                                             <p><span className="font-medium text-gray-900">Industry:</span> {formData.industryDomain}</p>
                                             <p><span className="font-medium text-gray-900">Location:</span> {formData.location} ({formData.workModel})</p>
-                                            <p><span className="font-medium text-gray-900">Salary:</span> {formData.salaryRange}</p>
+                                            <p><span className="font-medium text-gray-900">Salary:</span> {(() => { const curr = CURRENCIES.find(c => c.code === formData.salaryCurrency) || CURRENCIES[0]; return formData.salaryMin && formData.salaryMax ? `${curr.code} ${Number(formData.salaryMin).toLocaleString()} - ${curr.code} ${Number(formData.salaryMax).toLocaleString()}` : "Not specified"; })()}</p>
                                             <p><span className="font-medium text-gray-900">Experience:</span> {formData.experienceRange}</p>
                                             <p><span className="font-medium text-gray-900">Status:</span> {formData.status}</p>
                                             <p><span className="font-medium text-gray-900">Vacancies:</span> {formData.numberOfVacancies}</p>
