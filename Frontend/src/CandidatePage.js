@@ -52,7 +52,6 @@ const CandidatePage = () => {
 
     if (result.success) {
       localStorage.setItem("candidateUser", JSON.stringify(result.user));
-      alert(`Welcome back, ${result.user.firstName}!`);
       navigate("/candidate/dashboard");
     } else {
       setError(result.message);

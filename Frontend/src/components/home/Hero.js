@@ -49,7 +49,7 @@ const Hero = () => {
           <p className="text-lg text-gray-600 leading-relaxed mb-8 max-w-xl">
             RecruBotX empowers you with AI-driven video interviews to hire faster,
             smarter, and fairer. From screening to selection, it streamlines the
-            journey for HR and candidates alike—your all-in-one solution for
+            journey for HR and candidates alike — your all-in-one solution for
             finding the right talent at any scale.
           </p>
 
