@@ -112,10 +112,31 @@ const LiveInterviewSession = ({
     // Auto-scroll Transcript
     const transcriptRef = useRef(null);
     useEffect(() => {
-        if (transcriptRef.current) {
-            transcriptRef.current.scrollTo({ top: transcriptRef.current.scrollHeight, behavior: 'smooth' });
-        }
-    }, [messages, interimText]);
+        const scrollToBottom = () => {
+            if (transcriptRef.current) {
+                transcriptRef.current.scrollTo({ top: transcriptRef.current.scrollHeight, behavior: 'smooth' });
+            }
+        };
+
+        // Scroll immediately on prop changes
+        scrollToBottom();
+
+        const currentRef = transcriptRef.current;
+        if (!currentRef) return;
+
+        // Observe DOM mutations to scroll smoothly as TypewriterText reveals characters
+        const observer = new MutationObserver(() => {
+            scrollToBottom();
+        });
+
+        observer.observe(currentRef, {
+            childList: true,
+            subtree: true,
+            characterData: true
+        });
+
+        return () => observer.disconnect();
+    }, [messages, interimText, isAIThinking, isTranscriptVisible]);
 
     return (
         <div className="flex h-screen bg-slate-900 text-white overflow-hidden font-sans">
