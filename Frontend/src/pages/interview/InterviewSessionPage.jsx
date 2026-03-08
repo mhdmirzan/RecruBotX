@@ -18,6 +18,7 @@ function App() {
   const [messages, setMessages] = useState([]);
   const [interimText, setInterimText] = useState('');
   const [liveCaption, setLiveCaption] = useState(''); // Live caption state
+  const pendingInterviewerText = useRef(''); // Buffer incoming text chunks
   const wordBufferRef = useRef([]); // Buffer for incoming words
   const captionIntervalRef = useRef(null);
 
@@ -156,20 +157,11 @@ function App() {
         break;
 
       case 'text_chunk':
-        // Append streamed text to transcript
-        setMessages(prev => {
-          const lastMsg = prev[prev.length - 1];
-          if (lastMsg && lastMsg.role === 'interviewer') {
-            const newPrev = [...prev];
-            newPrev[prev.length - 1] = { ...lastMsg, content: lastMsg.content + data.payload };
-            return newPrev;
-          }
-          return [...prev, { role: 'interviewer', content: data.payload }];
-        });
-
-        // Push words to buffer for synchronized captioning
-        // We split by spaces and add to our ref queue
+        // Append streamed text to an invisible buffer rather than state directly to wait for audio
         if (data.payload) {
+          pendingInterviewerText.current += data.payload;
+
+          // Push words to buffer for synchronized captioning
           const words = data.payload.split(' ').filter(w => w.length > 0);
           wordBufferRef.current.push(...words);
         }
@@ -236,6 +228,35 @@ function App() {
       audioRef.current = audio;
 
       audio.onplay = () => {
+        // Now that audio is actually playing, flush the buffered text!
+        if (pendingInterviewerText.current) {
+          const textToReveal = pendingInterviewerText.current;
+
+          // Calculate dynamic typing speed based on audio duration
+          let charSpeed = 40; // Default fallback
+          if (audio.duration && audio.duration !== Infinity) {
+            charSpeed = (audio.duration * 1000) / textToReveal.length;
+            charSpeed = Math.max(20, Math.min(charSpeed, 80)); // Clamp between reasonable bounds
+          } else {
+            charSpeed = 1000 / 18;  // Estimate ~18 chars/sec
+          }
+
+          pendingInterviewerText.current = ''; // Reset buffer
+
+          setMessages(prev => {
+            const lastMsg = prev[prev.length - 1];
+            if (lastMsg && lastMsg.role === 'interviewer') {
+              const newPrev = [...prev];
+              newPrev[prev.length - 1] = {
+                ...lastMsg,
+                content: lastMsg.content + "\n\n" + textToReveal,
+                speed: charSpeed
+              };
+              return newPrev;
+            }
+            return [...prev, { role: 'interviewer', content: textToReveal, speed: charSpeed }];
+          });
+        }
         conversationStateMachine.transition(ConversationState.AI_SPEAKING, { source: 'audio_started' });
       };
 

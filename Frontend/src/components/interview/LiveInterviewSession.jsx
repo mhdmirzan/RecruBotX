@@ -112,10 +112,29 @@ const LiveInterviewSession = ({
     // Auto-scroll Transcript
     const transcriptRef = useRef(null);
     useEffect(() => {
-        if (transcriptRef.current) {
-            transcriptRef.current.scrollTo({ top: transcriptRef.current.scrollHeight, behavior: 'smooth' });
-        }
-    }, [messages, interimText]);
+        const scrollNode = transcriptRef.current;
+        if (!scrollNode) return;
+
+        // Create observer to constantly scroll down if new text is animated
+        const observer = new MutationObserver(() => {
+            scrollNode.scrollTo({
+                top: scrollNode.scrollHeight,
+                behavior: 'smooth'
+            });
+        });
+
+        // Observe both child additions and text/character changes
+        observer.observe(scrollNode, {
+            childList: true,
+            subtree: true,
+            characterData: true
+        });
+
+        // Trigger an initial scroll just in case
+        scrollNode.scrollTo({ top: scrollNode.scrollHeight, behavior: 'smooth' });
+
+        return () => observer.disconnect();
+    }, []);
 
     return (
         <div className="flex h-screen bg-slate-900 text-white overflow-hidden font-sans">
@@ -277,7 +296,7 @@ const LiveInterviewSession = ({
                                 {msg.role === 'candidate' ? (
                                     <p>{correctGrammar(msg.content)}</p>
                                 ) : (
-                                    <p><TypewriterText text={correctGrammar(msg.content)} /></p>
+                                    <p><TypewriterText text={correctGrammar(msg.content)} typingSpeed={msg.speed || 40} /></p>
                                 )}
                             </div>
                         </div>
