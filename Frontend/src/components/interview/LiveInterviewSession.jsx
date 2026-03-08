@@ -13,6 +13,8 @@ import {
 } from 'lucide-react';
 import { ConversationState } from '../../services/ConversationStateMachine';
 import { correctGrammar } from '../../utils/grammarUtils';
+import AITypingIndicator from './AITypingIndicator';
+import TypewriterText from './TypewriterText';
 
 // Live Caption Component (Updated for Relative Flow)
 const LiveCaption = ({ text, isVisible }) => {
@@ -50,6 +52,10 @@ const LiveInterviewSession = ({
     const isAiSpeaking = status === ConversationState.AI_SPEAKING;
     const isUserSpeaking = status === ConversationState.PROCESSING || interimText.length > 0;
     const isListening = status === ConversationState.LISTENING;
+
+    // AI Thinking State for Typing Indicator
+    const lastMessage = messages[messages.length - 1];
+    const isAIThinking = status === ConversationState.PROCESSING && lastMessage?.role !== 'interviewer';
 
     // Timer
     useEffect(() => {
@@ -268,10 +274,16 @@ const LiveInterviewSession = ({
                                 ? 'bg-blue-600 text-white rounded-tr-none'
                                 : 'bg-slate-800 text-slate-200 rounded-tl-none border border-slate-700'
                                 }`}>
-                                <p>{correctGrammar(msg.content)}</p>
+                                {msg.role === 'candidate' ? (
+                                    <p>{correctGrammar(msg.content)}</p>
+                                ) : (
+                                    <p><TypewriterText text={correctGrammar(msg.content)} /></p>
+                                )}
                             </div>
                         </div>
                     ))}
+
+                    <AITypingIndicator isAIThinking={isAIThinking} />
 
                     {interimText && (
                         <div className="flex justify-end">

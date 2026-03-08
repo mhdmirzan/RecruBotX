@@ -33,7 +33,7 @@ class DatabaseManager:
         mongodb_url = os.getenv("MONGODB_URL", "mongodb://localhost:27017")
         
         if "localhost" in mongodb_url or "127.0.0.1" in mongodb_url:
-            print("ℹ Using local MongoDB URL. If you intended to use Atlas, check your .env file.")
+            print("i Using local MongoDB URL. If you intended to use Atlas, check your .env file.")
             print("  Required env var: MONGODB_URL=mongodb+srv://...")
 
         # Prefer explicit env var, otherwise try to infer DB name from URI.
@@ -66,23 +66,23 @@ class DatabaseManager:
             
             # Test connection
             await self.client.admin.command('ping')
-            print(f"✓ Connected to MongoDB: {db_name}")
+            print(f"- Connected to MongoDB: {db_name}")
             
             # Create indexes
             await self._create_indexes()
             
         except Exception as e:
             error_msg = str(e)
-            print(f"✗ Failed to connect to MongoDB: {mongodb_url.split('@')[-1]}")
+            print(f"x Failed to connect to MongoDB: {mongodb_url.split('@')[-1]}")
             print(f"  Error: {error_msg}")
             
             if "[Errno 11001]" in error_msg or "getaddrinfo failed" in error_msg or "DNS" in error_msg:
-                print("\n🔴 DNS RESOLUTION ERROR DETECTED")
+                print("\n- DNS RESOLUTION ERROR DETECTED")
                 print("Your computer cannot resolve the MongoDB Atlas address.")
                 print("FIX: See MONGODB_DNS_FIX.md in the project root.")
                 print("Quick Fix: Change your Windows DNS to 8.8.8.8 (Google DNS).\n")
             elif "timed out" in error_msg.lower():
-                print("\n🔴 CONNECTION TIMEOUT")
+                print("\n- CONNECTION TIMEOUT")
                 print("Could not reach the database. Check if your IP is whitelisted in MongoDB Atlas.")
                 print("Or if you are using localhost, ensure MongoDB is actually running locally.\n")
             
@@ -92,7 +92,7 @@ class DatabaseManager:
         """Close MongoDB connection."""
         if self.client:
             self.client.close()
-            print("✓ Disconnected from MongoDB")
+            print("- Disconnected from MongoDB")
     
     async def _create_indexes(self):
         """Create database indexes optimized for MongoDB Atlas."""
@@ -193,9 +193,9 @@ class DatabaseManager:
                 "deadline", background=True
             )
 
-            print("✓ Database indexes created successfully")
+            print("- Database indexes created successfully")
         except Exception as e:
-            print(f"⚠ Warning: Could not create some indexes: {e}")
+            print(f"Warning: Could not create some indexes: {e}")
             # Don't raise - indexes might already exist
     
     def get_collection(self, name: str):

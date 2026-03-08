@@ -40,7 +40,7 @@ origins = os.getenv(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:3001", "http://127.0.0.1:3001", "http://localhost:8000"],
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allow_headers=["*"],
@@ -96,7 +96,7 @@ async def startup_event():
             print("MONGODB_STRICT_STARTUP=true, shutting down...")
             raise
         # Allow app to boot so /health can report the failure.
-        print("✓ Continuing without MongoDB (MONGODB_STRICT_STARTUP=false)")
+        print("- Continuing without MongoDB (MONGODB_STRICT_STARTUP=false)")
         print("  → Authentication and database features will be unavailable")
         print("  → To fix: Start MongoDB or update MONGODB_URL in .env")
 
