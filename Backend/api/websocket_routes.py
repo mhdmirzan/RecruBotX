@@ -26,43 +26,6 @@ class ConnectionManager:
         if session_id in self.active_connections:
             await self.active_connections[session_id].send_json(message)
 
-import re
-
-class TTSSender:
-    def __init__(self, session_id: str, manager: ConnectionManager, tts_service):
-        self.session_id = session_id
-        self.manager = manager
-        self.tts_service = tts_service
-        self.queue = asyncio.Queue()
-        self.worker = asyncio.create_task(self._process_queue())
-        
-    async def put(self, sentence: str):
-        await self.queue.put(sentence)
-             
-    async def _process_queue(self):
-        while True:
-            sentence = await self.queue.get()
-            if sentence is None: 
-                break
-            try:
-                tts_bytes = await self.tts_service.generate_speech(sentence)
-                if tts_bytes:
-                    import base64
-                    b64 = base64.b64encode(tts_bytes).decode('utf-8')
-                    await self.manager.send_json(self.session_id, {
-                        "type": "audio_output",
-                        "payload": b64,
-                        "sentence": sentence
-                    })
-            except Exception as e:
-                print(f"TTS streaming error for sentence: {e}")
-            finally:
-                self.queue.task_done()
-            
-    async def close(self):
-        await self.queue.put(None)
-        await self.worker
-
 manager = ConnectionManager()
 
 
@@ -95,31 +58,29 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str):
                         "payload": "Session connected securely."
                     })
                     
-                    # Generate the first greeting via streaming chunker
-                    tts_sender = TTSSender(session_id, manager, service.tts_service)
-                    buffer = ""
+                    # Generate the first greeting
                     async for chunk in service.process_input(session_id, "INIT"):
-                        # Keep UI updated with chunk progress (technically deprecated for display, but good for logs/future)
                         await manager.send_json(session_id, {
                             "type": "text_chunk",
                             "payload": chunk
                         })
-                        buffer += chunk
-                        while len(buffer) > 40:
-                            match = re.search(r'(?<=[.!?\n])\s+', buffer[40:])
-                            if not match:
-                                break
-                            split_idx = 40 + match.start()
-                            sentence = buffer[:split_idx].strip()
-                            buffer = buffer[40 + match.end():].lstrip()
-                            if sentence:
-                                await tts_sender.put(sentence)
-                                
-                    if buffer.strip():
-                        await tts_sender.put(buffer.strip())
                         
-                    # Await all the queued audio generation and sending to finish
-                    await tts_sender.close()
+                    # After text finishes streaming, we capture the full response generated
+                    # and synthesize it into Audio
+                    session_data = await service.get_session(session_id)
+                    if session_data:
+                        session, _ = session_data
+                        if session.transcript:
+                            last_interviewer_msg = session.transcript[-1]["content"]
+                        audio_bytes = await service.tts_service.generate_speech(last_interviewer_msg)
+                        import base64
+                        if audio_bytes:
+                            b64 = base64.b64encode(audio_bytes).decode("utf-8")
+                            await manager.send_json(session_id, {
+                                "type": "audio_output",
+                                "payload": b64
+                            })
+                            
                 elif msg_type == "audio_data":
                     # Candidate sent a chunk of microphone audio
                     import base64
@@ -135,32 +96,25 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str):
                         })
                         
                         # Send transcription to LLM and stream response back
-                        tts_sender = TTSSender(session_id, manager, service.tts_service)
-                        buffer = ""
                         async for chunk in service.process_input(session_id, transcription):
                             await manager.send_json(session_id, {
                                 "type": "text_chunk",
                                 "payload": chunk
                             })
-                            buffer += chunk
-                            while len(buffer) > 40:
-                                match = re.search(r'(?<=[.!?\n])\s+', buffer[40:])
-                                if not match:
-                                    break
-                                split_idx = 40 + match.start()
-                                sentence = buffer[:split_idx].strip()
-                                buffer = buffer[40 + match.end():].lstrip()
-                                if sentence:
-                                    await tts_sender.put(sentence)
-                                    
-                        if buffer.strip():
-                            await tts_sender.put(buffer.strip())
                             
-                        await tts_sender.close()
-                            
+                        # Generate TTS for the completed phrase
                         session_data = await service.get_session(session_id)
                         if session_data:
                             session, _ = session_data
+                            last_interviewer_msg = session.transcript[-1]["content"]
+                            tts_bytes = await service.tts_service.generate_speech(last_interviewer_msg)
+                            if tts_bytes:
+                                b64 = base64.b64encode(tts_bytes).decode('utf-8')
+                                await manager.send_json(session_id, {
+                                    "type": "audio_output",
+                                    "payload": b64
+                                })
+
                             if session.stage.value == "finished":
                                 # Notify frontend we're calculating
                                 await manager.send_json(session_id, {
@@ -173,6 +127,7 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str):
                                     "type": "report",
                                     "payload": report_dict
                                 })
+                                
                 elif msg_type == "text_data":
                     transcription = payload
                     if transcription and transcription.strip():
@@ -183,32 +138,26 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str):
                         })
                         
                         # Send transcription to LLM and stream response back
-                        tts_sender = TTSSender(session_id, manager, service.tts_service)
-                        buffer = ""
                         async for chunk in service.process_input(session_id, transcription):
                             await manager.send_json(session_id, {
                                 "type": "text_chunk",
                                 "payload": chunk
                             })
-                            buffer += chunk
-                            while len(buffer) > 40:
-                                match = re.search(r'(?<=[.!?\n])\s+', buffer[40:])
-                                if not match:
-                                    break
-                                split_idx = 40 + match.start()
-                                sentence = buffer[:split_idx].strip()
-                                buffer = buffer[40 + match.end():].lstrip()
-                                if sentence:
-                                    await tts_sender.put(sentence)
-                                    
-                        if buffer.strip():
-                            await tts_sender.put(buffer.strip())
                             
-                        await tts_sender.close()
-                            
+                        # Generate TTS for the completed phrase
                         session_data = await service.get_session(session_id)
                         if session_data:
                             session, _ = session_data
+                            last_interviewer_msg = session.transcript[-1]["content"]
+                            tts_bytes = await service.tts_service.generate_speech(last_interviewer_msg)
+                            import base64
+                            if tts_bytes:
+                                b64 = base64.b64encode(tts_bytes).decode('utf-8')
+                                await manager.send_json(session_id, {
+                                    "type": "audio_output",
+                                    "payload": b64
+                                })
+
                             if session.stage.value == "finished":
                                 # Notify frontend we're calculating
                                 await manager.send_json(session_id, {
@@ -221,6 +170,7 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str):
                                     "type": "report",
                                     "payload": report_dict
                                 })
+                                    
                 elif msg_type == "interrupt":
                     # Handled natively by wiping the current audio play queue on frontend
                     # Nothing strictly needed on backend unless we want to flag the conversation
