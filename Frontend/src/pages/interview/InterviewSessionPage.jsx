@@ -18,7 +18,6 @@ function App() {
   const [messages, setMessages] = useState([]);
   const [interimText, setInterimText] = useState('');
   const [liveCaption, setLiveCaption] = useState(''); // Live caption state
-  const pendingInterviewerText = useRef(''); // Buffer incoming text chunks
   const wordBufferRef = useRef([]); // Buffer for incoming words
   const captionIntervalRef = useRef(null);
 
@@ -76,6 +75,8 @@ function App() {
   const ws = useRef(null);
   const audioRef = useRef(null);
   const isConnecting = useRef(false);
+  const audioQueue = useRef([]);
+  const isPlayingAudio = useRef(false);
 
   // Helper to log debug events
   const logDebug = (event) => {
@@ -157,19 +158,16 @@ function App() {
         break;
 
       case 'text_chunk':
-        // Append streamed text to an invisible buffer rather than state directly to wait for audio
-        if (data.payload) {
-          pendingInterviewerText.current += data.payload;
-
-          // Push words to buffer for synchronized captioning
-          const words = data.payload.split(' ').filter(w => w.length > 0);
-          wordBufferRef.current.push(...words);
-        }
+        // We now ignore raw websocket text_chunks, because we bind the text directly 
+        // to the speech audio_output chunks to guarantee perfect synchronization.
         break;
 
       case 'audio_output':
         logDebug(`🔊 Audio Received`);
-        playAudio(data.payload);
+        audioQueue.current.push({ base64: data.payload, sentence: data.sentence });
+        if (!isPlayingAudio.current) {
+          playNextAudio();
+        }
         break;
 
       case 'transcription':
@@ -208,12 +206,31 @@ function App() {
   };
 
   // --- Audio Logic ---
-  const playAudio = (base64String) => {
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.onended = null;
+  const playNextAudio = () => {
+    if (audioQueue.current.length === 0) {
+      isPlayingAudio.current = false;
+      if (isWrappingUp.current) {
+        if (reportData) {
+          setIsConcluding(false);
+          setSessionActive(false);
+        } else {
+          setIsConcluding(true);
+        }
+      } else {
+        // Delay listening to prevent self-hearing (echo cancellation buffer)
+        setTimeout(() => {
+          conversationStateMachine.transition(ConversationState.LISTENING, { source: 'audio_finished' });
+        }, 800);
+      }
+      return;
     }
 
+    isPlayingAudio.current = true;
+    const { base64, sentence } = audioQueue.current.shift();
+    playAudio(base64, sentence);
+  };
+
+  const playAudio = (base64String, exactSentence) => {
     try {
       const byteCharacters = atob(base64String);
       const byteNumbers = new Array(byteCharacters.length);
@@ -228,9 +245,12 @@ function App() {
       audioRef.current = audio;
 
       audio.onplay = () => {
-        // Now that audio is actually playing, flush the buffered text!
-        if (pendingInterviewerText.current) {
-          const textToReveal = pendingInterviewerText.current;
+        if (exactSentence) {
+          const textToReveal = exactSentence;
+
+          // Load words into LiveCaption buffer here so it stays in absolute sync
+          const words = textToReveal.split(' ').filter(w => w.length > 0);
+          wordBufferRef.current.push(...words);
 
           // Calculate dynamic typing speed based on audio duration
           let charSpeed = 40; // Default fallback
@@ -241,15 +261,13 @@ function App() {
             charSpeed = 1000 / 18;  // Estimate ~18 chars/sec
           }
 
-          pendingInterviewerText.current = ''; // Reset buffer
-
           setMessages(prev => {
             const lastMsg = prev[prev.length - 1];
             if (lastMsg && lastMsg.role === 'interviewer') {
               const newPrev = [...prev];
               newPrev[prev.length - 1] = {
                 ...lastMsg,
-                content: lastMsg.content + "\n\n" + textToReveal,
+                content: lastMsg.content + " " + textToReveal,
                 speed: charSpeed
               };
               return newPrev;
@@ -257,35 +275,25 @@ function App() {
             return [...prev, { role: 'interviewer', content: textToReveal, speed: charSpeed }];
           });
         }
+
         conversationStateMachine.transition(ConversationState.AI_SPEAKING, { source: 'audio_started' });
       };
 
       audio.onended = () => {
         URL.revokeObjectURL(url);
         audioRef.current = null;
-
-        if (isWrappingUp.current) {
-          // If we have report data already, skip loading screen and show report
-          if (reportData) {
-            setIsConcluding(false);
-            setSessionActive(false);
-          } else {
-            setIsConcluding(true);
-          }
-        } else {
-          // Delay listening to prevent self-hearing (echo cancellation buffer)
-          setTimeout(() => {
-            conversationStateMachine.transition(ConversationState.LISTENING, { source: 'audio_finished' });
-          }, 800);
-        }
+        // Proceed to next queued chunk
+        playNextAudio();
       };
 
       audio.play().catch(e => {
         logDebug(`⚠️ Play Error: ${e.message}`);
-        conversationStateMachine.transition(ConversationState.LISTENING, { source: 'autoplay_fail' });
+        // If one chunk fails, skip it and play the next
+        playNextAudio();
       });
     } catch (e) {
       console.error(e);
+      playNextAudio();
     }
   };
 
@@ -302,6 +310,11 @@ function App() {
   const handleInterrupt = () => {
     logDebug('🛑 Interrupt!');
     setLiveCaption(''); // Clear caption on interrupt
+
+    // Completely nuke the audio queue
+    audioQueue.current = [];
+    isPlayingAudio.current = false;
+
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current = null;
