@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Search, Briefcase, MapPin, DollarSign, Calendar, ChevronRight, Send, Filter, X, Clock, CheckCircle2, XCircle, AlertTriangle, Users } from "lucide-react";
+import { Search, Briefcase, MapPin, DollarSign, Calendar, ChevronRight, Send, X, Clock, CheckCircle2, XCircle, AlertTriangle, Users, SlidersHorizontal, Building2, Home, Heart } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { getCurrentUser, logoutUser } from "./utils/userDatabase";
 import API_BASE_URL from "./apiConfig";
@@ -43,11 +43,39 @@ const CandidateJobs = () => {
     const navigate = useNavigate();
     const [user, setUser] = useState(null);
 
-    // Filter states
-    const [interviewField, setInterviewField] = useState("all");
-    const [position, setPosition] = useState("all");
-    const [sortBy, setSortBy] = useState("date-desc");
+    // Search & filter states
     const [searchTerm, setSearchTerm] = useState("");
+    const [showFilterPanel, setShowFilterPanel] = useState(false);
+    const [filters, setFilters] = useState({
+        company: "",
+        jobPosition: "",
+        dateFrom: "",
+        dateTo: "",
+        workModel: [],
+        vacanciesMin: "",
+        vacanciesMax: "",
+        salaryMin: "",
+        salaryMax: "",
+        employmentStatus: [],
+    });
+
+    const getActiveFilterCount = () => {
+        let count = 0;
+        if (filters.company) count++;
+        if (filters.jobPosition) count++;
+        if (filters.dateFrom || filters.dateTo) count++;
+        if (filters.workModel.length > 0) count++;
+        if (filters.vacanciesMin || filters.vacanciesMax) count++;
+        if (filters.salaryMin || filters.salaryMax) count++;
+        if (filters.employmentStatus.length > 0) count++;
+        return count;
+    };
+
+    const clearFilters = () => setFilters({
+        company: "", jobPosition: "", dateFrom: "", dateTo: "",
+        workModel: [], vacanciesMin: "", vacanciesMax: "",
+        salaryMin: "", salaryMax: "", employmentStatus: [],
+    });
 
     // Job postings
     const [jobPostings, setJobPostings] = useState([]);
@@ -55,6 +83,17 @@ const CandidateJobs = () => {
     const [selectedJob, setSelectedJob] = useState(null);
     const [showJobModal, setShowJobModal] = useState(false);
     const [appliedJobIds, setAppliedJobIds] = useState([]);
+
+    // Saved Jobs — persisted per user in localStorage
+    const [savedJobIds, setSavedJobIds] = useState(() => {
+        try {
+            const cu = getCurrentUser();
+            const key = cu ? `rbx_saved_jobs_${cu.id}` : 'rbx_saved_jobs';
+            const stored = localStorage.getItem(key);
+            return stored ? JSON.parse(stored) : [];
+        } catch { return []; }
+    });
+    const [showSavedPanel, setShowSavedPanel] = useState(false);
 
     useEffect(() => {
         const currentUser = getCurrentUser();
@@ -114,6 +153,28 @@ const CandidateJobs = () => {
         }
     };
 
+    // Sync saved job IDs to localStorage
+    useEffect(() => {
+        const cu = getCurrentUser();
+        const key = cu ? `rbx_saved_jobs_${cu.id}` : 'rbx_saved_jobs';
+        localStorage.setItem(key, JSON.stringify(savedJobIds));
+    }, [savedJobIds]);
+
+    const toggleSavedJob = (jobId) => setSavedJobIds(prev =>
+        prev.includes(jobId) ? prev.filter(id => id !== jobId) : [...prev, jobId]
+    );
+    const isSaved = (jobId) => savedJobIds.includes(jobId);
+    const removeSavedJob = (jobId) => setSavedJobIds(prev => prev.filter(id => id !== jobId));
+    const getSavedJobs = () => savedJobIds.map(id => jobPostings.find(j => j.id === id)).filter(Boolean);
+
+    const parseSalaryRange = (salaryStr) => {
+        if (!salaryStr) return null;
+        const nums = salaryStr.match(/\d[\d,]*/g);
+        if (!nums || nums.length < 1) return null;
+        const toNum = s => { const n = parseInt(s.replace(/,/g, ''), 10); return n < 1000 ? n * 1000 : n; };
+        return { min: toNum(nums[0]), max: nums[1] ? toNum(nums[1]) : toNum(nums[0]) };
+    };
+
     const getFilteredJobs = () => {
         let filtered = [...jobPostings];
 
@@ -133,34 +194,37 @@ const CandidateJobs = () => {
             );
         }
 
-        // Field Filter
-        if (interviewField !== "all") {
+        if (filters.company)
+            filtered = filtered.filter(job => job.company?.toLowerCase().includes(filters.company.toLowerCase()));
+        if (filters.jobPosition)
+            filtered = filtered.filter(job =>
+                job.title?.toLowerCase().includes(filters.jobPosition.toLowerCase()) ||
+                job.position?.toLowerCase().includes(filters.jobPosition.toLowerCase()));
+        if (filters.dateFrom)
+            filtered = filtered.filter(job => job.appliedDate >= new Date(filters.dateFrom));
+        if (filters.dateTo) {
+            const to = new Date(filters.dateTo); to.setHours(23, 59, 59, 999);
+            filtered = filtered.filter(job => job.appliedDate <= to);
+        }
+        if (filters.workModel.length > 0)
+            filtered = filtered.filter(job => filters.workModel.some(wm => job.workModel?.toLowerCase() === wm.toLowerCase()));
+        if (filters.vacanciesMin)
+            filtered = filtered.filter(job => job.numberOfVacancies >= parseInt(filters.vacanciesMin, 10));
+        if (filters.vacanciesMax)
+            filtered = filtered.filter(job => job.numberOfVacancies <= parseInt(filters.vacanciesMax, 10));
+        if (filters.salaryMin || filters.salaryMax) {
             filtered = filtered.filter(job => {
-                const slug = job.interviewField?.toLowerCase().replace(/\s+/g, '-');
-                return slug === interviewField;
+                const sr = parseSalaryRange(job.salaryRange);
+                if (!sr) return true;
+                if (filters.salaryMin && sr.max < parseInt(filters.salaryMin, 10)) return false;
+                if (filters.salaryMax && sr.min > parseInt(filters.salaryMax, 10)) return false;
+                return true;
             });
         }
+        if (filters.employmentStatus.length > 0)
+            filtered = filtered.filter(job => filters.employmentStatus.some(es => job.status?.toLowerCase() === es.toLowerCase()));
 
-        // Position Filter
-        if (position !== "all") {
-            filtered = filtered.filter(job => {
-                const slug = job.position?.toLowerCase().replace(/\s+/g, '-');
-                return slug === position;
-            });
-        }
-
-        // Sort
-        filtered.sort((a, b) => {
-            if (sortBy === "name") return a.title.localeCompare(b.title);
-            if (sortBy === "date-asc") return a.appliedDate - b.appliedDate;
-            if (sortBy === "deadline") {
-                if (!a.deadline) return 1;
-                if (!b.deadline) return -1;
-                return a.deadline - b.deadline;
-            }
-            return b.appliedDate - a.appliedDate;
-        });
-
+        filtered.sort((a, b) => b.appliedDate - a.appliedDate);
         return filtered;
     };
 
@@ -213,54 +277,54 @@ const CandidateJobs = () => {
                 {/* Filters & Content */}
                 <div className="flex-1 overflow-hidden p-8 flex flex-col gap-6">
 
-                    {/* Filter Bar */}
-                    <div className="flex flex-wrap gap-4 items-center">
-                        <div className="flex-1 min-w-[250px] relative">
+                    {/* Search + Filter Bar */}
+                    <div className="flex items-center gap-3">
+                        <div className="flex-1 relative">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
                             <input
                                 type="text"
-                                placeholder="Search jobs..."
+                                placeholder="Search by job, company, or location…"
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-800 rounded-xl focus:ring-2 focus:ring-[#0a2a5e] focus:border-transparent outline-none"
+                                className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#0a2a5e]/20 focus:border-[#0a2a5e] outline-none transition-all text-sm"
                             />
                         </div>
 
-                        <div className="flex gap-4">
-                            <select
-                                value={interviewField}
-                                onChange={(e) => setInterviewField(e.target.value)}
-                                className="px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-gray-700 focus:ring-2 focus:ring-[#0a2a5e] outline-none cursor-pointer"
+                        {getActiveFilterCount() > 0 && (
+                            <button
+                                onClick={clearFilters}
+                                className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl border border-gray-200 text-gray-400 hover:text-gray-600 hover:border-gray-300 hover:bg-gray-50 transition-all text-sm font-medium"
                             >
-                                <option value="all">All Fields</option>
-                                <option value="software-engineering">Software Engineering</option>
-                                <option value="data-science">Data Science</option>
-                                <option value="product-management">Product Management</option>
-                            </select>
+                                <X className="w-3.5 h-3.5" />
+                                <span>Clear</span>
+                            </button>
+                        )}
 
-                            <select
-                                value={position}
-                                onChange={(e) => setPosition(e.target.value)}
-                                className="px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-gray-700 focus:ring-2 focus:ring-[#0a2a5e] outline-none cursor-pointer"
-                            >
-                                <option value="all">All Levels</option>
-                                <option value="intern">Intern</option>
-                                <option value="junior">Junior</option>
-                                <option value="mid-level">Mid-level</option>
-                                <option value="senior">Senior</option>
-                            </select>
+                        <button
+                            onClick={() => setShowFilterPanel(true)}
+                            className="relative flex items-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 text-gray-600 hover:border-[#0a2a5e] hover:text-[#0a2a5e] hover:bg-[#0a2a5e]/5 transition-all text-sm font-medium"
+                        >
+                            <SlidersHorizontal className="w-4 h-4" />
+                            <span>Filter</span>
+                            {getActiveFilterCount() > 0 && (
+                                <span className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-[#0a2a5e] text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                                    {getActiveFilterCount()}
+                                </span>
+                            )}
+                        </button>
 
-                            <select
-                                value={sortBy}
-                                onChange={(e) => setSortBy(e.target.value)}
-                                className="px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-gray-700 focus:ring-2 focus:ring-[#0a2a5e] outline-none cursor-pointer"
-                            >
-                                <option value="date-desc">Newest First</option>
-                                <option value="date-asc">Oldest First</option>
-                                <option value="deadline">Deadline (Soonest)</option>
-                                <option value="name">Name (A-Z)</option>
-                            </select>
-                        </div>
+                        <button
+                            onClick={() => setShowSavedPanel(true)}
+                            className="relative flex items-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 text-gray-600 hover:border-red-300 hover:text-red-500 hover:bg-red-50/50 transition-all text-sm font-medium"
+                        >
+                            <Heart className="w-4 h-4" />
+                            <span>Saved</span>
+                            {savedJobIds.length > 0 && (
+                                <span className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                                    {savedJobIds.length}
+                                </span>
+                            )}
+                        </button>
                     </div>
 
                     {/* Job Grid */}
@@ -282,34 +346,43 @@ const CandidateJobs = () => {
                                     const deadlineInfo = getDeadlineInfo(job);
 
                                     return (
-                                        <div key={job.id} className={`bg-white rounded-2xl shadow-sm border p-6 transition-shadow group flex flex-col relative ${expired ? 'border-gray-200 opacity-75' : 'border-gray-100 hover:shadow-md'}`}>
-                                            {/* Applied Badge */}
-                                            {applied && (
-                                                <div className="absolute top-4 right-4 flex items-center gap-1 px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold">
-                                                    <CheckCircle2 className="w-3.5 h-3.5" /> Applied
-                                                </div>
-                                            )}
-
-                                            {/* Closed Badge */}
-                                            {expired && !applied && (
-                                                <div className="absolute top-4 right-4 flex items-center gap-1 px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-bold">
-                                                    <XCircle className="w-3.5 h-3.5" /> Closed
-                                                </div>
-                                            )}
-
+                                        <div key={job.id} className={`bg-white rounded-2xl shadow-sm border p-6 transition-shadow group flex flex-col ${expired ? 'border-gray-200 opacity-75' : 'border-gray-100 hover:shadow-md'}`}>
                                             <div className="flex justify-between items-start mb-3">
-                                                <div className="flex-1">
+                                                <div className="flex-1 pr-2">
                                                     <h3 className="font-bold text-xl text-gray-800 group-hover:text-[#0a2a5e] transition-colors">{job.title}</h3>
                                                     <p className="text-gray-500 font-medium">{job.position}</p>
                                                     {job.company && (
                                                         <p className="text-[#0a2a5e] text-sm font-semibold mt-0.5">{job.company}</p>
                                                     )}
                                                 </div>
-                                                {!applied && !expired && (
-                                                    <span className={`px-3 py-1 rounded-full text-xs font-bold ${getStatusColor(job.status)}`}>
-                                                        {job.status}
-                                                    </span>
-                                                )}
+                                                <div className="flex items-center gap-2 flex-shrink-0">
+                                                    {applied && (
+                                                        <span className="flex items-center gap-1 px-2.5 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold">
+                                                            <CheckCircle2 className="w-3 h-3" /> Applied
+                                                        </span>
+                                                    )}
+                                                    {expired && !applied && (
+                                                        <span className="flex items-center gap-1 px-2.5 py-1 bg-red-100 text-red-700 rounded-full text-xs font-bold">
+                                                            <XCircle className="w-3 h-3" /> Closed
+                                                        </span>
+                                                    )}
+                                                    {!applied && !expired && (
+                                                        <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${getStatusColor(job.status)}`}>
+                                                            {job.status}
+                                                        </span>
+                                                    )}
+                                                    <button
+                                                        onClick={(e) => { e.stopPropagation(); toggleSavedJob(job.id); }}
+                                                        title={isSaved(job.id) ? "Remove from saved" : "Save job"}
+                                                        className={`w-7 h-7 flex items-center justify-center rounded-full transition-all ${
+                                                            isSaved(job.id)
+                                                                ? 'text-red-500 bg-red-50 hover:bg-red-100'
+                                                                : 'text-gray-300 hover:text-red-400 hover:bg-red-50'
+                                                        }`}
+                                                    >
+                                                        <Heart className={`w-4 h-4 ${isSaved(job.id) ? 'fill-current' : ''}`} />
+                                                    </button>
+                                                </div>
                                             </div>
 
                                             <div className="space-y-2 mb-4 flex-1">
@@ -362,6 +435,257 @@ const CandidateJobs = () => {
                     </div>
                 </div>
             </main>
+
+            {/* Saved Jobs Panel */}
+            {showSavedPanel && (
+                <div className="fixed inset-0 z-[200] flex justify-end">
+                    <style dangerouslySetInnerHTML={{__html: `
+                        @keyframes slideInRight { from { transform: translateX(100%); } to { transform: translateX(0); } }
+                    `}} />
+                    <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowSavedPanel(false)} />
+                    <div className="relative bg-white w-full max-w-sm h-full flex flex-col shadow-2xl" style={{ animation: 'slideInRight 0.22s ease-out' }}>
+
+                        {/* Header */}
+                        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+                            <div className="flex items-center gap-2.5">
+                                <div className="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center">
+                                    <Heart className="w-4 h-4 text-red-500 fill-current" />
+                                </div>
+                                <h2 className="text-base font-bold text-gray-800">Saved Jobs</h2>
+                                {savedJobIds.length > 0 && (
+                                    <span className="px-2 py-0.5 bg-red-500 text-white text-[11px] font-bold rounded-full">
+                                        {savedJobIds.length}
+                                    </span>
+                                )}
+                            </div>
+                            <button onClick={() => setShowSavedPanel(false)} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors">
+                                <X className="w-4 h-4 text-gray-500" />
+                            </button>
+                        </div>
+
+                        {/* Body */}
+                        <div className="flex-1 overflow-y-auto theme-scrollbar p-4 space-y-3">
+                            {getSavedJobs().length === 0 ? (
+                                <div className="flex flex-col items-center justify-center h-64 text-center px-4">
+                                    <Heart className="w-12 h-12 text-gray-200 mb-3" />
+                                    <p className="text-gray-500 font-medium text-sm">No saved jobs yet</p>
+                                    <p className="text-gray-400 text-xs mt-1">Tap the heart icon on any job card to save it here</p>
+                                </div>
+                            ) : (
+                                getSavedJobs().map(job => {
+                                    const savedExpired = isJobExpired(job) || !job.isActive;
+                                    const savedApplied = isApplied(job.id);
+                                    return (
+                                        <div key={job.id} className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                                            <div className="flex items-start justify-between gap-2 mb-2">
+                                                <div className="flex-1 min-w-0">
+                                                    <h4 className="font-bold text-gray-800 text-sm truncate">{job.title}</h4>
+                                                    <p className="text-gray-500 text-xs">{job.position}</p>
+                                                    {job.company && <p className="text-[#0a2a5e] text-xs font-semibold truncate">{job.company}</p>}
+                                                </div>
+                                                <button
+                                                    onClick={() => removeSavedJob(job.id)}
+                                                    className="w-6 h-6 flex items-center justify-center rounded-full text-gray-300 hover:text-red-500 hover:bg-red-50 transition-all flex-shrink-0"
+                                                    title="Remove from saved"
+                                                >
+                                                    <X className="w-3.5 h-3.5" />
+                                                </button>
+                                            </div>
+                                            <div className="flex items-center gap-2 mb-2">
+                                                {savedApplied ? (
+                                                    <span className="flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-[11px] font-bold">
+                                                        <CheckCircle2 className="w-3 h-3" /> Applied
+                                                    </span>
+                                                ) : savedExpired ? (
+                                                    <span className="flex items-center gap-1 px-2 py-0.5 bg-red-100 text-red-700 rounded-full text-[11px] font-bold">
+                                                        <XCircle className="w-3 h-3" /> Closed
+                                                    </span>
+                                                ) : (
+                                                    <span className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-[11px] font-bold">
+                                                        Available
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <div className="space-y-1">
+                                                {job.location && (
+                                                    <p className="text-xs text-gray-400 flex items-center gap-1">
+                                                        <MapPin className="w-3 h-3" /> {job.location}
+                                                    </p>
+                                                )}
+                                                {job.salaryRange && (
+                                                    <p className="text-xs text-green-600 font-medium flex items-center gap-1">
+                                                        <DollarSign className="w-3 h-3" /> {job.salaryRange}
+                                                    </p>
+                                                )}
+                                            </div>
+                                        </div>
+                                    );
+                                })
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Filter Panel Modal */}
+            {showFilterPanel && (
+                <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowFilterPanel(false)} />
+                    <div className="relative bg-white w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]" style={{ animation: 'modalPop 0.25s cubic-bezier(0.34,1.56,0.64,1)' }}>
+
+                        {/* Header */}
+                        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+                            <div className="flex items-center gap-2.5">
+                                <div className="w-8 h-8 rounded-lg bg-[#0a2a5e]/10 flex items-center justify-center">
+                                    <SlidersHorizontal className="w-4 h-4 text-[#0a2a5e]" />
+                                </div>
+                                <h2 className="text-base font-bold text-gray-800">Advanced Filters</h2>
+                                {getActiveFilterCount() > 0 && (
+                                    <span className="px-2 py-0.5 bg-[#0a2a5e] text-white text-[11px] font-bold rounded-full">
+                                        {getActiveFilterCount()} active
+                                    </span>
+                                )}
+                            </div>
+                            <div className="flex items-center gap-3">
+                                {getActiveFilterCount() > 0 && (
+                                    <button onClick={clearFilters} className="text-sm text-red-500 hover:text-red-700 font-semibold transition-colors">Clear All</button>
+                                )}
+                                <button onClick={() => setShowFilterPanel(false)} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors">
+                                    <X className="w-4 h-4 text-gray-500" />
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Body */}
+                        <div className="flex-1 overflow-y-auto theme-scrollbar p-6 space-y-5">
+
+                            {/* Company */}
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">Company</label>
+                                <div className="relative">
+                                    <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                    <input type="text" placeholder="Search by company name…" value={filters.company}
+                                        onChange={e => setFilters(f => ({ ...f, company: e.target.value }))}
+                                        className="w-full pl-9 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#0a2a5e]/20 focus:border-[#0a2a5e] outline-none transition-all" />
+                                </div>
+                            </div>
+
+                            {/* Job Position */}
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">Job Position</label>
+                                <div className="relative">
+                                    <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                    <input type="text" placeholder="e.g. Software Engineer, Data Analyst…" value={filters.jobPosition}
+                                        onChange={e => setFilters(f => ({ ...f, jobPosition: e.target.value }))}
+                                        className="w-full pl-9 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#0a2a5e]/20 focus:border-[#0a2a5e] outline-none transition-all" />
+                                </div>
+                            </div>
+
+                            {/* Date Range */}
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">Date Posted</label>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <p className="text-xs text-gray-400 mb-1.5">From</p>
+                                        <input type="date" value={filters.dateFrom}
+                                            onChange={e => setFilters(f => ({ ...f, dateFrom: e.target.value }))}
+                                            className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#0a2a5e]/20 focus:border-[#0a2a5e] outline-none transition-all" />
+                                    </div>
+                                    <div>
+                                        <p className="text-xs text-gray-400 mb-1.5">To</p>
+                                        <input type="date" value={filters.dateTo}
+                                            onChange={e => setFilters(f => ({ ...f, dateTo: e.target.value }))}
+                                            className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#0a2a5e]/20 focus:border-[#0a2a5e] outline-none transition-all" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Work Model */}
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">Work Model</label>
+                                <div className="flex flex-wrap gap-2">
+                                    {["Remote", "Hybrid", "On-site", "On-field"].map(wm => (
+                                        <button key={wm} type="button"
+                                            onClick={() => setFilters(f => ({ ...f, workModel: f.workModel.includes(wm) ? f.workModel.filter(x => x !== wm) : [...f.workModel, wm] }))}
+                                            className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-all ${
+                                                filters.workModel.includes(wm)
+                                                    ? 'bg-[#0a2a5e] text-white border-[#0a2a5e] shadow-sm'
+                                                    : 'bg-white text-gray-600 border-gray-200 hover:border-[#0a2a5e] hover:text-[#0a2a5e]'
+                                            }`}>{wm}</button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* No. of Vacancies */}
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">No. of Vacancies</label>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <p className="text-xs text-gray-400 mb-1.5">Minimum</p>
+                                        <input type="number" min="1" placeholder="e.g. 1" value={filters.vacanciesMin}
+                                            onChange={e => setFilters(f => ({ ...f, vacanciesMin: e.target.value }))}
+                                            className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#0a2a5e]/20 focus:border-[#0a2a5e] outline-none transition-all" />
+                                    </div>
+                                    <div>
+                                        <p className="text-xs text-gray-400 mb-1.5">Maximum</p>
+                                        <input type="number" min="1" placeholder="e.g. 10" value={filters.vacanciesMax}
+                                            onChange={e => setFilters(f => ({ ...f, vacanciesMax: e.target.value }))}
+                                            className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#0a2a5e]/20 focus:border-[#0a2a5e] outline-none transition-all" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Salary Range */}
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">Salary Range <span className="font-normal text-gray-400">(annual, $)</span></label>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <p className="text-xs text-gray-400 mb-1.5">Min ($)</p>
+                                        <input type="number" min="0" step="1000" placeholder="e.g. 40000" value={filters.salaryMin}
+                                            onChange={e => setFilters(f => ({ ...f, salaryMin: e.target.value }))}
+                                            className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#0a2a5e]/20 focus:border-[#0a2a5e] outline-none transition-all" />
+                                    </div>
+                                    <div>
+                                        <p className="text-xs text-gray-400 mb-1.5">Max ($)</p>
+                                        <input type="number" min="0" step="1000" placeholder="e.g. 120000" value={filters.salaryMax}
+                                            onChange={e => setFilters(f => ({ ...f, salaryMax: e.target.value }))}
+                                            className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#0a2a5e]/20 focus:border-[#0a2a5e] outline-none transition-all" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Employment Status */}
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">Employment Status</label>
+                                <div className="flex flex-wrap gap-2">
+                                    {["Full-time", "Part-time", "Contract", "Freelance", "Internship"].map(es => (
+                                        <button key={es} type="button"
+                                            onClick={() => setFilters(f => ({ ...f, employmentStatus: f.employmentStatus.includes(es) ? f.employmentStatus.filter(x => x !== es) : [...f.employmentStatus, es] }))}
+                                            className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-all ${
+                                                filters.employmentStatus.includes(es)
+                                                    ? 'bg-[#0a2a5e] text-white border-[#0a2a5e] shadow-sm'
+                                                    : 'bg-white text-gray-600 border-gray-200 hover:border-[#0a2a5e] hover:text-[#0a2a5e]'
+                                            }`}>{es}</button>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Footer */}
+                        <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
+                            <p className="text-xs text-gray-400">
+                                {getFilteredJobs().length} job{getFilteredJobs().length !== 1 ? "s" : ""} match
+                            </p>
+                            <div className="flex gap-3">
+                                <button onClick={() => setShowFilterPanel(false)}
+                                    className="px-5 py-2 rounded-xl text-sm font-semibold text-gray-600 hover:bg-gray-200 transition-colors">Cancel</button>
+                                <button onClick={() => setShowFilterPanel(false)}
+                                    className="px-6 py-2 rounded-xl text-sm font-bold bg-[#0a2a5e] text-white hover:bg-[#0d3b82] transition-colors shadow-sm">Show Results</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Job Info Modal */}
             {showJobModal && selectedJob && (

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Briefcase, MapPin, Clock, Send, ArrowRight, ChevronRight, Zap, DollarSign, Home, X, AlertTriangle, XCircle, Users, Compass } from "lucide-react";
+import { Briefcase, MapPin, Clock, Send, ArrowRight, ChevronRight, Zap, DollarSign, Home, X, AlertTriangle, XCircle, Users, Compass, SlidersHorizontal, Building2 } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { getCurrentUser, logoutUser } from "./utils/userDatabase";
 import API_BASE_URL from "./apiConfig";
@@ -109,9 +109,31 @@ const CandidateDashboard = () => {
   };
 
   // Filter states
-  const [interviewField, setInterviewField] = useState("all");
-  const [position, setPosition] = useState("all");
-  const [sortBy, setSortBy] = useState("date-desc");
+  const [showFilterPanel, setShowFilterPanel] = useState(false);
+  const [filters, setFilters] = useState({
+    company: "",
+    jobPosition: "",
+    dateFrom: "",
+    dateTo: "",
+    workModel: [],
+    vacanciesMin: "",
+    vacanciesMax: "",
+    salaryMin: "",
+    salaryMax: "",
+    employmentStatus: [],
+  });
+
+  const getActiveFilterCount = () => {
+    let count = 0;
+    if (filters.company) count++;
+    if (filters.jobPosition) count++;
+    if (filters.dateFrom || filters.dateTo) count++;
+    if (filters.workModel.length > 0) count++;
+    if (filters.vacanciesMin || filters.vacanciesMax) count++;
+    if (filters.salaryMin || filters.salaryMax) count++;
+    if (filters.employmentStatus.length > 0) count++;
+    return count;
+  };
 
   // Job postings from database
   const [jobPostings, setJobPostings] = useState([]);
@@ -217,37 +239,77 @@ const CandidateDashboard = () => {
     navigate("/candidate/resume/choose-template");
   };
 
+  // Parse salary string (e.g. "$50K - $80K" or "$50,000 - $80,000") to numeric range
+  const parseSalaryRange = (salaryStr) => {
+    if (!salaryStr) return null;
+    const nums = salaryStr.match(/\d[\d,]*/g);
+    if (!nums || nums.length < 1) return null;
+    const toNum = s => {
+      const n = parseInt(s.replace(/,/g, ''), 10);
+      return n < 1000 ? n * 1000 : n;
+    };
+    return { min: toNum(nums[0]), max: nums[1] ? toNum(nums[1]) : toNum(nums[0]) };
+  };
+
   // Filter and sort job postings
   const getFilteredAndSortedJobs = () => {
     let filtered = [...jobPostings];
 
-    // Apply interview field filter
-    if (interviewField !== "all") {
+    // Hide expired / closed jobs
+    filtered = filtered.filter(job => !isJobExpired(job) && job.isActive !== false);
+
+    // Hide jobs the candidate has already applied to
+    const appliedIds = recentJobActivity.map(a => a.jobId);
+    filtered = filtered.filter(job => !appliedIds.includes(job.id));
+
+    if (filters.company) {
+      filtered = filtered.filter(job =>
+        job.company?.toLowerCase().includes(filters.company.toLowerCase())
+      );
+    }
+    if (filters.jobPosition) {
+      filtered = filtered.filter(job =>
+        job.title?.toLowerCase().includes(filters.jobPosition.toLowerCase()) ||
+        job.position?.toLowerCase().includes(filters.jobPosition.toLowerCase())
+      );
+    }
+    if (filters.dateFrom) {
+      const from = new Date(filters.dateFrom);
+      filtered = filtered.filter(job => job.appliedDate >= from);
+    }
+    if (filters.dateTo) {
+      const to = new Date(filters.dateTo);
+      to.setHours(23, 59, 59, 999);
+      filtered = filtered.filter(job => job.appliedDate <= to);
+    }
+    if (filters.workModel.length > 0) {
+      filtered = filtered.filter(job =>
+        filters.workModel.some(wm => job.workModel?.toLowerCase() === wm.toLowerCase())
+      );
+    }
+    if (filters.vacanciesMin) {
+      filtered = filtered.filter(job => job.numberOfVacancies >= parseInt(filters.vacanciesMin, 10));
+    }
+    if (filters.vacanciesMax) {
+      filtered = filtered.filter(job => job.numberOfVacancies <= parseInt(filters.vacanciesMax, 10));
+    }
+    if (filters.salaryMin || filters.salaryMax) {
       filtered = filtered.filter(job => {
-        const jobFieldSlug = job.interviewField?.toLowerCase().replace(/\s+/g, '-');
-        return jobFieldSlug === interviewField;
+        const sr = parseSalaryRange(job.salaryRange);
+        if (!sr) return true;
+        if (filters.salaryMin && sr.max < parseInt(filters.salaryMin, 10)) return false;
+        if (filters.salaryMax && sr.min > parseInt(filters.salaryMax, 10)) return false;
+        return true;
       });
     }
-
-    // Apply position filter
-    if (position !== "all") {
-      filtered = filtered.filter(job => {
-        const jobPosSlug = job.position?.toLowerCase().replace(/\s+/g, '-');
-        return jobPosSlug === position;
-      });
+    if (filters.employmentStatus.length > 0) {
+      filtered = filtered.filter(job =>
+        filters.employmentStatus.some(es => job.status?.toLowerCase() === es.toLowerCase())
+      );
     }
 
-    // Apply sorting
-    filtered.sort((a, b) => {
-      if (sortBy === "name") {
-        return a.company.localeCompare(b.company);
-      } else if (sortBy === "date-asc") {
-        return a.appliedDate - b.appliedDate;
-      } else { // date-desc
-        return b.appliedDate - a.appliedDate;
-      }
-    });
-
+    // Default sort: newest first
+    filtered.sort((a, b) => b.appliedDate - a.appliedDate);
     return filtered;
   };
 
@@ -346,67 +408,35 @@ const CandidateDashboard = () => {
           {/* LEFT SECTION - Job Vacancies (60% - 3 columns) */}
           <div className="col-span-3 flex flex-col overflow-hidden">
             <div data-tour="c-job-apps-panel" className="bg-white rounded-2xl shadow-lg p-6 h-full flex flex-col overflow-hidden">
-              <h3 className="text-xl font-bold text-gray-800 mb-4">Job Vacancies</h3>
-
-              {/* Filters Section */}
-              <div data-tour="c-job-filters" className="mb-4 grid grid-cols-3 gap-4">
-                {/* Interview Field Filter */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Interview Field
-                  </label>
-                  <select
-                    value={interviewField}
-                    onChange={(e) => setInterviewField(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0a2a5e] focus:border-[#0a2a5e] bg-white text-gray-700"
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-bold text-gray-800">Job Vacancies</h3>
+                <div className="flex items-center gap-2">
+                  {getActiveFilterCount() > 0 && (
+                    <button
+                      title="Clear all filters"
+                      onClick={() => setFilters({
+                        company: "", jobPosition: "", dateFrom: "", dateTo: "",
+                        workModel: [], vacanciesMin: "", vacanciesMax: "",
+                        salaryMin: "", salaryMax: "", employmentStatus: [],
+                      })}
+                      className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-gray-200 text-gray-400 hover:text-gray-600 hover:border-gray-300 hover:bg-gray-50 transition-all text-sm"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                      <span className="font-medium">Clear</span>
+                    </button>
+                  )}
+                  <button
+                    onClick={() => setShowFilterPanel(true)}
+                    className="relative flex items-center gap-2 px-4 py-2 rounded-xl border border-gray-200 text-gray-600 hover:border-[#0a2a5e] hover:text-[#0a2a5e] hover:bg-[#0a2a5e]/5 transition-all text-sm font-medium"
                   >
-                    <option value="all">All Fields</option>
-                    <option value="software-engineering">Software Engineering</option>
-                    <option value="data-science">Data Science</option>
-                    <option value="product-management">Product Management</option>
-                    <option value="ui-ux-design">UI/UX Design</option>
-                    <option value="marketing">Marketing</option>
-                    <option value="sales">Sales</option>
-                    <option value="finance">Finance</option>
-                    <option value="human-resources">Human Resources</option>
-                  </select>
-                </div>
-
-                {/* Position Filter */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Position Level
-                  </label>
-                  <select
-                    value={position}
-                    onChange={(e) => setPosition(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-700"
-                  >
-                    <option value="all">All Levels</option>
-                    <option value="intern">Intern</option>
-                    <option value="junior">Junior</option>
-                    <option value="mid-level">Mid-level</option>
-                    <option value="senior">Senior</option>
-                    <option value="lead">Lead</option>
-                    <option value="manager">Manager</option>
-                    <option value="director">Director</option>
-                  </select>
-                </div>
-
-                {/* Sort By Filter */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Sort By
-                  </label>
-                  <select
-                    value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-700"
-                  >
-                    <option value="name">Name (A-Z)</option>
-                    <option value="date-asc">Date (Oldest First)</option>
-                    <option value="date-desc">Date (Newest First)</option>
-                  </select>
+                    <SlidersHorizontal className="w-4 h-4" />
+                    <span>Filter</span>
+                    {getActiveFilterCount() > 0 && (
+                      <span className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-[#0a2a5e] text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                        {getActiveFilterCount()}
+                      </span>
+                    )}
+                  </button>
                 </div>
               </div>
 
@@ -442,52 +472,61 @@ const CandidateDashboard = () => {
                         </span>
                       </div>
 
-                      <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-100">
-                        <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm text-gray-600 flex-1">
-                          <div className="flex items-center gap-1">
-                            <MapPin className="w-4 h-4 text-[#0a2a5e]" />
-                            <span>{job.location}</span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Home className="w-4 h-4 text-[#0a2a5e]" />
-                            <span>{job.workModel}</span>
-                          </div>
-                          <div className="flex items-center gap-1 text-green-600 font-medium">
-                            <DollarSign className="w-4 h-4" />
-                            <span>{job.salaryRange}</span>
-                          </div>
-                          <div className="flex items-center gap-1 text-indigo-600 font-semibold">
-                            <Users className="w-4 h-4" />
-                            <span>{job.numberOfVacancies} {job.numberOfVacancies === 1 ? 'Vacancy' : 'Vacancies'}</span>
-                          </div>
-                        </div>
-
-                        {job.deadline && (
-                          <div className={`flex items-center justify-between mt-3 text-xs font-semibold ${isJobExpired(job) ? 'text-red-600' :
-                              getDeadlineInfo(job).urgent ? 'text-orange-600' :
-                                'text-gray-500'
-                            }`}>
-                            <div className="flex items-center gap-1">
-                              {isJobExpired(job) ? <XCircle className="w-3.5 h-3.5" /> : getDeadlineInfo(job).urgent ? <AlertTriangle className="w-3.5 h-3.5" /> : <Clock className="w-3.5 h-3.5" />}
-                              <span>
-                                {isJobExpired(job) ? "Closed" : `Deadline: ${getDeadlineInfo(job).text}`}
-                              </span>
+                      <div className="mt-4 pt-4 border-t border-gray-100">
+                        <div className="grid grid-cols-3 gap-4">
+                          {/* Col 1 */}
+                          <div>
+                            <div className="flex items-center gap-1 text-sm text-gray-600">
+                              <MapPin className="w-4 h-4 text-[#0a2a5e]" />
+                              <span>{job.location}</span>
+                            </div>
+                            <div className="flex items-center gap-1 text-sm text-green-600 font-medium mt-3">
+                              <DollarSign className="w-4 h-4" />
+                              <span>{job.salaryRange}</span>
                             </div>
                           </div>
-                        )}
-                      </div>
 
-                      <div className="mt-3 flex justify-end items-center">
-                        <button
-                          onClick={() => {
-                            setSelectedJob(job);
-                            setShowJobModal(true);
-                          }}
-                          className="flex items-center gap-0.5 text-[#0a2a5e] hover:text-[#0a2a5e] transition-all group whitespace-nowrap text-[13px] font-semibold"
-                        >
-                          More
-                          <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-0.4 transition-transform translate-y-[2px]" />
-                        </button>
+                          {/* Col 2 */}
+                          <div>
+                            <div className="flex items-center gap-1 text-sm text-gray-600">
+                              <Home className="w-4 h-4 text-[#0a2a5e]" />
+                              <span>{job.workModel}</span>
+                            </div>
+                            <div className="flex items-center gap-1 text-sm text-indigo-600 font-semibold mt-3">
+                              <Users className="w-4 h-4" />
+                              <span>{job.numberOfVacancies} {job.numberOfVacancies === 1 ? 'Vacancy' : 'Vacancies'}</span>
+                            </div>
+                          </div>
+
+                          {/* Col 3 */}
+                          <div className="flex flex-col items-end gap-3">
+                            {job.deadline && (
+                              <div className={`flex items-center gap-1 text-xs font-semibold whitespace-nowrap ${isJobExpired(job) ? 'text-red-600' :
+                                  getDeadlineInfo(job).urgent ? 'text-orange-600' :
+                                    'text-gray-500'
+                                }`}>
+                                {isJobExpired(job) ? <XCircle className="w-3.5 h-3.5" /> : getDeadlineInfo(job).urgent ? <AlertTriangle className="w-3.5 h-3.5" /> : <Clock className="w-3.5 h-3.5" />}
+                                <span>
+                                  {isJobExpired(job) ? "Closed" : `Deadline: ${getDeadlineInfo(job).text}`}
+                                </span>
+                              </div>
+                            )}
+                            <button
+                              disabled={isJobExpired(job)}
+                              onClick={() => {
+                                setSelectedJob(job);
+                                setShowJobModal(true);
+                              }}
+                              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap border ${
+                                isJobExpired(job)
+                                  ? 'border-gray-200 text-gray-400 cursor-not-allowed'
+                                  : 'border-[#0a2a5e] text-[#0a2a5e] hover:bg-[#0a2a5e]/5'
+                              }`}
+                            >
+                              {isJobExpired(job) ? 'Closed' : 'Apply Now'}
+                            </button>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   ))
@@ -576,6 +615,252 @@ const CandidateDashboard = () => {
           </div>
         </div>
       </main>
+
+      {/* Filter Panel Modal */}
+      {showFilterPanel && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            onClick={() => setShowFilterPanel(false)}
+          />
+
+          {/* Panel */}
+          <div
+            className="relative bg-white w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+            style={{ animation: "modalPop 0.25s cubic-bezier(0.34,1.56,0.64,1)" }}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-[#0a2a5e]/10 flex items-center justify-center">
+                  <SlidersHorizontal className="w-4 h-4 text-[#0a2a5e]" />
+                </div>
+                <h2 className="text-base font-bold text-gray-800">Advanced Filters</h2>
+                {getActiveFilterCount() > 0 && (
+                  <span className="px-2 py-0.5 bg-[#0a2a5e] text-white text-[11px] font-bold rounded-full">
+                    {getActiveFilterCount()} active
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center gap-3">
+                {getActiveFilterCount() > 0 && (
+                  <button
+                    onClick={() => setFilters({
+                      company: "", jobPosition: "", dateFrom: "", dateTo: "",
+                      workModel: [], vacanciesMin: "", vacanciesMax: "",
+                      salaryMin: "", salaryMax: "", employmentStatus: [],
+                    })}
+                    className="text-sm text-red-500 hover:text-red-700 font-semibold transition-colors"
+                  >
+                    Clear All
+                  </button>
+                )}
+                <button
+                  onClick={() => setShowFilterPanel(false)}
+                  className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
+                >
+                  <X className="w-4 h-4 text-gray-500" />
+                </button>
+              </div>
+            </div>
+
+            {/* Scrollable Body */}
+            <div className="flex-1 overflow-y-auto theme-scrollbar p-6 space-y-5">
+
+              {/* Company */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Company</label>
+                <div className="relative">
+                  <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Search by company name…"
+                    value={filters.company}
+                    onChange={e => setFilters(f => ({ ...f, company: e.target.value }))}
+                    className="w-full pl-9 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#0a2a5e]/20 focus:border-[#0a2a5e] outline-none transition-all"
+                  />
+                </div>
+              </div>
+
+              {/* Job Position */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Job Position</label>
+                <div className="relative">
+                  <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="e.g. Software Engineer, Data Analyst…"
+                    value={filters.jobPosition}
+                    onChange={e => setFilters(f => ({ ...f, jobPosition: e.target.value }))}
+                    className="w-full pl-9 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#0a2a5e]/20 focus:border-[#0a2a5e] outline-none transition-all"
+                  />
+                </div>
+              </div>
+
+              {/* Date Range */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Date Posted</label>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <p className="text-xs text-gray-400 mb-1.5">From</p>
+                    <input
+                      type="date"
+                      value={filters.dateFrom}
+                      onChange={e => setFilters(f => ({ ...f, dateFrom: e.target.value }))}
+                      className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#0a2a5e]/20 focus:border-[#0a2a5e] outline-none transition-all"
+                    />
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-400 mb-1.5">To</p>
+                    <input
+                      type="date"
+                      value={filters.dateTo}
+                      onChange={e => setFilters(f => ({ ...f, dateTo: e.target.value }))}
+                      className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#0a2a5e]/20 focus:border-[#0a2a5e] outline-none transition-all"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Work Model */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Work Model</label>
+                <div className="flex flex-wrap gap-2">
+                  {["Remote", "Hybrid", "On-site", "On-field"].map(wm => (
+                    <button
+                      key={wm}
+                      type="button"
+                      onClick={() => setFilters(f => ({
+                        ...f,
+                        workModel: f.workModel.includes(wm)
+                          ? f.workModel.filter(x => x !== wm)
+                          : [...f.workModel, wm],
+                      }))}
+                      className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-all ${
+                        filters.workModel.includes(wm)
+                          ? "bg-[#0a2a5e] text-white border-[#0a2a5e] shadow-sm"
+                          : "bg-white text-gray-600 border-gray-200 hover:border-[#0a2a5e] hover:text-[#0a2a5e]"
+                      }`}
+                    >
+                      {wm}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* No. of Vacancies */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">No. of Vacancies</label>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <p className="text-xs text-gray-400 mb-1.5">Minimum</p>
+                    <input
+                      type="number"
+                      min="1"
+                      placeholder="e.g. 1"
+                      value={filters.vacanciesMin}
+                      onChange={e => setFilters(f => ({ ...f, vacanciesMin: e.target.value }))}
+                      className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#0a2a5e]/20 focus:border-[#0a2a5e] outline-none transition-all"
+                    />
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-400 mb-1.5">Maximum</p>
+                    <input
+                      type="number"
+                      min="1"
+                      placeholder="e.g. 10"
+                      value={filters.vacanciesMax}
+                      onChange={e => setFilters(f => ({ ...f, vacanciesMax: e.target.value }))}
+                      className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#0a2a5e]/20 focus:border-[#0a2a5e] outline-none transition-all"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Salary Range */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Salary Range <span className="font-normal text-gray-400">(annual, $)</span>
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <p className="text-xs text-gray-400 mb-1.5">Min ($)</p>
+                    <input
+                      type="number"
+                      min="0"
+                      step="1000"
+                      placeholder="e.g. 40000"
+                      value={filters.salaryMin}
+                      onChange={e => setFilters(f => ({ ...f, salaryMin: e.target.value }))}
+                      className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#0a2a5e]/20 focus:border-[#0a2a5e] outline-none transition-all"
+                    />
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-400 mb-1.5">Max ($)</p>
+                    <input
+                      type="number"
+                      min="0"
+                      step="1000"
+                      placeholder="e.g. 120000"
+                      value={filters.salaryMax}
+                      onChange={e => setFilters(f => ({ ...f, salaryMax: e.target.value }))}
+                      className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#0a2a5e]/20 focus:border-[#0a2a5e] outline-none transition-all"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Employment Status */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Employment Status</label>
+                <div className="flex flex-wrap gap-2">
+                  {["Full-time", "Part-time", "Contract", "Freelance", "Internship"].map(es => (
+                    <button
+                      key={es}
+                      type="button"
+                      onClick={() => setFilters(f => ({
+                        ...f,
+                        employmentStatus: f.employmentStatus.includes(es)
+                          ? f.employmentStatus.filter(x => x !== es)
+                          : [...f.employmentStatus, es],
+                      }))}
+                      className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-all ${
+                        filters.employmentStatus.includes(es)
+                          ? "bg-[#0a2a5e] text-white border-[#0a2a5e] shadow-sm"
+                          : "bg-white text-gray-600 border-gray-200 hover:border-[#0a2a5e] hover:text-[#0a2a5e]"
+                      }`}
+                    >
+                      {es}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
+              <p className="text-xs text-gray-400">
+                {getFilteredAndSortedJobs().length} job{getFilteredAndSortedJobs().length !== 1 ? "s" : ""} match
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowFilterPanel(false)}
+                  className="px-5 py-2 rounded-xl text-sm font-semibold text-gray-600 hover:bg-gray-200 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => setShowFilterPanel(false)}
+                  className="px-6 py-2 rounded-xl text-sm font-bold bg-[#0a2a5e] text-white hover:bg-[#0d3b82] transition-colors shadow-sm"
+                >
+                  Show Results
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Job Details Modal */}
       {showJobModal && selectedJob && (
