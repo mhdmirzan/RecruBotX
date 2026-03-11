@@ -19,7 +19,8 @@ export const ConversationState = {
  */
 const VALID_TRANSITIONS = {
     [ConversationState.IDLE]: [
-        ConversationState.LISTENING         // Session started
+        ConversationState.LISTENING,        // Session started (Legacy)
+        ConversationState.PROCESSING        // Session started, AI generating first question
     ],
 
     [ConversationState.LISTENING]: [

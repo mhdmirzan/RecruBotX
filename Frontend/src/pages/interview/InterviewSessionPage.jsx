@@ -153,7 +153,7 @@ function App() {
       case 'session_created':
         logDebug('✅ Session Started');
         setSessionActive(true);
-        conversationStateMachine.transition(ConversationState.LISTENING, { source: 'session_created' });
+        conversationStateMachine.transition(ConversationState.PROCESSING, { source: 'session_created' });
         break;
 
       case 'text_chunk':
