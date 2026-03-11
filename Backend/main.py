@@ -35,7 +35,7 @@ app = FastAPI(
 # Configure CORS
 origins = os.getenv(
     "ALLOWED_ORIGINS", 
-    "http://localhost:3000,http://127.0.0.1:3000,https://recrubotx.vercel.app"
+    "http://localhost:3000,http://127.0.0.1:3000,https://recrubotx.vercel.app,https://victorious-hill-0116e0f00.4.azurestaticapps.net"
 ).split(",")
 
 app.add_middleware(
