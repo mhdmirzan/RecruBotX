@@ -258,6 +258,9 @@ const CandidateDashboard = () => {
     // Hide expired / closed jobs
     filtered = filtered.filter(job => !isJobExpired(job) && job.isActive !== false);
 
+    // Hide CV Screening entries — only show real job postings
+    filtered = filtered.filter(job => job.status !== "Screening");
+
     // Hide jobs the candidate has already applied to
     const appliedIds = recentJobActivity.map(a => a.jobId);
     filtered = filtered.filter(job => !appliedIds.includes(job.id));

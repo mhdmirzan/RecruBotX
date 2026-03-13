@@ -238,7 +238,9 @@ const JobPosting = () => {
             const response = await fetch(`${API_BASE_URL}/jobs/recruiter/${recruiterId}`);
             if (response.ok) {
                 const data = await response.json();
-                setJobPostings(data);
+                // Filter out CV Screening entries — only show real job postings
+                const realJobs = data.filter(job => job.status !== "Screening");
+                setJobPostings(realJobs);
             }
         } catch (error) {
             console.error("Error fetching jobs:", error);
