@@ -210,6 +210,54 @@ async def start_interview(
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.post("/start-demo")
+async def start_demo_interview(
+    job_title: str = Form(...),
+    candidate_name: str = Form("Demo Candidate"),
+    db=Depends(get_database)
+):
+    """Start a shortened demo interview without requiring CV or job posting id."""
+    try:
+        session_id = str(uuid.uuid4())
+        
+        job_description = f"Dummy job description for {job_title}. This is a demonstration so keep questions general but relevant."
+        required_skills = ["Communication", "Problem Solving", "Adaptability"]
+        extra_instructions = "Keep the interview conversational and very short as this is a demo to show the platform's capabilities."
+        
+        context = InterviewServiceContext(
+            candidate_name=candidate_name,
+            candidate_cv_json={"summary": "Demo candidate evaluating the platform."},
+            job_description=job_description,
+            required_skills=required_skills,
+            recruiter_extra_instructions=extra_instructions,
+            is_demo=True
+        )
+        
+        from main import get_interview_service
+        service = get_interview_service()
+        
+        new_session_id = await service.initialize_session(context, "demo_job_id", "demo_candidate_id")
+        
+        full_response = ""
+        async for chunk in service.process_input(new_session_id, "INIT"):
+            full_response += chunk
+            
+        return {
+            "success": True,
+            "message": "Demo Interview sequence initiated",
+            "session_id": new_session_id,
+            "candidate_name": candidate_name,
+            "job_title": job_title,
+            "question": full_response,
+            "total_questions": 3,
+            "current_question": 1
+        }
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.post("/next-question")
 async def next_question(
     session_id: str = Form(...),

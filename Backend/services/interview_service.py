@@ -17,12 +17,13 @@ from services.tts_service import TTSService
 
 
 class InterviewServiceContext:
-    def __init__(self, candidate_name: str, candidate_cv_json: dict, job_description: str, required_skills: list, recruiter_extra_instructions: str):
+    def __init__(self, candidate_name: str, candidate_cv_json: dict, job_description: str, required_skills: list, recruiter_extra_instructions: str, is_demo: bool = False):
         self.candidate_name = candidate_name
         self.candidate_cv_json = candidate_cv_json
         self.job_description = job_description
         self.required_skills = required_skills
         self.recruiter_extra_instructions = recruiter_extra_instructions
+        self.is_demo = is_demo
 
 
 class InterviewService:
@@ -58,7 +59,8 @@ class InterviewService:
                 "candidate_cv_json": context.candidate_cv_json,
                 "job_description": context.job_description,
                 "required_skills": context.required_skills,
-                "recruiter_extra_instructions": context.recruiter_extra_instructions
+                "recruiter_extra_instructions": context.recruiter_extra_instructions,
+                "is_demo": context.is_demo
             },
             "state_overrides": {
                 "stage": session_state.stage.value,
@@ -83,7 +85,8 @@ class InterviewService:
             candidate_cv_json=context_data.get("candidate_cv_json", {}),
             job_description=context_data.get("job_description", ""),
             required_skills=context_data.get("required_skills", []),
-            recruiter_extra_instructions=context_data.get("recruiter_extra_instructions", "")
+            recruiter_extra_instructions=context_data.get("recruiter_extra_instructions", ""),
+            is_demo=context_data.get("is_demo", False)
         )
         
         session = InterviewState(
@@ -149,11 +152,16 @@ class InterviewService:
         interaction_count = len([x for x in session.transcript if x["role"] == "interviewer"])
 
         # Simple Stage Transition Logic
+        is_demo = getattr(context, "is_demo", False)
+        
+        target_core_start = 1 if is_demo else 2
+        target_wrapup_start = 3 if is_demo else 7
+
         if current_stage == InterviewStage.INTRODUCTION and interaction_count > 0:
             session.stage = InterviewStage.WARMUP
-        elif current_stage == InterviewStage.WARMUP and interaction_count > 2:
+        elif current_stage == InterviewStage.WARMUP and interaction_count > target_core_start:
             session.stage = InterviewStage.CORE
-        elif current_stage == InterviewStage.CORE and interaction_count > 7:
+        elif current_stage == InterviewStage.CORE and interaction_count > target_wrapup_start:
             session.stage = InterviewStage.WRAPUP
 
         stage_instructions = STAGE_INSTRUCTIONS.get(session.stage.value, "")
@@ -161,13 +169,22 @@ class InterviewService:
         # 3. Construct History
         history = []
         
+        # Define context-dependent string replacements
+        if is_demo:
+            cv_section_text = "Note: This is a demo interview. The user has not provided a CV."
+            cv_rule_text = "- Keep questions mostly general and focused on the job description as we lack candidate-specific context."
+        else:
+            cv_section_text = f"Candidate CV (Structured JSON):\n{json.dumps(context.candidate_cv_json, indent=2)}"
+            cv_rule_text = "- Ask about relevant projects from their CV."
+
         # Add System Prompt with the new context
         system_prompt = INTERVIEWER_SYSTEM_PROMPT.format(
             job_description=context.job_description,
             required_skills=", ".join(context.required_skills) if context.required_skills else "Not specified",
             extra_instructions=context.recruiter_extra_instructions,
             candidate_name=context.candidate_name,
-            candidate_cv_json=json.dumps(context.candidate_cv_json, indent=2),
+            cv_section=cv_section_text,
+            cv_rule=cv_rule_text,
             stage=session.stage.value,
             stage_instructions=stage_instructions
         )
