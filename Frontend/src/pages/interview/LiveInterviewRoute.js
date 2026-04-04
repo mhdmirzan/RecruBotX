@@ -13,7 +13,7 @@ const LiveInterviewRoute = () => {
     const navigate = useNavigate();
 
     // Extracted from InterviewPage navigation state
-    const { sessionId, candidateName, jobTitle } = location.state || {};
+    const { sessionId, candidateName, jobTitle, isDemo } = location.state || {};
 
     const [currentState, setCurrentState] = useState(ConversationState.IDLE);
     const [isConnected, setIsConnected] = useState(false);
@@ -64,6 +64,19 @@ const LiveInterviewRoute = () => {
     }, [currentState, liveCaption]);
 
     const isWrappingUp = useRef(false);
+
+    // Demo 3-minute max timer
+    useEffect(() => {
+        if (isDemo && hasStarted) {
+            const timer = setTimeout(() => {
+                if (ws.current?.readyState === WebSocket.OPEN) {
+                    ws.current.close();
+                }
+                navigate("/candidate/interview-complete", { state: { sessionId, candidateName, jobTitle, isDemo, aborted: true } });
+            }, 3 * 60 * 1000); // exactly 3 minutes
+            return () => clearTimeout(timer);
+        }
+    }, [isDemo, hasStarted, navigate, sessionId, candidateName, jobTitle]);
 
     // --- WebSocket Logic ---
     useEffect(() => {
@@ -158,14 +171,14 @@ const LiveInterviewRoute = () => {
                 isWrappingUp.current = true;
                 if (!audioRef.current || audioRef.current.paused) {
                     ws.current?.close();
-                    navigate("/candidate/interview-complete", { state: { sessionId, candidateName, jobTitle } });
+                    navigate("/candidate/interview-complete", { state: { sessionId, candidateName, jobTitle, isDemo } });
                 }
                 break;
             case 'interview_concluding':
                 isWrappingUp.current = true;
                 if (!audioRef.current || audioRef.current.paused) {
                     ws.current?.close();
-                    navigate("/candidate/interview-complete", { state: { sessionId, candidateName, jobTitle } });
+                    navigate("/candidate/interview-complete", { state: { sessionId, candidateName, jobTitle, isDemo } });
                 }
                 break;
             default:
@@ -201,7 +214,7 @@ const LiveInterviewRoute = () => {
                     // Sequence finished. Wait a final 2 seconds for dramatic effect, then close.
                     setTimeout(() => {
                         ws.current?.close();
-                        navigate("/candidate/interview-complete", { state: { sessionId, candidateName, jobTitle } });
+                        navigate("/candidate/interview-complete", { state: { sessionId, candidateName, jobTitle, isDemo } });
                     }, 2000);
                 } else {
                     setTimeout(() => {
@@ -253,7 +266,7 @@ const LiveInterviewRoute = () => {
         if (ws.current?.readyState === WebSocket.OPEN) {
             ws.current.close();
         }
-        navigate("/candidate/interview-complete", { state: { sessionId, candidateName, jobTitle, aborted: true } });
+        navigate("/candidate/interview-complete", { state: { sessionId, candidateName, jobTitle, aborted: true, isDemo } });
     };
 
     if (!sessionId) return null;

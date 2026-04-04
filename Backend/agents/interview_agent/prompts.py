@@ -102,7 +102,7 @@ Generate:
 
 STAGE_INSTRUCTIONS = {
     "introduction": "Enthusiastically welcome the candidate by name to the RecruBotX AI Interview for their job role. Introduce yourself representing RecruBotX. Do NOT ask them to introduce themselves or talk about their background yet. Simply explain the format and ask if they are ready to begin.",
-    "warmup": "Ask a broad question like 'Tell me about yourself' or ask about their background from the CV. Keep it light.",
+    "warmup": "Ask a broad question like 'Tell me about yourself' or ask about their relevant background. Keep it light.",
     "core": "Ask specific technical questions related to the required skills and job description. Challenge their assumptions. Test depth of knowledge. Mix in 1-2 behavioral questions.",
     "wrapup": "Ask if they have any questions for you. Then thank them and close the interview."
 }

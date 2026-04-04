@@ -1,13 +1,16 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowRight, User, Briefcase } from "lucide-react";
+import { ArrowRight, User, Briefcase, Play } from "lucide-react";
 import Img1 from "../../assets/images/general/1.png";
 import Img2 from "../../assets/images/general/2.png";
 import Img3 from "../../assets/images/general/3.png";
 import Img4 from "../../assets/images/general/5.png";
+import DemoInterviewModal from "./DemoInterviewModal";
 
 const Hero = () => {
+  const [showDemoModal, setShowDemoModal] = useState(false);
+
   return (
     <section className="relative px-6 md:px-16 py-16 md:py-24 bg-gradient-to-br from-slate-50 via-white to-blue-50 overflow-hidden">
       {/* Background decorative elements */}
@@ -72,6 +75,14 @@ const Hero = () => {
               Recruiter
               <ArrowRight className="w-4 h-4 text-blue-600 group-hover:translate-x-1 transition-transform duration-300" />
             </Link>
+
+            <button
+              onClick={() => setShowDemoModal(true)}
+              className="group inline-flex items-center justify-center gap-2 min-w-[180px] bg-gradient-to-r from-[#0a2a5e] to-[#143d7a] text-white px-6 py-3.5 rounded-xl font-medium shadow-lg shadow-[#0a2a5e]/20 hover:shadow-xl hover:shadow-[#0a2a5e]/30 hover:-translate-y-0.5 border border-[#143d7a] transition-all duration-300"
+            >
+              <Play className="w-5 h-5 fill-current" />
+              Demo Interview
+            </button>
           </div>
 
         </motion.div>
@@ -110,6 +121,11 @@ const Hero = () => {
           </div>
         </motion.div>
       </div>
+
+      <DemoInterviewModal
+        isOpen={showDemoModal}
+        onClose={() => setShowDemoModal(false)}
+      />
     </section>
   );
 };
