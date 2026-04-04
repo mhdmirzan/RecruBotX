@@ -76,7 +76,7 @@ const DemoInterviewModal = ({ isOpen, onClose }) => {
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 10 }}
           transition={{ duration: 0.2 }}
-          className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-100"
+          className="bg-white rounded-xl shadow-2xl max-w-md w-full overflow-hidden"
         >
           {/* Header */}
           <div className="bg-gradient-to-r from-[#0a2a5e] to-[#0d3b82] p-6 flex justify-between items-start text-white relative">
