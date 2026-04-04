@@ -170,21 +170,19 @@ class InterviewService:
         history = []
         
         # Define context-dependent string replacements
+        extra_instr = context.recruiter_extra_instructions
+        cv_json_val = json.dumps(context.candidate_cv_json, indent=2)
         if is_demo:
-            cv_section_text = "Note: This is a demo interview. The user has not provided a CV."
-            cv_rule_text = "- Keep questions mostly general and focused on the job description as we lack candidate-specific context."
-        else:
-            cv_section_text = f"Candidate CV (Structured JSON):\n{json.dumps(context.candidate_cv_json, indent=2)}"
-            cv_rule_text = "- Ask about relevant projects from their CV."
+            cv_json_val = "Note: This is a demo interview. The user has not provided a CV. Do NOT ask about projects from the CV."
+            extra_instr += " IMPORTANT: DO NOT attempt to ask about any CV projects. Keep questions general."
 
         # Add System Prompt with the new context
         system_prompt = INTERVIEWER_SYSTEM_PROMPT.format(
             job_description=context.job_description,
             required_skills=", ".join(context.required_skills) if context.required_skills else "Not specified",
-            extra_instructions=context.recruiter_extra_instructions,
+            extra_instructions=extra_instr,
             candidate_name=context.candidate_name,
-            cv_section=cv_section_text,
-            cv_rule=cv_rule_text,
+            candidate_cv_json=cv_json_val,
             stage=session.stage.value,
             stage_instructions=stage_instructions
         )
