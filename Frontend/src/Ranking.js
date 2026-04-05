@@ -131,7 +131,7 @@ const Ranking = () => {
             {/* Sidebar */}
             <aside className="w-72 h-screen bg-white shadow-xl flex flex-col p-6 border-r border-gray-200 flex-shrink-0">
                 <div className="mb-8 text-center flex-shrink-0">
-                    <h1 className="text-3xl font-bold text-[#0a2a5e]">RecruBotX</h1>
+                    <h1 className="text-3xl font-bold text-[#0a2a5e]">Interveuu</h1>
                 </div>
 
                 <nav className="flex flex-col space-y-4 text-gray-700 flex-shrink-0">

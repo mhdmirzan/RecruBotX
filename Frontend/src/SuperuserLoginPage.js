@@ -65,7 +65,7 @@ const SuperuserLoginPage = () => {
                             <ShieldCheck className="w-8 h-8 text-white" />
                         </div>
                         <h1 className="text-2xl font-bold text-white">Admin Portal</h1>
-                        <p className="text-blue-200 text-sm mt-1">RecruBotX System Administration</p>
+                        <p className="text-blue-200 text-sm mt-1">Interveuu System Administration</p>
                     </div>
 
                     <div className="p-8">
@@ -83,7 +83,7 @@ const SuperuserLoginPage = () => {
                                     <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                                     <input
                                         type="email" name="email" value={formData.email}
-                                        onChange={handleInputChange} placeholder="admin@recrubotx.com"
+                                        onChange={handleInputChange} placeholder="admin@interveuu.com"
                                         required id="superuser-email"
                                         className="w-full rounded-xl pl-11 pr-4 py-3 text-gray-900 placeholder-gray-400 bg-gray-50 border border-gray-200 focus:outline-none focus:ring-2 focus:border-transparent transition-all"
                                         style={{ focusRingColor: "#0a2a5e" }}

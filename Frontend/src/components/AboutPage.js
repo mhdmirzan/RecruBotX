@@ -13,7 +13,10 @@ import {
     Mail,
     Linkedin,
     Twitter,
-    Github
+    Github,
+    FileText,
+    Video,
+    Brain
 } from "lucide-react";
 
 // Team member images
@@ -33,26 +36,22 @@ const AboutPage = () => {
         {
             icon: Lightbulb,
             title: "Innovation",
-            description: "We constantly push the boundaries of AI technology to create smarter, more efficient hiring solutions.",
-            color: "from-amber-400 to-orange-500"
+            description: "We constantly push the boundaries of AI technology to create smarter, more efficient hiring solutions."
         },
         {
             icon: Heart,
             title: "Fairness",
-            description: "Our AI is designed to eliminate bias and ensure every candidate gets an equal opportunity to succeed.",
-            color: "from-rose-400 to-pink-500"
+            description: "Our AI is designed to eliminate bias and ensure every candidate gets an equal opportunity to succeed."
         },
         {
             icon: Shield,
             title: "Trust",
-            description: "We prioritize data security and privacy, building trust with both employers and candidates.",
-            color: "from-emerald-400 to-teal-500"
+            description: "We prioritize data security and privacy, building trust with both employers and candidates."
         },
         {
             icon: Users,
             title: "Collaboration",
-            description: "We believe in working closely with HR teams to understand and solve their unique challenges.",
-            color: "from-blue-400 to-indigo-500"
+            description: "We believe in working closely with HR teams to understand and solve their unique challenges."
         }
     ];
 
@@ -60,7 +59,7 @@ const AboutPage = () => {
         {
             name: "Dr. Naveed Khan Baloch",
             role: "Project Mentor",
-            description: "Guiding the team with expertise in AI, machine learning, and software engineering. Providing invaluable mentorship and technical direction for RecruBotX.",
+            description: "Guiding the team with expertise in AI, machine learning, and software engineering. Providing invaluable mentorship and technical direction for Interveuu.",
             department: "Assistant Professor, Department of Computer Engineering",
             institution: "UET Taxila",
             color: "from-[#0a2a5e] to-[#1a4a8e]",
@@ -91,10 +90,10 @@ const AboutPage = () => {
     ];
 
     const milestones = [
-        { year: "2024", event: "RecruBotX concept developed at UET Taxila" },
-        { year: "2024", event: "AI-powered video interview system launched" },
-        { year: "2025", event: "Advanced emotion and expression analysis added" },
-        { year: "2025", event: "Resume builder and analysis features released" },
+        { date: "2025 April", event: "Interveuu concept developed at UET Taxila", icon: Lightbulb },
+        { date: "2025 November", event: "Resume builder and analysis features released", icon: FileText },
+        { date: "2026 February", event: "AI-powered video interview system launched", icon: Video },
+        { date: "2026 April", event: "Advanced emotion and expression analysis added", icon: Brain },
     ];
 
     return (
@@ -104,7 +103,7 @@ const AboutPage = () => {
                 <div className="max-w-5xl mx-auto text-center">
                     <motion.div {...fadeInUp}>
                         <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-6">
-                            About RecruBotX
+                            About Interveuu
                         </h1>
                         <p className="text-lg md:text-xl text-blue-200/80 max-w-3xl mx-auto leading-relaxed">
                             We're on a mission to revolutionize the hiring process through intelligent AI,
@@ -123,18 +122,14 @@ const AboutPage = () => {
                                 <Target className="w-4 h-4" />
                                 Our Mission
                             </div>
-                            <h2 className="text-3xl md:text-4xl font-bold text-[#0a2a5e] mb-6">
+                            <h2 className="text-3xl md:text-4xl lg:text-4xl font-bold text-[#0a2a5e] mb-6 leading-tight">
                                 Transforming Recruitment Through AI
                             </h2>
-                            <p className="text-gray-600 leading-relaxed mb-4">
-                                RecruBotX was born from a simple observation: traditional hiring processes are slow,
-                                biased, and often fail to identify the best candidates. We set out to change that.
+                            <p className="text-md text-[#0a2a5e]/80 leading-relaxed mb-4 font-medium">
+                                Traditional hiring is slow and prone to bias. Interveuu was built to change that.
                             </p>
-                            <p className="text-gray-600 leading-relaxed mb-6">
-                                Our AI-powered platform automates the entire interview process, from CV screening
-                                to video interviews and candidate evaluation. By leveraging advanced natural language
-                                processing and emotion analysis, we help HR teams make data-driven hiring decisions
-                                while ensuring a fair and consistent experience for every candidate.
+                            <p className="text-md text-gray-600 leading-relaxed mb-8">
+                                We fully automate CV screening, conduct responsive video interviews, and analyze candidate responses in real-time. This empowers your HR team to make fast, fair, and highly accurate hiring decisions at unprecedented scale.
                             </p>
                             <div className="flex flex-wrap gap-4">
                                 <div className="flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-lg">
@@ -156,32 +151,32 @@ const AboutPage = () => {
                             {...fadeInUp}
                             className="relative"
                         >
-                            <div className="bg-gradient-to-br from-[#0a2a5e] to-[#1a4a8e] rounded-2xl p-8 text-white">
-                                <h3 className="text-2xl font-bold mb-6">Why We Built RecruBotX</h3>
-                                <ul className="space-y-4">
-                                    <li className="flex items-start gap-3">
-                                        <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                                            <span className="text-sm font-bold">1</span>
+                            <div className="bg-gradient-to-br from-[#0a2a5e] to-[#1a4a8e] rounded-2xl p-10 text-white h-full flex flex-col justify-center">
+                                <h3 className="text-3xl font-bold mb-8">Why We Built Interveuu</h3>
+                                <ul className="space-y-6">
+                                    <li className="flex items-start gap-4">
+                                        <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
+                                            <span className="font-bold text-white">1</span>
                                         </div>
-                                        <p className="text-blue-100">70% of recruiters' time is spent on repetitive screening tasks</p>
+                                        <p className="text-md text-blue-100 leading-relaxed pt-0.5">70% of recruiters' time is spent on repetitive screening tasks</p>
                                     </li>
-                                    <li className="flex items-start gap-3">
-                                        <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                                            <span className="text-sm font-bold">2</span>
+                                    <li className="flex items-start gap-4">
+                                        <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
+                                            <span className="font-bold text-white">2</span>
                                         </div>
-                                        <p className="text-blue-100">Unconscious bias affects 78% of hiring decisions</p>
+                                        <p className="text-md text-blue-100 leading-relaxed pt-0.5">Unconscious bias affects 78% of hiring decisions</p>
                                     </li>
-                                    <li className="flex items-start gap-3">
-                                        <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                                            <span className="text-sm font-bold">3</span>
+                                    <li className="flex items-start gap-4">
+                                        <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
+                                            <span className="font-bold text-white">3</span>
                                         </div>
-                                        <p className="text-blue-100">Candidates deserve fair, consistent evaluation</p>
+                                        <p className="text-md text-blue-100 leading-relaxed pt-0.5">Candidates deserve fair, consistent evaluation</p>
                                     </li>
-                                    <li className="flex items-start gap-3">
-                                        <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                                            <span className="text-sm font-bold">4</span>
+                                    <li className="flex items-start gap-4">
+                                        <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
+                                            <span className="font-bold text-white">4</span>
                                         </div>
-                                        <p className="text-blue-100">AI can make hiring smarter, not replace humans</p>
+                                        <p className="text-md text-blue-100 leading-relaxed pt-0.5">AI can make hiring smarter, not replace humans</p>
                                     </li>
                                 </ul>
                             </div>
@@ -196,7 +191,7 @@ const AboutPage = () => {
                     <motion.div {...fadeInUp} className="text-center mb-12">
                         <h2 className="text-3xl md:text-4xl font-bold text-[#0a2a5e] mb-4">Our Core Values</h2>
                         <p className="text-gray-600 max-w-2xl mx-auto">
-                            These principles guide everything we do at RecruBotX
+                            These principles guide everything we do at Interveuu
                         </p>
                     </motion.div>
 
@@ -207,8 +202,8 @@ const AboutPage = () => {
                                 {...fadeInUp}
                                 className="bg-white rounded-xl p-6 shadow-md hover:shadow-lg transition-shadow"
                             >
-                                <div className={`w-12 h-12 bg-gradient-to-br ${value.color} rounded-xl flex items-center justify-center mb-4`}>
-                                    <value.icon className="w-6 h-6 text-white" />
+                                <div className="w-12 h-12 bg-[#0a2a5e]/5 border border-[#0a2a5e]/20 rounded-xl flex items-center justify-center mb-4">
+                                    <value.icon className="w-6 h-6 text-[#0a2a5e]" />
                                 </div>
                                 <h3 className="text-xl font-semibold text-[#0a2a5e] mb-2">{value.title}</h3>
                                 <p className="text-gray-600 text-sm leading-relaxed">{value.description}</p>
@@ -236,10 +231,15 @@ const AboutPage = () => {
                                 className={`relative flex items-center gap-4 mb-8 ${index % 2 === 0 ? "md:flex-row" : "md:flex-row-reverse"
                                     }`}
                             >
-                                <div className={`flex-1 ${index % 2 === 0 ? "md:text-right md:pr-12" : "md:text-left md:pl-12"} pl-12 md:pl-0`}>
-                                    <div className="bg-white p-4 rounded-xl shadow-md inline-block">
-                                        <span className="text-sm font-bold text-blue-600">{milestone.year}</span>
-                                        <p className="text-gray-700 mt-1">{milestone.event}</p>
+                                <div className={`flex-1 flex ${index % 2 === 0 ? "md:justify-end md:pr-12" : "md:justify-start md:pl-12"} pl-12 md:pl-0`}>
+                                    <div className="bg-white p-5 rounded-xl shadow-md border border-gray-100 flex-none w-full max-w-sm text-left hover:shadow-lg transition-shadow">
+                                        <div className="flex items-center gap-3 mb-2">
+                                            <div className="w-8 h-8 rounded-lg bg-[#0a2a5e]/10 text-[#0a2a5e] flex items-center justify-center">
+                                                <milestone.icon className="w-4 h-4" />
+                                            </div>
+                                            <span className="text-sm font-bold text-[#0a2a5e]">{milestone.date}</span>
+                                        </div>
+                                        <p className="text-gray-700 leading-relaxed">{milestone.event}</p>
                                     </div>
                                 </div>
                                 <div className="absolute left-4 md:left-1/2 w-3 h-3 bg-[#0a2a5e] rounded-full transform md:-translate-x-1/2 z-10" />
@@ -256,7 +256,7 @@ const AboutPage = () => {
                     <motion.div {...fadeInUp} className="text-center mb-12">
                         <h2 className="text-3xl md:text-4xl font-bold text-[#0a2a5e] mb-4">Meet Our Team</h2>
                         <p className="text-gray-600 max-w-2xl mx-auto">
-                            The talented individuals behind RecruBotX, bringing together expertise in AI,
+                            The talented individuals behind Interveuu, bringing together expertise in AI,
                             computer vision, and software engineering.
                         </p>
                     </motion.div>
@@ -337,8 +337,8 @@ const AboutPage = () => {
                                     <Mail className="w-6 h-6" />
                                     <div className="text-left">
                                         <p className="font-medium">Email Us</p>
-                                        <a href="mailto:recrubotx@uettaxila.edu.pk" className="text-blue-200 text-sm hover:text-white transition-colors">
-                                            recrubotx@uettaxila.edu.pk
+                                        <a href="mailto:interveuu@uettaxila.edu.pk" className="text-blue-200 text-sm hover:text-white transition-colors">
+                                            interveuu@uettaxila.edu.pk
                                         </a>
                                     </div>
                                 </div>
@@ -368,7 +368,7 @@ const AboutPage = () => {
                             Ready to Transform Your Hiring?
                         </h2>
                         <p className="text-gray-600 mb-8 max-w-2xl mx-auto">
-                            Join hundreds of companies already using RecruBotX to find the best talent faster and fairer.
+                            Join hundreds of companies already using Interveuu to find the best talent faster and fairer.
                         </p>
                         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
                             <Link

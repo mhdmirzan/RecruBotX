@@ -64,7 +64,7 @@ const HowItWorksPage = () => {
       <section className="py-16 md:py-20 px-4 bg-[#0a2a5e] text-white text-center">
         <motion.div {...fadeInUp} className="max-w-4xl mx-auto">
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 md:mb-6">
-            How RecruBotX Works
+            How Interveuu Works
           </h1>
           <p className="text-base md:text-lg max-w-2xl mx-auto text-blue-200/80">
             See how our AI-powered system transforms every step of recruitment
@@ -119,7 +119,7 @@ const HowItWorksPage = () => {
       {/* Benefits Section */}
       <section className="py-12 md:py-20 bg-gray-50 px-4 sm:px-6 md:px-12 lg:px-20">
         <motion.div {...fadeInUp} className="text-center mb-8 md:mb-12">
-          <h2 className="text-2xl md:text-3xl font-bold text-[#0a2a5e] mb-3 md:mb-4">Why Choose RecruBotX</h2>
+          <h2 className="text-2xl md:text-3xl font-bold text-[#0a2a5e] mb-3 md:mb-4">Why Choose Interveuu</h2>
           <p className="text-gray-600 text-sm md:text-base">
             Transform your hiring process with measurable improvements
           </p>

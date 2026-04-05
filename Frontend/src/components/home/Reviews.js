@@ -48,7 +48,7 @@ const Reviews = () => {
       role: "VP of Talent",
       company: "TechCorp",
       review:
-        "RecruBotX reduced our hiring time by 30% while improving candidate quality. The AI-powered screening is incredibly accurate and saves our team countless hours.",
+        "Interveuu reduced our hiring time by 30% while improving candidate quality. The AI-powered screening is incredibly accurate and saves our team countless hours.",
       rating: 5,
     },
     {

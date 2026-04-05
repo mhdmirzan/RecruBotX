@@ -213,7 +213,7 @@ const RecruiterSigninPage = () => {
                             Streamline Your Hiring
                         </h2>
                         <p className="text-gray-600 mb-6">
-                            RecruBotX helps you find the best talent faster with AI-driven insights
+                            Interveuu helps you find the best talent faster with AI-driven insights
                         </p>
 
                         <div className="space-y-3 mb-8">

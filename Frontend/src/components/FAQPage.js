@@ -37,23 +37,23 @@ const FAQPage = () => {
     const faqs = [
         {
             category: "general",
-            q: "What is RecruBotX?",
-            a: "RecruBotX is an AI-powered recruitment platform that automates the entire hiring process. From CV screening and interview scheduling to conducting AI video interviews and providing detailed candidate evaluations, RecruBotX helps HR teams hire faster, smarter, and without bias. Our platform uses advanced natural language processing and emotion analysis to assess candidates objectively."
+            q: "What is Interveuu?",
+            a: "Interveuu is an AI-powered recruitment platform that automates the entire hiring process. From CV screening and interview scheduling to conducting AI video interviews and providing detailed candidate evaluations, Interveuu helps HR teams hire faster, smarter, and without bias. Our platform uses advanced natural language processing and emotion analysis to assess candidates objectively."
         },
         {
             category: "general",
-            q: "How does RecruBotX differ from traditional recruitment software?",
-            a: "Unlike traditional ATS (Applicant Tracking Systems) that simply manage applications, RecruBotX actively participates in the hiring process. Our AI conducts video interviews, analyzes candidate responses in real-time, evaluates communication skills, body language, and emotional intelligence, and provides comprehensive scoring reports. This means recruiters spend less time screening and more time making strategic hiring decisions."
+            q: "How does Interveuu differ from traditional recruitment software?",
+            a: "Unlike traditional ATS (Applicant Tracking Systems) that simply manage applications, Interveuu actively participates in the hiring process. Our AI conducts video interviews, analyzes candidate responses in real-time, evaluates communication skills, body language, and emotional intelligence, and provides comprehensive scoring reports. This means recruiters spend less time screening and more time making strategic hiring decisions."
         },
         {
             category: "general",
-            q: "Is RecruBotX suitable for companies of all sizes?",
-            a: "Yes! RecruBotX is designed to scale with your needs. Small businesses can use our Basic plan for up to 50 candidates per month, while enterprise organizations can handle unlimited candidates with custom workflows. Whether you're hiring 5 people a year or 5,000, RecruBotX adapts to your requirements."
+            q: "Is Interveuu suitable for companies of all sizes?",
+            a: "Yes! Interveuu is designed to scale with your needs. Small businesses can use our Basic plan for up to 50 candidates per month, while enterprise organizations can handle unlimited candidates with custom workflows. Whether you're hiring 5 people a year or 5,000, Interveuu adapts to your requirements."
         },
         {
             category: "candidates",
             q: "How do I prepare for an AI interview?",
-            a: "Preparing for a RecruBotX AI interview is similar to preparing for any professional interview. Ensure you're in a quiet, well-lit environment with a stable internet connection. Test your camera and microphone beforehand. Dress professionally and speak clearly. Our AI is designed to make you feel comfortable – it will guide you through each question and give you time to think before responding."
+            a: "Preparing for a Interveuu AI interview is similar to preparing for any professional interview. Ensure you're in a quiet, well-lit environment with a stable internet connection. Test your camera and microphone beforehand. Dress professionally and speak clearly. Our AI is designed to make you feel comfortable – it will guide you through each question and give you time to think before responding."
         },
         {
             category: "candidates",
@@ -88,7 +88,7 @@ const FAQPage = () => {
         {
             category: "interviews",
             q: "What technology powers the AI interviews?",
-            a: "RecruBotX uses a combination of advanced technologies: Natural Language Processing (NLP) for understanding and evaluating verbal responses, Computer Vision for analyzing facial expressions and body language, Speech Recognition for accurate transcription, and Machine Learning models trained specifically for recruitment contexts. All processing happens in real-time during the interview."
+            a: "Interveuu uses a combination of advanced technologies: Natural Language Processing (NLP) for understanding and evaluating verbal responses, Computer Vision for analyzing facial expressions and body language, Speech Recognition for accurate transcription, and Machine Learning models trained specifically for recruitment contexts. All processing happens in real-time during the interview."
         },
         {
             category: "interviews",
@@ -102,8 +102,8 @@ const FAQPage = () => {
         },
         {
             category: "security",
-            q: "Is RecruBotX GDPR compliant?",
-            a: "Yes, RecruBotX is fully GDPR compliant. We provide data processing agreements, support data subject rights (access, deletion, portability), maintain detailed processing records, and have appointed a Data Protection Officer. Our infrastructure is hosted on secure, certified data centers with regular security audits."
+            q: "Is Interveuu GDPR compliant?",
+            a: "Yes, Interveuu is fully GDPR compliant. We provide data processing agreements, support data subject rights (access, deletion, portability), maintain detailed processing records, and have appointed a Data Protection Officer. Our infrastructure is hosted on secure, certified data centers with regular security audits."
         },
         {
             category: "security",
@@ -113,7 +113,7 @@ const FAQPage = () => {
         {
             category: "security",
             q: "Can hiring decisions be audited for bias?",
-            a: "Yes! RecruBotX includes built-in bias detection and reporting tools. You can analyze hiring patterns across demographics, identify potential bias in AI scoring, and generate compliance reports. Our AI is regularly tested for bias using diverse datasets, and we continuously update our models to minimize any unintended discrimination."
+            a: "Yes! Interveuu includes built-in bias detection and reporting tools. You can analyze hiring patterns across demographics, identify potential bias in AI scoring, and generate compliance reports. Our AI is regularly tested for bias using diverse datasets, and we continuously update our models to minimize any unintended discrimination."
         },
         {
             category: "billing",
@@ -149,7 +149,7 @@ const FAQPage = () => {
                             Frequently Asked Questions
                         </h1>
                         <p className="text-lg text-blue-200/80 max-w-2xl mx-auto">
-                            Everything you need to know about RecruBotX. Can't find your answer? Contact our support team.
+                            Everything you need to know about Interveuu. Can't find your answer? Contact our support team.
                         </p>
                     </motion.div>
                 </div>

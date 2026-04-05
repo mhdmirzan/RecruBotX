@@ -26,7 +26,7 @@ const Signup = () => {
     try {
       const result = await registerUser(formData);
       if (result.success) {
-        setMessage("Signup successful! Welcome to RecruBotX.");
+        setMessage("Signup successful! Welcome to Interveuu.");
         // Optional: Redirect or clear form
       } else {
         setMessage(result.message || "Signup failed. Please try again.");

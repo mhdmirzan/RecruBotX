@@ -26,7 +26,7 @@ const securityFeatures = [
   {
     icon: FileCheck,
     h: "GDPR & Data Compliance",
-    p: "RecruBotX complies with global data protection laws including GDPR to safeguard privacy and maintain legal integrity.",
+    p: "Interveuu complies with global data protection laws including GDPR to safeguard privacy and maintain legal integrity.",
   },
   {
     icon: Lock,
@@ -126,7 +126,7 @@ const Security = () => {
 
           {/* Description */}
           <p className="text-blue-200/80 max-w-2xl mx-auto mb-6">
-            RecruBotX is fully compliant with global data protection laws, ensuring fair hiring practices
+            Interveuu is fully compliant with global data protection laws, ensuring fair hiring practices
             and strict adherence to GDPR and privacy regulations.
           </p>
 

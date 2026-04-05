@@ -24,7 +24,7 @@ const CandidateDashboard = ({ candidateName, onStartInterview }) => {
                         <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-bold text-xl">
                             R
                         </div>
-                        <h1 className="text-xl font-bold tracking-tight text-slate-900">RecruBotX</h1>
+                        <h1 className="text-xl font-bold tracking-tight text-slate-900">Interveuu</h1>
                     </div>
 
                     <nav className="space-y-1">
@@ -144,7 +144,7 @@ const CandidateDashboard = ({ candidateName, onStartInterview }) => {
                                     />
                                     <PrepItem
                                         title="Company Research"
-                                        desc="RecruBotX mission and values"
+                                        desc="Interveuu mission and values"
                                         progress={100}
                                     />
                                 </div>

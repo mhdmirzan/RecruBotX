@@ -85,7 +85,7 @@ const Navbar = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex justify-between items-center">
         {/* Logo */}
         <Link to="/" className="text-xl sm:text-2xl font-bold text-[#0a2a5e]">
-          RecruBotX
+          Interveuu
         </Link>
 
         {/* Desktop Menu Links - Right aligned with increased gap */}

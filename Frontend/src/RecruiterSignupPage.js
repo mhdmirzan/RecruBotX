@@ -408,7 +408,7 @@ const RecruiterSignupPage = () => {
             />
 
             <h2 className="text-2xl font-bold text-gray-800 mb-4">
-              Why Recruiters Love RecruBotX
+              Why Recruiters Love Interveuu
             </h2>
 
             <div className="space-y-3 mb-8">

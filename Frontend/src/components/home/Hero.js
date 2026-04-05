@@ -266,7 +266,7 @@ const Hero = () => {
             variants={itemVariants}
             className="mx-auto mb-10 max-w-3xl text-base text-gray-600 md:text-xl md:leading-relaxed"
           >
-            RecruBotX empowers you with AI-driven video interviews to hire faster,
+            Interveuu empowers you with AI-driven video interviews to hire faster,
             smarter, and fairer. From screening to selection, it streamlines the
             journey for HR and candidates alike.
           </motion.p>

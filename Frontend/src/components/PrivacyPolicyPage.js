@@ -26,8 +26,8 @@ const PrivacyPolicyPage = () => {
         {
             title: "1. Introduction",
             content: [
-                "Welcome to RecruBotX. We are committed to protecting your privacy and ensuring the security of your personal information. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our AI-powered recruitment platform.",
-                "RecruBotX is developed and operated by the team at UET Taxila, Pakistan. By using our services, you agree to the collection and use of information in accordance with this policy."
+                "Welcome to Interveuu. We are committed to protecting your privacy and ensuring the security of your personal information. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our AI-powered recruitment platform.",
+                "Interveuu is developed and operated by the team at UET Taxila, Pakistan. By using our services, you agree to the collection and use of information in accordance with this policy."
             ]
         },
         {
@@ -101,7 +101,7 @@ const PrivacyPolicyPage = () => {
         {
             title: "4. AI and Automated Decision-Making",
             content: [
-                "RecruBotX uses artificial intelligence to analyze interviews and provide candidate assessments. Important things to know:",
+                "Interveuu uses artificial intelligence to analyze interviews and provide candidate assessments. Important things to know:",
                 {
                     items: [
                         "Our AI evaluates communication skills, technical knowledge, problem-solving ability, and cultural fit indicators",
@@ -197,7 +197,7 @@ const PrivacyPolicyPage = () => {
                         "Withdraw Consent: Withdraw consent where processing is based on consent"
                     ]
                 },
-                "To exercise these rights, contact us at recrubotx@uettaxila.edu.pk. We will respond within 30 days."
+                "To exercise these rights, contact us at interveuu@uettaxila.edu.pk. We will respond within 30 days."
             ]
         },
         {
@@ -217,14 +217,14 @@ const PrivacyPolicyPage = () => {
         {
             title: "10. International Data Transfers",
             content: [
-                "RecruBotX is based in Pakistan. If you access our services from other countries, your data may be transferred to and processed in Pakistan or other countries where our service providers are located.",
+                "Interveuu is based in Pakistan. If you access our services from other countries, your data may be transferred to and processed in Pakistan or other countries where our service providers are located.",
                 "We ensure appropriate safeguards are in place for international transfers, including compliance with applicable data protection laws and standard contractual clauses where required."
             ]
         },
         {
             title: "11. Children's Privacy",
             content: [
-                "RecruBotX is not intended for individuals under 18 years of age. We do not knowingly collect personal information from children. If you believe we have inadvertently collected information from a child, please contact us immediately at recrubotx@uettaxila.edu.pk."
+                "Interveuu is not intended for individuals under 18 years of age. We do not knowingly collect personal information from children. If you believe we have inadvertently collected information from a child, please contact us immediately at interveuu@uettaxila.edu.pk."
             ]
         },
         {
@@ -246,10 +246,10 @@ const PrivacyPolicyPage = () => {
             content: [
                 "If you have questions about this Privacy Policy or our data practices, please contact us:",
                 {
-                    heading: "RecruBotX", items: [
+                    heading: "Interveuu", items: [
                         "UET Taxila, Rawalpindi",
                         "Punjab, Pakistan",
-                        "Email: recrubotx@uettaxila.edu.pk"
+                        "Email: interveuu@uettaxila.edu.pk"
                     ]
                 },
                 "For privacy-specific inquiries, please include \"Privacy\" in your subject line."
@@ -372,11 +372,11 @@ const PrivacyPolicyPage = () => {
                             Contact our team for any privacy-related inquiries
                         </p>
                         <a
-                            href="mailto:recrubotx@uettaxila.edu.pk"
+                            href="mailto:interveuu@uettaxila.edu.pk"
                             className="inline-flex items-center gap-2 bg-white text-[#0a2a5e] px-5 py-2.5 rounded-lg font-medium text-sm hover:bg-blue-50 transition-colors"
                         >
                             <Mail className="w-4 h-4" />
-                            recrubotx@uettaxila.edu.pk
+                            interveuu@uettaxila.edu.pk
                         </a>
                     </motion.div>
                 </div>

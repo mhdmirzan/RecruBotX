@@ -70,7 +70,7 @@ const recruiterTourSteps = [
   {
     target: "[data-tour='r-tour-btn']",
     title: "You're all set!",
-    description: "Tap this button anytime to replay the tour and explore RecruBotX features again.",
+    description: "Tap this button anytime to replay the tour and explore Interveuu features again.",
   },
 ];
 

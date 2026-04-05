@@ -38,10 +38,10 @@ const Contact = () => {
                 <div>
                   <p className="text-xs text-gray-500">Email</p>
                   <a
-                    href="mailto:recrubotx@uettaxila.edu.pk"
+                    href="mailto:interveuu@uettaxila.edu.pk"
                     className="text-sm md:text-base text-[#0a2a5e] font-medium hover:underline"
                   >
-                    recrubotx@uettaxila.edu.pk
+                    interveuu@uettaxila.edu.pk
                   </a>
                 </div>
               </div>
