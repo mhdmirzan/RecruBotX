@@ -29,20 +29,13 @@ const About = () => {
 
         {/* Right Side - Text */}
         <div>
-          <h2 className="text-4xl md:text-5xl font-bold text-[#0a2a5e] mb-6">
+          <h2 className="text-3xl md:text-4xl font-bold text-[#0a2a5e] mb-6">
             Hire Better with AI
           </h2>
-          <p className="text-gray-700 leading-relaxed">
-            RecruBotX is the leading AI-powered video interview platform
-            designed to streamline the entire recruitment process from screening
-            to final selection. With intelligent candidate analysis, automated
-            assessments, and real-time evaluation features, RecruBotX empowers HR
-            teams to make faster, data-driven hiring decisions.
+          <p className="text-lg md:text-xl text-gray-700 leading-relaxed">
+            RecruBotX is an AI-powered video interview platform designed to streamline your entire recruitment process. 
             <br /><br />
-            Our end-to-end system ensures a seamless experience for both recruiters and candidates —
-            saving time, reducing bias, and enhancing talent acquisition like never before.
-            Whether you're hiring at scale or seeking top talent, RecruBotX is your all-in-one solution
-            for smarter, faster, and fairer hiring.
+            With intelligent candidate analysis and real-time evaluations, our end-to-end system empowers HR teams to save time, reduce bias, and make faster, data-driven hiring decisions at scale.
           </p>
         </div>
       </div>

@@ -32,56 +32,36 @@ const howItWorksSteps = [
     description:
       "Uses NLP to extract key information from resumes and filter candidates based on job-specific requirements.",
     icon: FileText,
-    gradient: "from-blue-500 to-cyan-400",
   },
   {
     title: "Interview Scheduling",
     description:
       "Automatically schedules interviews using Google Calendar / Outlook API and sends invites via email.",
     icon: CalendarCheck,
-    gradient: "from-emerald-500 to-teal-400",
-  },
-  {
-    title: "Interview Session Launch",
-    description:
-      "Initiates a video interview using integrated platforms like Zoom, Jitsi, or Twilio Video SDK at the scheduled time.",
-    icon: Video,
-    gradient: "from-violet-500 to-purple-400",
   },
   {
     title: "LLM-Powered Interviewing",
     description:
       "A large language model (LLM) agent asks dynamic, role-based questions tailored to the candidate's profile.",
     icon: Bot,
-    gradient: "from-orange-500 to-amber-400",
   },
   {
     title: "Facial Expression Analysis",
     description:
       "Uses AI tools like OpenCV, DeepFace, or MediaPipe to assess non-verbal cues such as confidence, engagement, and emotions.",
     icon: Smile,
-    gradient: "from-pink-500 to-rose-400",
   },
   {
     title: "Response Evaluation",
     description:
       "Analyzes verbal and visual data to generate a comprehensive evaluation report with objective scoring.",
     icon: BarChart3,
-    gradient: "from-indigo-500 to-blue-400",
   },
   {
     title: "Dual Mode Support",
     description:
       "Supports real interviews for companies and practice simulations for job seekers using the same intelligent flow.",
     icon: RefreshCw,
-    gradient: "from-cyan-500 to-sky-400",
-  },
-  {
-    title: "Data Logging",
-    description:
-      "Stores all session data and reports in a secure database (MongoDB / PostgreSQL) for HR review, analytics, and feedback.",
-    icon: Database,
-    gradient: "from-slate-500 to-gray-400",
   },
 ];
 
@@ -101,7 +81,7 @@ const WorkingProcess = () => {
           <span className="inline-block px-4 py-1.5 bg-blue-500/20 backdrop-blur-sm border border-blue-400/30 rounded-full text-blue-300 text-sm font-medium mb-4">
             Our Process
           </span>
-          <h2 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-white via-blue-100 to-cyan-200 bg-clip-text text-transparent">
+          <h2 className="text-3xl md:text-4xl font-bold mb-4 bg-gradient-to-r from-white via-blue-100 to-cyan-200 bg-clip-text text-transparent">
             How It Works
           </h2>
           <p className="text-lg text-blue-200/80 max-w-2xl mx-auto">
@@ -112,7 +92,7 @@ const WorkingProcess = () => {
 
         {/* Steps Grid */}
         <motion.div
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
           variants={staggerContainer}
           initial="initial"
           whileInView="animate"
@@ -124,31 +104,22 @@ const WorkingProcess = () => {
               <motion.div
                 key={index}
                 variants={fadeInUp}
-                whileHover={{ y: -8, scale: 1.02 }}
-                className="group bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl shadow-xl hover:shadow-2xl hover:bg-white/10 transition-all duration-500 p-7 text-center relative overflow-hidden"
+                className="group bg-[#0a1f44]/40 backdrop-blur-sm border border-white/10 rounded-2xl shadow-lg hover:shadow-xl hover:bg-white/[0.08] hover:border-white/20 transition-all duration-300 p-8 text-left relative overflow-hidden flex flex-col"
               >
-                {/* Glow effect on hover */}
-                <div className={`absolute inset-0 bg-gradient-to-br ${step.gradient} opacity-0 group-hover:opacity-5 transition-opacity duration-500`} />
-
                 {/* Icon */}
                 <div
-                  className={`w-16 h-16 bg-gradient-to-br ${step.gradient} rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-lg group-hover:shadow-xl group-hover:scale-110 transition-all duration-300`}
+                  className="w-14 h-14 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center mb-6 group-hover:bg-blue-500/10 group-hover:border-blue-400/30 transition-all duration-300"
                 >
-                  <IconComponent className="w-8 h-8 text-white" strokeWidth={1.8} />
+                  <IconComponent className="w-7 h-7 text-blue-300 group-hover:text-cyan-300 transition-colors" strokeWidth={1.8} />
                 </div>
 
-                {/* Step number */}
-                <span className="absolute top-4 right-4 text-xs font-semibold text-white/30 bg-white/5 px-2 py-1 rounded-full">
-                  {String(index + 1).padStart(2, "0")}
-                </span>
-
                 {/* Title */}
-                <h3 className="text-lg font-semibold mb-3 text-white group-hover:text-cyan-300 transition-colors duration-300">
+                <h3 className="text-xl font-semibold mb-3 text-white tracking-wide">
                   {step.title}
                 </h3>
 
                 {/* Description */}
-                <p className="text-blue-200/70 text-sm leading-relaxed">
+                <p className="text-blue-100/70 text-base leading-relaxed">
                   {step.description}
                 </p>
               </motion.div>

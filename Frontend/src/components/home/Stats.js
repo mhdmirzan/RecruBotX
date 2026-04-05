@@ -64,10 +64,10 @@ const Stats = () => {
       <div className="max-w-7xl mx-auto relative z-10">
         {/* Header */}
         <motion.div className="text-center mb-12" {...fadeInUp}>
-          <span className="inline-block px-4 py-1.5 bg-blue-500/20 backdrop-blur-sm border border-blue-400/30 rounded-full text-blue-300 text-sm font-medium mb-4">
+          <span className="inline-block px-4 py-1.5 bg-[#0a1f44]/50 backdrop-blur-sm border border-blue-400/20 rounded-full text-cyan-300 text-sm font-medium mb-4">
             Our Impact
           </span>
-          <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
+          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
             Numbers That{" "}
             <span className="bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
               Speak
@@ -91,17 +91,13 @@ const Stats = () => {
               <motion.div
                 key={i}
                 variants={fadeInUp}
-                whileHover={{ y: -8, scale: 1.05 }}
-                className="group bg-white/5 backdrop-blur-md border border-white/10 p-6 rounded-2xl shadow-lg hover:shadow-2xl hover:bg-white/10 transition-all duration-500 text-center relative overflow-hidden"
+                className="group bg-white/5 backdrop-blur-md border border-white/10 p-6 rounded-2xl shadow-lg hover:shadow-xl hover:bg-white/10 transition-all duration-500 text-center relative overflow-hidden"
               >
-                {/* Glow effect */}
-                <div className={`absolute inset-0 bg-gradient-to-br ${item.gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-500`} />
-
                 {/* Icon */}
                 <div
-                  className={`w-12 h-12 bg-gradient-to-br ${item.gradient} rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg group-hover:scale-110 group-hover:rotate-6 transition-all duration-300`}
+                  className="w-12 h-12 bg-[#0a1f44] border border-blue-400/20 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg group-hover:bg-[#0a2a5e]/50 group-hover:border-blue-400/40 transition-all duration-300"
                 >
-                  <IconComponent className="w-6 h-6 text-white" strokeWidth={2} />
+                  <IconComponent className="w-6 h-6 text-cyan-400" strokeWidth={2} />
                 </div>
 
                 {/* Value */}
@@ -115,7 +111,7 @@ const Stats = () => {
                 </p>
 
                 {/* Description */}
-                <p className="text-blue-200/50 text-xs">
+                <p className="text-blue-200/65 text-xs">
                   {item.description}
                 </p>
               </motion.div>

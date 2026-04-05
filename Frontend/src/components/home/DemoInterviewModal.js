@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, User, Briefcase, Play, AlertCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -8,6 +8,18 @@ const DemoInterviewModal = ({ isOpen, onClose }) => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [isOpen]);
+
 
   const [formData, setFormData] = useState({
     jobTitle: "Software Engineer",
