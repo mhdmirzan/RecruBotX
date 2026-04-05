@@ -487,7 +487,7 @@ const VoiceInterview = () => {
   const Sidebar = () => (
     <aside className="w-72 h-screen bg-white shadow-xl flex flex-col p-6 border-r border-gray-200 flex-shrink-0">
       <div className="mb-8 text-center flex-shrink-0">
-        <h1 className="text-3xl font-bold text-blue-600">RecruBotX</h1>
+        <h1 className="text-3xl font-bold text-blue-600">Interveuu</h1>
       </div>
 
       <nav className="flex flex-col space-y-4 text-gray-700 flex-shrink-0">

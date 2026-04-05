@@ -1,5 +1,5 @@
 /**
- * RecruBotX — Brand Loading Spinner
+ * Interveuu — Brand Loading Spinner
  *
  * Variants:
  *  <LoadingSpinner />              — full-page centered overlay
@@ -15,7 +15,7 @@ const FullPageSpinner = ({ label = "Loading…" }) => (
     <div className="flex-1 flex flex-col items-center justify-center gap-8 select-none">
         <AtlasOrbit />
         {label && (
-            <p className="recrubotx-label text-sm font-medium tracking-widest uppercase text-[#0a2a5e]/50">
+            <p className="interveuu-label text-sm font-medium tracking-widest uppercase text-[#0a2a5e]/50">
                 {label}
             </p>
         )}
@@ -32,27 +32,27 @@ const InlineSpinner = () => (
 /* ─────────────────────────── Button / tiny spinner ─────────────────────── */
 const SmallSpinner = () => (
     <span
-        className="recrubotx-small-spin inline-block rounded-full border-2 border-white/30 border-t-white"
+        className="interveuu-small-spin inline-block rounded-full border-2 border-white/30 border-t-white"
         style={{ width: 18, height: 18 }}
     />
 );
 
 /* ─────────────────────────── Core orbit animation ──────────────────────── */
 const AtlasOrbit = () => (
-    <div className="recrubotx-orbit-root" aria-label="Loading" role="status">
+    <div className="interveuu-orbit-root" aria-label="Loading" role="status">
         {/* Pulsing glow ring */}
-        <span className="recrubotx-glow" />
+        <span className="interveuu-glow" />
 
         {/* Rotating arc track */}
-        <span className="recrubotx-arc" />
+        <span className="interveuu-arc" />
 
         {/* Three chasing dots */}
-        <span className="recrubotx-dot recrubotx-dot-1" />
-        <span className="recrubotx-dot recrubotx-dot-2" />
-        <span className="recrubotx-dot recrubotx-dot-3" />
+        <span className="interveuu-dot interveuu-dot-1" />
+        <span className="interveuu-dot interveuu-dot-2" />
+        <span className="interveuu-dot interveuu-dot-3" />
 
         {/* Center pulse */}
-        <span className="recrubotx-center" />
+        <span className="interveuu-center" />
     </div>
 );
 

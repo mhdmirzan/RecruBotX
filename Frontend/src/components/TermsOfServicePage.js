@@ -26,15 +26,15 @@ const TermsOfServicePage = () => {
         {
             title: "1. Acceptance of Terms",
             content: [
-                "By accessing or using RecruBotX (\"the Platform,\" \"our Service\"), you agree to be bound by these Terms of Service (\"Terms\"). If you disagree with any part of these terms, you may not access or use our services.",
-                "These Terms apply to all visitors, users, candidates, and recruiters who access or use RecruBotX. By creating an account, you represent that you are at least 18 years old and have the legal capacity to enter into this agreement.",
-                "RecruBotX is provided by the development team at UET Taxila, Pakistan."
+                "By accessing or using Interveuu (\"the Platform,\" \"our Service\"), you agree to be bound by these Terms of Service (\"Terms\"). If you disagree with any part of these terms, you may not access or use our services.",
+                "These Terms apply to all visitors, users, candidates, and recruiters who access or use Interveuu. By creating an account, you represent that you are at least 18 years old and have the legal capacity to enter into this agreement.",
+                "Interveuu is provided by the development team at UET Taxila, Pakistan."
             ]
         },
         {
             title: "2. Description of Service",
             content: [
-                "RecruBotX is an AI-powered recruitment platform that provides:",
+                "Interveuu is an AI-powered recruitment platform that provides:",
                 {
                     heading: "For Candidates", items: [
                         "AI-conducted video interviews",
@@ -123,7 +123,7 @@ const TermsOfServicePage = () => {
                         "Sharing of your interview data and reports with the prospective employer"
                     ]
                 },
-                "By participating in an AI interview through RecruBotX, you consent to the above.",
+                "By participating in an AI interview through Interveuu, you consent to the above.",
                 {
                     heading: "Accuracy of Information", items: [
                         "You represent that all information you provide is accurate and truthful",
@@ -145,7 +145,7 @@ const TermsOfServicePage = () => {
             content: [
                 {
                     heading: "Lawful Use", items: [
-                        "You will use RecruBotX only for lawful recruitment purposes",
+                        "You will use Interveuu only for lawful recruitment purposes",
                         "You will comply with all applicable employment and anti-discrimination laws",
                         "You will not use candidate data for purposes other than hiring evaluation"
                     ]
@@ -205,7 +205,7 @@ const TermsOfServicePage = () => {
             content: [
                 {
                     heading: "Our Property", items: [
-                        "RecruBotX and all associated technology, content, and branding are our property",
+                        "Interveuu and all associated technology, content, and branding are our property",
                         "You may not copy, modify, or create derivative works without permission",
                         "Our trademarks may not be used without prior written consent"
                     ]
@@ -278,7 +278,7 @@ const TermsOfServicePage = () => {
         {
             title: "11. Indemnification",
             content: [
-                "You agree to indemnify, defend, and hold harmless RecruBotX, its team members, and affiliates from any claims, damages, losses, and expenses (including legal fees) arising from:",
+                "You agree to indemnify, defend, and hold harmless Interveuu, its team members, and affiliates from any claims, damages, losses, and expenses (including legal fees) arising from:",
                 {
                     items: [
                         "Your use of the Service",
@@ -325,7 +325,7 @@ const TermsOfServicePage = () => {
                 },
                 {
                     heading: "Informal Resolution", items: [
-                        "Before filing any formal claim, you agree to try resolving disputes informally by contacting us at recrubotx@uettaxila.edu.pk"
+                        "Before filing any formal claim, you agree to try resolving disputes informally by contacting us at interveuu@uettaxila.edu.pk"
                     ]
                 },
                 {
@@ -359,7 +359,7 @@ const TermsOfServicePage = () => {
             content: [
                 {
                     heading: "Entire Agreement", items: [
-                        "These Terms constitute the entire agreement between you and RecruBotX regarding the Service"
+                        "These Terms constitute the entire agreement between you and Interveuu regarding the Service"
                     ]
                 },
                 {
@@ -384,10 +384,10 @@ const TermsOfServicePage = () => {
             content: [
                 "For questions about these Terms of Service:",
                 {
-                    heading: "RecruBotX", items: [
+                    heading: "Interveuu", items: [
                         "UET Taxila, Rawalpindi",
                         "Punjab, Pakistan",
-                        "Email: recrubotx@uettaxila.edu.pk"
+                        "Email: interveuu@uettaxila.edu.pk"
                     ]
                 },
                 "For legal inquiries, please include \"Legal\" in your subject line."
@@ -510,11 +510,11 @@ const TermsOfServicePage = () => {
                             Contact our team for any legal inquiries
                         </p>
                         <a
-                            href="mailto:recrubotx@uettaxila.edu.pk"
+                            href="mailto:interveuu@uettaxila.edu.pk"
                             className="inline-flex items-center gap-2 bg-white text-[#0a2a5e] px-5 py-2.5 rounded-lg font-medium text-sm hover:bg-blue-50 transition-colors"
                         >
                             <Mail className="w-4 h-4" />
-                            recrubotx@uettaxila.edu.pk
+                            interveuu@uettaxila.edu.pk
                         </a>
                     </motion.div>
                 </div>

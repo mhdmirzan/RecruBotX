@@ -39,7 +39,7 @@ const InterviewInterface = ({
                 <div className="flex items-center gap-3">
                     <div className={`status-dot ${isConnected ? 'online' : 'offline'}`} />
                     <h1 className="text-xl font-semibold">
-                        RecruBotX <span className="text-secondary">AI Interviewer</span>
+                        Interveuu <span className="text-secondary">AI Interviewer</span>
                     </h1>
                 </div>
                 <div className="flex items-center gap-4 text-sm">

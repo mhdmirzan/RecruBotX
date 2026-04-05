@@ -15,28 +15,28 @@ const Footer = () => {
               <div className="w-10 h-10 bg-gradient-to-r from-primary-accent to-blue-500 rounded-lg flex items-center justify-center">
                 <Bot className="w-5 h-5 text-white" />
               </div>
-              <span className="text-xl font-bold">RecruBotX</span>
+              <span className="text-xl font-bold">Interveuu</span>
             </Link>
             <p className="text-sm max-w-sm leading-relaxed text-blue-200/80">
               AI-powered interview automation for smarter hiring. Transform your recruitment process with intelligent conversations.
             </p>
             <div className="flex space-x-3">
               <a
-                href="https://twitter.com/recrubotx"
+                href="https://twitter.com/interveuu"
                 className="w-9 h-9 flex items-center justify-center rounded-lg bg-white/10 hover:bg-primary-accent transition"
                 aria-label="Twitter"
               >
                 <Twitter className="w-4 h-4 text-white" />
               </a>
               <a
-                href="https://linkedin.com/company/recrubotx"
+                href="https://linkedin.com/company/interveuu"
                 className="w-9 h-9 flex items-center justify-center rounded-lg bg-white/10 hover:bg-primary-accent transition"
                 aria-label="LinkedIn"
               >
                 <Linkedin className="w-4 h-4 text-white" />
               </a>
               <a
-                href="https://github.com/recrubotx"
+                href="https://github.com/interveuu"
                 className="w-9 h-9 flex items-center justify-center rounded-lg bg-white/10 hover:bg-primary-accent transition"
                 aria-label="GitHub"
               >
@@ -67,10 +67,10 @@ const Footer = () => {
               <div className="flex items-center space-x-3">
                 <Mail className="w-4 h-4 text-blue-400" />
                 <a
-                  href="mailto:recrubotx@uettaxila.edu.pk"
+                  href="mailto:interveuu@uettaxila.edu.pk"
                   className="text-sm text-blue-200/80 hover:text-white transition"
                 >
-                  recrubotx@uettaxila.edu.pk
+                  interveuu@uettaxila.edu.pk
                 </a>
               </div>
               <div className="flex items-start space-x-3">
@@ -101,7 +101,7 @@ const Footer = () => {
         {/* Bottom Section */}
         <div className="border-t border-white/20 mt-12 pt-8 text-center">
           <p className="text-sm leading-relaxed">
-            © 2024 RecruBotX. All rights reserved.
+            © 2024 Interveuu. All rights reserved.
             <br className="block md:hidden" /> Built with AI for the future of recruitment.
           </p>
         </div>

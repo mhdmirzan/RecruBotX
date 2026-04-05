@@ -194,7 +194,7 @@ const CandidateLoginPage = () => {
               />
             </div>
             <h2 className="text-2xl font-bold text-gray-800 mb-4">
-              Why Choose RecruBotX?
+              Why Choose Interveuu?
             </h2>
             <p className="text-gray-600 mb-6">
               Join thousands of candidates who have improved their interview skills

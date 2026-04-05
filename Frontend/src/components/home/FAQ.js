@@ -8,24 +8,24 @@ const faqs = [
     a: "Our free trial gives you full access to basic AI interview features including 5 candidate screenings, video interview capabilities, and automated scoring. No credit card required.",
   },
   {
-    q: "What is RecruBotX?",
-    a: "RecruBotX is an AI-powered interview automation platform that uses advanced language models and facial analysis to conduct, evaluate, and score candidate interviews automatically, saving HR teams up to 70% of their time.",
+    q: "What is Interveuu?",
+    a: "Interveuu is an AI-powered interview automation platform that uses advanced language models and facial analysis to conduct, evaluate, and score candidate interviews automatically, saving HR teams up to 70% of their time.",
   },
   {
-    q: "How does RecruBotX track candidate activity?",
+    q: "How does Interveuu track candidate activity?",
     a: "It analyzes verbal responses using NLP, tracks facial expressions and body language through computer vision, and compiles comprehensive evaluation reports—all while maintaining strict privacy and security standards.",
   },
   {
-    q: "Can RecruBotX be used for teams?",
-    a: "Yes! RecruBotX is built for collaboration. HR teams can share candidate profiles, compare evaluations, add notes, and make collective hiring decisions through our intuitive dashboard.",
+    q: "Can Interveuu be used for teams?",
+    a: "Yes! Interveuu is built for collaboration. HR teams can share candidate profiles, compare evaluations, add notes, and make collective hiring decisions through our intuitive dashboard.",
   },
   {
-    q: "Is my data secure with RecruBotX?",
+    q: "Is my data secure with Interveuu?",
     a: "Absolutely. We use end-to-end encryption, comply with GDPR and other data protection regulations, and employ role-based access control to ensure your data remains private and secure.",
   },
   {
-    q: "What integrations does RecruBotX support?",
-    a: "RecruBotX integrates seamlessly with popular ATS platforms, Google Calendar, Outlook, Zoom, and major HRIS systems. Custom API integrations are also available for enterprise clients.",
+    q: "What integrations does Interveuu support?",
+    a: "Interveuu integrates seamlessly with popular ATS platforms, Google Calendar, Outlook, Zoom, and major HRIS systems. Custom API integrations are also available for enterprise clients.",
   },
 ];
 
@@ -63,7 +63,7 @@ const FAQ = () => {
             </span>
           </h2>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Everything you need to know about RecruBotX
+            Everything you need to know about Interveuu
           </p>
         </motion.div>
 

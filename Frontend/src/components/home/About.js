@@ -33,7 +33,7 @@ const About = () => {
             Hire Better with AI
           </h2>
           <p className="text-lg md:text-xl text-gray-700 leading-relaxed">
-            RecruBotX is an AI-powered video interview platform designed to streamline your entire recruitment process. 
+            Interveuu is an AI-powered video interview platform designed to streamline your entire recruitment process. 
             <br /><br />
             With intelligent candidate analysis and real-time evaluations, our end-to-end system empowers HR teams to save time, reduce bias, and make faster, data-driven hiring decisions at scale.
           </p>
