@@ -50,7 +50,6 @@ const Reviews = () => {
       review:
         "RecruBotX reduced our hiring time by 30% while improving candidate quality. The AI-powered screening is incredibly accurate and saves our team countless hours.",
       rating: 5,
-      gradient: "from-blue-500 to-indigo-500",
     },
     {
       name: "David Smith",
@@ -59,7 +58,6 @@ const Reviews = () => {
       review:
         "A seamless and efficient process. The video interview analysis provides insights we never had before. Highly recommended for any growing team!",
       rating: 5,
-      gradient: "from-violet-500 to-purple-500",
     },
     {
       name: "Emily Johnson",
@@ -68,7 +66,6 @@ const Reviews = () => {
       review:
         "The platform made hiring so much easier for our team. From scheduling to evaluation, everything is automated. We've seen a 50% reduction in time-to-hire!",
       rating: 5,
-      gradient: "from-emerald-500 to-teal-500",
     },
   ];
 
@@ -89,13 +86,13 @@ const Reviews = () => {
           transition={{ duration: 0.6 }}
           viewport={{ once: true }}
         >
-          <span className="inline-flex items-center gap-2 px-4 py-1.5 bg-amber-100 border border-amber-200 rounded-full text-amber-700 text-sm font-medium mb-4">
-            <Star className="w-4 h-4 fill-amber-500 text-amber-500" />
+          <span className="inline-flex items-center gap-2 px-4 py-1.5 bg-[#0a2a5e]/5 border border-[#0a2a5e]/20 rounded-full text-[#0a2a5e] text-sm font-medium mb-4">
+            <Star className="w-4 h-4 fill-[#0a2a5e] text-[#0a2a5e]" />
             Customer Reviews
           </span>
-          <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
             What Our{" "}
-            <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-[#0a2a5e] to-blue-500 bg-clip-text text-transparent">
               Clients Say
             </span>
           </h2>
@@ -113,12 +110,11 @@ const Reviews = () => {
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
               viewport={{ once: true }}
-              whileHover={{ y: -8 }}
             >
-              <Card className="h-full relative overflow-hidden group">
-                {/* Gradient accent top */}
+              <Card className="h-full relative overflow-hidden group hover:bg-gray-50">
+                {/* Theme accent top */}
                 <div
-                  className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${t.gradient}`}
+                  className="absolute top-0 left-0 right-0 h-1 bg-[#0a2a5e]"
                 />
 
                 {/* Quote icon */}
@@ -140,7 +136,7 @@ const Reviews = () => {
                   {/* Author info */}
                   <div className="flex items-center gap-4 pt-4 border-t border-gray-100">
                     <div
-                      className={`w-12 h-12 rounded-xl bg-gradient-to-br ${t.gradient} flex items-center justify-center text-white font-bold text-lg shadow-lg`}
+                      className="w-12 h-12 rounded-xl bg-[#0a2a5e]/10 border border-[#0a2a5e]/20 flex items-center justify-center text-[#0a2a5e] font-bold text-lg shadow-sm"
                     >
                       {t.name.charAt(0)}
                     </div>
@@ -158,10 +154,7 @@ const Reviews = () => {
                   </div>
                 </CardContent>
 
-                {/* Hover glow effect */}
-                <div
-                  className={`absolute bottom-0 right-0 w-32 h-32 bg-gradient-to-br ${t.gradient} opacity-0 group-hover:opacity-5 rounded-full blur-2xl transition-opacity duration-500`}
-                />
+                {/* Minimal hover interaction handled by card's hover:bg-gray-50 parent class */}
               </Card>
             </motion.div>
           ))}
