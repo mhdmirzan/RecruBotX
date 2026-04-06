@@ -44,7 +44,7 @@ class DatabaseManager:
                 db_name = parsed.get("database")
             except Exception:
                 db_name = None
-        db_name = db_name or "interveuu"
+        db_name = db_name or "recrubotx"
         
         try:
             # MongoDB Atlas optimized settings
