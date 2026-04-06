@@ -99,7 +99,7 @@ const SuperuserDashboard = () => {
             <aside className="w-72 h-screen bg-white shadow-xl flex flex-col p-6 border-r border-gray-200 flex-shrink-0">
                 <div className="mb-8 text-center">
                     <div className="flex items-center justify-center gap-2">
-                        <Logo className="h-7 w-auto" />
+                        <Logo className="h-8 w-auto" />
                     </div>
                     <span className="inline-flex items-center gap-1.5 mt-2 text-xs font-medium text-[#0a2a5e]/70 bg-[#0a2a5e]/5 px-3 py-1 rounded-full"><ShieldCheck className="w-3.5 h-3.5" /> Admin Panel</span>
                 </div>
