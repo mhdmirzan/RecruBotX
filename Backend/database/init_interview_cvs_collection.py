@@ -18,7 +18,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 MONGODB_URI = os.getenv("MONGODB_URI")
-DATABASE_NAME = os.getenv("DATABASE_NAME", "recrubotx_db")
+DATABASE_NAME = os.getenv("DATABASE_NAME", "interveuu_db")
 
 
 async def init_interview_cvs_collection():

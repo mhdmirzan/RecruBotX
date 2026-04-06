@@ -12,7 +12,7 @@ Supported Formats:
 The parser automatically detects the file format and uses the appropriate
 method to extract text content while handling encoding issues gracefully.
 
-Author: RecruBotX Team
+Author: Interveuu Team
 Version: 1.0.0
 """
 

@@ -17,7 +17,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Secret key for JWT — loaded from .env (MUST match across restarts)
-JWT_SECRET = os.getenv("JWT_SECRET", "recrubotx-jwt-s3cret-k3y-2026-prod")
+JWT_SECRET = os.getenv("JWT_SECRET", "interveuu-jwt-s3cret-k3y-2026-prod")
 JWT_ALGORITHM = "HS256"
 JWT_EXPIRY_HOURS = 24
 

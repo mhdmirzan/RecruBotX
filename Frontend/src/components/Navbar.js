@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Menu, X, ChevronRight } from "lucide-react";
+import Logo from "./Logo";
 
 const Navbar = () => {
   const location = useLocation();
@@ -84,8 +85,8 @@ const Navbar = () => {
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex justify-between items-center">
         {/* Logo */}
-        <Link to="/" className="text-xl sm:text-2xl font-bold text-[#0a2a5e]">
-          Interveuu
+        <Link to="/" className="flex items-center gap-2">
+          <Logo className="h-8 w-auto" />
         </Link>
 
         {/* Desktop Menu Links - Right aligned with increased gap */}

@@ -27,7 +27,7 @@ for upload_dir in UPLOAD_DIRS:
 
 # Create FastAPI app
 app = FastAPI(
-    title="RecruBotX CV Screener API",
+    title="Interveuu CV Screener API",
     description="API for screening CVs against Job Descriptions using Gemini 2.5 Flash and MongoDB",
     version="2.0.0"
 )
@@ -35,7 +35,7 @@ app = FastAPI(
 # Configure CORS
 origins = os.getenv(
     "ALLOWED_ORIGINS", 
-    "http://localhost:3000,http://127.0.0.1:3000,https://recrubotx.vercel.app,https://green-coast-0ded80d00.4.azurestaticapps.net"
+    "http://localhost:3000,http://127.0.0.1:3000,https://interveuu.vercel.app,https://green-coast-0ded80d00.4.azurestaticapps.net"
 ).split(",")
 
 app.add_middleware(
@@ -120,7 +120,7 @@ def get_interview_service() -> InterviewService:
 @app.get("/")
 async def root():
     return {
-        "message": "RecruBotX CV Screener API",
+        "message": "Interveuu CV Screener API",
         "version": "2.0.0",
         "status": "running",
         "database": "MongoDB"

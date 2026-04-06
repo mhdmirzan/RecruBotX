@@ -6,6 +6,7 @@ import {
     Clock, FileText, Search, Zap, Globe, DollarSign, BarChart3, UserCheck
 } from "lucide-react";
 import API_BASE_URL from "./apiConfig";
+import Logo from "./components/Logo";
 
 const WS_BASE = API_BASE_URL.replace(/^http/, "ws").replace("/api", "");
 
@@ -96,7 +97,10 @@ const SuperuserDashboard = () => {
     return (
         <div className="h-screen w-screen flex bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden fixed inset-0">
             <aside className="w-72 h-screen bg-white shadow-xl flex flex-col p-6 border-r border-gray-200 flex-shrink-0">
-                <div className="mb-8 text-center"><h1 className="text-3xl font-bold text-[#0a2a5e]">Interveuu</h1>
+                <div className="mb-8 text-center">
+                    <div className="flex items-center justify-center gap-2">
+                        <Logo className="h-7 w-auto" />
+                    </div>
                     <span className="inline-flex items-center gap-1.5 mt-2 text-xs font-medium text-[#0a2a5e]/70 bg-[#0a2a5e]/5 px-3 py-1 rounded-full"><ShieldCheck className="w-3.5 h-3.5" /> Admin Panel</span>
                 </div>
                 <nav className="flex flex-col space-y-1">

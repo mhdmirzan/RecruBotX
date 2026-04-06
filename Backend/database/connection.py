@@ -2,7 +2,7 @@
 Database Configuration and Connection
 ======================================
 
-MongoDB connection management for RecruBotX.
+MongoDB connection management for Interveuu.
 """
 
 import os
@@ -44,7 +44,7 @@ class DatabaseManager:
                 db_name = parsed.get("database")
             except Exception:
                 db_name = None
-        db_name = db_name or "recrubotx"
+        db_name = db_name or "interveuu"
         
         try:
             # MongoDB Atlas optimized settings

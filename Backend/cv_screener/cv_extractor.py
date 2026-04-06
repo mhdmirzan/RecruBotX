@@ -13,7 +13,7 @@ Extracts:
 - Certifications
 - Professional Summary
 
-Author: RecruBotX Team
+Author: Interveuu Team
 """
 
 from google import genai

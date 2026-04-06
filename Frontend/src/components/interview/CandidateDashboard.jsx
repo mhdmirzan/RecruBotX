@@ -12,6 +12,7 @@ import {
     BarChart,
     CheckCircle
 } from 'lucide-react';
+import Logo from "../Logo";
 
 const CandidateDashboard = ({ candidateName, onStartInterview }) => {
     return (
@@ -21,10 +22,7 @@ const CandidateDashboard = ({ candidateName, onStartInterview }) => {
             <aside className="w-72 bg-white border-r border-slate-200 fixed h-full z-10 hidden md:flex flex-col">
                 <div className="p-8 pb-4">
                     <div className="flex items-center gap-3 mb-8">
-                        <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-bold text-xl">
-                            R
-                        </div>
-                        <h1 className="text-xl font-bold tracking-tight text-slate-900">Interveuu</h1>
+                        <Logo className="h-8 w-auto" />
                     </div>
 
                     <nav className="space-y-1">

@@ -3,7 +3,7 @@ Initialize MongoDB Atlas Collections for CV Screening
 ======================================================
 
 Run this script to set up all necessary collections and indexes
-for the RecruBotX CV screening system.
+for the Interveuu CV screening system.
 
 Usage:
     python database/init_collections.py
@@ -377,6 +377,6 @@ async def init_collections():
 if __name__ == "__main__":
     print("=" * 60)
     print("MongoDB Atlas Collection Initialization")
-    print("RecruBotX CV Screening System")
+    print("Interveuu CV Screening System")
     print("=" * 60)
     asyncio.run(init_collections())

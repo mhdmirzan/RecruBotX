@@ -19,6 +19,7 @@ import {
     Clock
 } from "lucide-react";
 import API_BASE_URL from "./apiConfig";
+import Logo from "./components/Logo";
 
 const CURRENCIES = [
     { code: "USD", name: "US Dollar" },
@@ -439,8 +440,8 @@ const JobPosting = () => {
         <div className="h-screen w-screen flex bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden fixed inset-0">
             {/* Sidebar */}
             <aside className="w-72 h-screen bg-white shadow-xl flex flex-col p-6 border-r border-gray-200 flex-shrink-0">
-                <div className="mb-8 text-center flex-shrink-0">
-                    <h1 className="text-3xl font-bold text-[#0a2a5e]">Interveuu</h1>
+                <div className="mb-8 flex items-center justify-center gap-2 flex-shrink-0">
+                    <Logo className="h-8 w-auto" />
                 </div>
 
                 <nav className="flex flex-col space-y-4 text-gray-700 flex-shrink-0">

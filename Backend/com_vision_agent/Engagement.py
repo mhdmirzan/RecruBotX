@@ -164,7 +164,7 @@ try:
         cv2.putText(frame, f"Engagement: {engagement_score}%", (16, 90), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 200, 0), 2)
         cv2.putText(frame, f"Attentiveness (last {int(WINDOW_SECONDS)}s): {attentiveness_pct}%", (16, 120), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 100, 0), 2)
 
-        cv2.imshow("RecruBotX - Interview Analyzer", frame)
+        cv2.imshow("Interveuu - Interview Analyzer", frame)
 
         # quick sleep to avoid 100% CPU if needed (useful on some machines)
         if cv2.waitKey(1) & 0xFF == ord('q'):
