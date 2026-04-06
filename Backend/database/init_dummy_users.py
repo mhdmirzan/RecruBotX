@@ -94,6 +94,6 @@ async def init_dummy_users():
 
 if __name__ == "__main__":
     print("=" * 60)
-    print("RecruBotX - Initialize Dummy Users")
+    print("Interveuu - Initialize Dummy Users")
     print("=" * 60)
     asyncio.run(init_dummy_users())

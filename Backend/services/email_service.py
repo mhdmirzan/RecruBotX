@@ -87,7 +87,7 @@ def _otp_html(otp: str) -> str:
     return f"""
     <div style="font-family: sans-serif; max-width: 500px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 16px; overflow: hidden;">
         <div style="background: #0a2a5e; padding: 32px; text-align: center; color: white;">
-            <h1>RecruBotX</h1>
+            <h1>Interveuu</h1>
         </div>
         <div style="padding: 32px; text-align: center;">
             <p>Your verification code is:</p>
@@ -101,7 +101,7 @@ def _otp_html(otp: str) -> str:
 async def _send_via_brevo(to_email: str, otp: str) -> bool:
     api_key = os.getenv("BREVO_API_KEY", "").strip()
     from_email = os.getenv("EMAIL_FROM_EMAIL", "").strip()
-    from_name = os.getenv("EMAIL_FROM_NAME", "RecruBotX").strip() or "RecruBotX"
+    from_name = os.getenv("EMAIL_FROM_NAME", "Interveuu").strip() or "Interveuu"
     if not api_key or not from_email:
         return False
 
@@ -114,7 +114,7 @@ async def _send_via_brevo(to_email: str, otp: str) -> bool:
     payload = {
         "sender": {"name": from_name, "email": from_email},
         "to": [{"email": to_email}],
-        "subject": f"RecruBotX - Your Verification Code: {otp}",
+        "subject": f"Interveuu - Your Verification Code: {otp}",
         "htmlContent": _otp_html(otp),
     }
 
@@ -131,7 +131,7 @@ async def _send_via_brevo(to_email: str, otp: str) -> bool:
 
 async def _send_via_resend(to_email: str, otp: str) -> bool:
     api_key = os.getenv("RESEND_API_KEY", "").strip()
-    resend_from = os.getenv("RESEND_FROM", "RecruBotX <onboarding@resend.dev>").strip()
+    resend_from = os.getenv("RESEND_FROM", "Interveuu <onboarding@resend.dev>").strip()
     if not api_key:
         return False
 
@@ -144,7 +144,7 @@ async def _send_via_resend(to_email: str, otp: str) -> bool:
     payload = {
         "from": resend_from,
         "to": [to_email],
-        "subject": f"RecruBotX - Your Verification Code: {otp}",
+        "subject": f"Interveuu - Your Verification Code: {otp}",
         "html": _otp_html(otp),
     }
 

@@ -1,7 +1,7 @@
-# RecruBotX Backend - AI Recruitment Engine
+# Interveuu Backend - AI Recruitment Engine
 
 ## 🚀 Overview
-The RecruBotX Backend is a FastAPI-powered service that handles the heavy lifting of the recruitment process. It integrates Google Gemini AI for CV screening, voice interview management, and candidate ranking, all backed by a persistent MongoDB database.
+The Interveuu Backend is a FastAPI-powered service that handles the heavy lifting of the recruitment process. It integrates Google Gemini AI for CV screening, voice interview management, and candidate ranking, all backed by a persistent MongoDB database.
 
 ---
 
@@ -31,7 +31,7 @@ The RecruBotX Backend is a FastAPI-powered service that handles the heavy liftin
    ```env
    GEMINI_API_KEY=your_key
    MONGODB_URL=mongodb://localhost:27017
-   MONGODB_DB_NAME=recrubotx
+   MONGODB_DB_NAME=interveuu
    HOST=0.0.0.0
    PORT=8000
    ```
@@ -114,4 +114,4 @@ If you encounter `The resolution lifetime expired` or DNS errors with MongoDB At
 
 **Version:** 2.2.0  
 **Last Updated:** February 2026  
-**Developer:** Team RecruBotX  
+**Developer:** Team Interveuu  

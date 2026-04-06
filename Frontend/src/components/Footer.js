@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Bot, Mail, MapPin, Twitter, Linkedin, Github } from 'lucide-react';
+import { Mail, MapPin, Twitter, Linkedin, Github } from 'lucide-react';
+import Logo from "./Logo";
 
 const Footer = () => {
   return (
@@ -12,10 +13,7 @@ const Footer = () => {
           {/* Left: Logo & Tagline - Takes 4 columns */}
           <div className="md:col-span-4 space-y-6">
             <Link to="/" className="flex items-center space-x-2">
-              <div className="w-10 h-10 bg-gradient-to-r from-primary-accent to-blue-500 rounded-lg flex items-center justify-center">
-                <Bot className="w-5 h-5 text-white" />
-              </div>
-              <span className="text-xl font-bold">Interveuu</span>
+              <Logo className="h-9 w-auto" />
             </Link>
             <p className="text-sm max-w-sm leading-relaxed text-blue-200/80">
               AI-powered interview automation for smarter hiring. Transform your recruitment process with intelligent conversations.
