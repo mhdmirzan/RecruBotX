@@ -12,7 +12,7 @@ const StarTryInterviewButton = ({ onClick }) => {
       const div = pathRef.current;
       div.style.setProperty(
         "--path",
-        `path('M 0 0 H ${ div.offsetWidth } V ${ div.offsetHeight } H 0 V 0')`
+        `path('M 0 0 H ${div.offsetWidth} V ${div.offsetHeight} H 0 V 0')`
       );
     }
   }, []);
@@ -47,12 +47,10 @@ const StarTryInterviewButton = ({ onClick }) => {
   );
 };
 
-const CountUpValue = ({ target, prefix = "", suffix = "", duration = 1400, isVisible = false }) => {
+const CountUpValue = ({ target, prefix = "", suffix = "", duration = 1400 }) => {
   const [value, setValue] = useState(0);
 
   useEffect(() => {
-    if (!isVisible) return;
-
     let frameId;
     const startTime = performance.now();
 
@@ -68,9 +66,9 @@ const CountUpValue = ({ target, prefix = "", suffix = "", duration = 1400, isVis
 
     frameId = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(frameId);
-  }, [target, duration, isVisible]);
+  }, [target, duration]);
 
-  return <>{`${ prefix }${ Math.round(value) }${ suffix }`}</>;
+  return <>{`${prefix}${Math.round(value)}${suffix}`}</>;
 };
 
 const highlightPills = [
@@ -114,9 +112,7 @@ const statsVariants = {
 
 const Hero = () => {
   const [showDemoModal, setShowDemoModal] = useState(false);
-  const [statsVisible, setStatsVisible] = useState(false);
   const canvasRef = useRef(null);
-  const statsRef = useRef(null);
   const mouseRef = useRef({ x: 0, y: 0 });
   const targetMouseRef = useRef({ x: 0, y: 0 });
 
@@ -249,30 +245,6 @@ const Hero = () => {
     };
   }, []);
 
-  // Intersection Observer for stats animation trigger
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setStatsVisible(true);
-        } else {
-          setStatsVisible(false);
-        }
-      },
-      {
-        threshold: 0.3,
-      }
-    );
-
-    if (statsRef.current) {
-      observer.observe(statsRef.current);
-    }
-
-    return () => {
-      observer.disconnect();
-    };
-  }, []);
-
   return (
     <section
       className="relative isolate flex min-h-screen w-full items-center justify-center overflow-hidden bg-white"
@@ -355,7 +327,6 @@ const Hero = () => {
           </motion.ul>
 
           <motion.div
-            ref={statsRef}
             variants={statsVariants}
             className="grid gap-4 rounded-3xl border border-[#0a2a5e]/10 bg-white/50 p-8 backdrop-blur-md sm:grid-cols-3 max-w-4xl mx-auto shadow-xl shadow-[#0a2a5e]/5"
           >
@@ -370,7 +341,6 @@ const Hero = () => {
                 </div>
                 <div className="text-4xl lg:text-5xl font-bold text-[#0a2a5e]">
                   <CountUpValue
-                    isVisible={statsVisible}
                     target={stat.target}
                     prefix={stat.prefix}
                     suffix={stat.suffix}
