@@ -13,7 +13,7 @@ const Footer = () => {
           {/* Left: Logo & Tagline - Takes 4 columns */}
           <div className="md:col-span-4 space-y-6">
             <Link to="/" className="flex items-center space-x-2">
-              <Logo className="h-10 w-auto" />
+              <Logo className="h-10 w-auto brightness-0 invert" />
             </Link>
             <p className="text-sm max-w-sm leading-relaxed text-blue-200/80">
               AI-powered interview automation for smarter hiring. Transform your recruitment process with intelligent conversations.
@@ -65,10 +65,10 @@ const Footer = () => {
               <div className="flex items-center space-x-3">
                 <Mail className="w-4 h-4 text-blue-400" />
                 <a
-                  href="mailto:interveuu@uettaxila.edu.pk"
+                  href="mailto:interveuu@gmail.com"
                   className="text-sm text-blue-200/80 hover:text-white transition"
                 >
-                  interveuu@uettaxila.edu.pk
+                  interveuu@gmail.com
                 </a>
               </div>
               <div className="flex items-start space-x-3">

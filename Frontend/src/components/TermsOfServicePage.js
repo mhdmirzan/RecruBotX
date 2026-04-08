@@ -325,7 +325,7 @@ const TermsOfServicePage = () => {
                 },
                 {
                     heading: "Informal Resolution", items: [
-                        "Before filing any formal claim, you agree to try resolving disputes informally by contacting us at interveuu@uettaxila.edu.pk"
+                        "Before filing any formal claim, you agree to try resolving disputes informally by contacting us at interveuu@gmail.com"
                     ]
                 },
                 {
@@ -387,7 +387,7 @@ const TermsOfServicePage = () => {
                     heading: "Interveuu", items: [
                         "UET Taxila, Rawalpindi",
                         "Punjab, Pakistan",
-                        "Email: interveuu@uettaxila.edu.pk"
+                        "Email: interveuu@gmail.com"
                     ]
                 },
                 "For legal inquiries, please include \"Legal\" in your subject line."
@@ -510,11 +510,11 @@ const TermsOfServicePage = () => {
                             Contact our team for any legal inquiries
                         </p>
                         <a
-                            href="mailto:interveuu@uettaxila.edu.pk"
+                            href="mailto:interveuu@gmail.com"
                             className="inline-flex items-center gap-2 bg-white text-[#0a2a5e] px-5 py-2.5 rounded-lg font-medium text-sm hover:bg-blue-50 transition-colors"
                         >
                             <Mail className="w-4 h-4" />
-                            interveuu@uettaxila.edu.pk
+                            interveuu@gmail.com
                         </a>
                     </motion.div>
                 </div>

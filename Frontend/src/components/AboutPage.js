@@ -337,8 +337,8 @@ const AboutPage = () => {
                                     <Mail className="w-6 h-6" />
                                     <div className="text-left">
                                         <p className="font-medium">Email Us</p>
-                                        <a href="mailto:interveuu@uettaxila.edu.pk" className="text-blue-200 text-sm hover:text-white transition-colors">
-                                            interveuu@uettaxila.edu.pk
+                                        <a href="mailto:interveuu@gmail.com" className="text-blue-200 text-sm hover:text-white transition-colors">
+                                            interveuu@gmail.com
                                         </a>
                                     </div>
                                 </div>

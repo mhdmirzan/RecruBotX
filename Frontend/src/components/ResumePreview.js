@@ -234,7 +234,7 @@ const ResumePreview = ({ resume, template = "Simple" }) => {
     return (
       <div id="resume-preview-content" className="w-full max-w-4xl mx-auto bg-white" style={{ minHeight: '842px', height: '842px', maxHeight: '842px' }}>
         {/* Header Section with Profile Photo and Curved Design */}
-        <div className="relative flex items-center mb-4">
+        <div className="relative flex items-center mb-0">
           {/* Profile Photo - Large circular with white frame */}
           <div className="relative z-10 flex-shrink-0">
             {resume.profileImage ? (
@@ -270,7 +270,7 @@ const ResumePreview = ({ resume, template = "Simple" }) => {
         {/* Two-column content area */}
         <div className="flex gap-1">
           {/* Left Sidebar - Rounded light blue background */}
-          <div className="w-[35%] bg-slate-200 px-6 py-12 pt-12 rounded-tl-[40px] rounded-tr-[40px]">
+          <div className="w-[35%] bg-slate-200 px-8 py-12 rounded-tl-[60px] rounded-tr-[60px]">
             {/* Contact Information */}
             <div className="mb-8">
               <div className="space-y-3 text-sm text-gray-700">
@@ -633,9 +633,9 @@ const ResumePreview = ({ resume, template = "Simple" }) => {
     );
   }
 
-  // Default Single Column Template (Simple)
+  // Default Single Column Template
   return (
-    <div id="resume-preview-content" className="w-full max-w-4xl mx-auto bg-white p-8 font-sans text-sm leading-relaxed" style={{ minHeight: '842px', height: '842px', maxHeight: '842px' }}>
+    <div id="resume-preview-content" className="w-full max-w-4xl mx-auto bg-white p-8 font-sans text-sm leading-relaxed">
       {/* Header Section */}
       <div className="text-center border-b-2 border-gray-800 pb-4 mb-6">
         <h1 className="text-3xl font-bold text-gray-900 uppercase tracking-wide">

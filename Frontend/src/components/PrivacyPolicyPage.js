@@ -197,7 +197,7 @@ const PrivacyPolicyPage = () => {
                         "Withdraw Consent: Withdraw consent where processing is based on consent"
                     ]
                 },
-                "To exercise these rights, contact us at interveuu@uettaxila.edu.pk. We will respond within 30 days."
+                "To exercise these rights, contact us at interveuu@gmail.com. We will respond within 30 days."
             ]
         },
         {
@@ -224,7 +224,7 @@ const PrivacyPolicyPage = () => {
         {
             title: "11. Children's Privacy",
             content: [
-                "Interveuu is not intended for individuals under 18 years of age. We do not knowingly collect personal information from children. If you believe we have inadvertently collected information from a child, please contact us immediately at interveuu@uettaxila.edu.pk."
+                "Interveuu is not intended for individuals under 18 years of age. We do not knowingly collect personal information from children. If you believe we have inadvertently collected information from a child, please contact us immediately at interveuu@gmail.com."
             ]
         },
         {
@@ -249,7 +249,7 @@ const PrivacyPolicyPage = () => {
                     heading: "Interveuu", items: [
                         "UET Taxila, Rawalpindi",
                         "Punjab, Pakistan",
-                        "Email: interveuu@uettaxila.edu.pk"
+                        "Email: interveuu@gmail.com"
                     ]
                 },
                 "For privacy-specific inquiries, please include \"Privacy\" in your subject line."
@@ -372,11 +372,11 @@ const PrivacyPolicyPage = () => {
                             Contact our team for any privacy-related inquiries
                         </p>
                         <a
-                            href="mailto:interveuu@uettaxila.edu.pk"
+                            href="mailto:interveuu@gmail.com"
                             className="inline-flex items-center gap-2 bg-white text-[#0a2a5e] px-5 py-2.5 rounded-lg font-medium text-sm hover:bg-blue-50 transition-colors"
                         >
                             <Mail className="w-4 h-4" />
-                            interveuu@uettaxila.edu.pk
+                            interveuu@gmail.com
                         </a>
                     </motion.div>
                 </div>
