@@ -8,6 +8,10 @@ services:
     envVars:
       - key: MONGODB_URL
         sync: false # Set manually in Render dashboard
+      - key: MONGODB_DB_NAME
+        value: recrubotx
+      - key: MONGODB_STRICT_STARTUP
+        value: "true"
       - key: GEMINI_API_KEY
         sync: false # Set manually in Render dashboard
       - key: DEEPGRAM_API_KEY

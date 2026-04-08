@@ -6,6 +6,7 @@ MongoDB connection management for Interveuu.
 """
 
 import os
+import asyncio
 from typing import Optional
 
 from dotenv import load_dotenv
@@ -37,7 +38,7 @@ class DatabaseManager:
             print("  Required env var: MONGODB_URL=mongodb+srv://...")
 
         # Prefer explicit env var, otherwise try to infer DB name from URI.
-        db_name = os.getenv("MONGODB_DB_NAME")
+        db_name = (os.getenv("MONGODB_DB_NAME") or "").strip()
         if not db_name:
             try:
                 parsed = parse_uri(mongodb_url)
@@ -46,47 +47,64 @@ class DatabaseManager:
                 db_name = None
         db_name = db_name or "recrubotx"
         
-        try:
-            # MongoDB Atlas optimized settings
-            client_options = {
-                "serverSelectionTimeoutMS": 5000,  # 5 seconds is enough for fail-fast
-                "connectTimeoutMS": 5000,
-                "socketTimeoutMS": 45000,
-                "maxPoolSize": 50,
-                "minPoolSize": 10,
-                "maxIdleTimeMS": 45000,
-            }
-            
-            # Add retryWrites for Atlas
-            if "mongodb+srv://" in mongodb_url or "retryWrites" not in mongodb_url:
-                client_options["retryWrites"] = True
-            
-            self.client = AsyncIOMotorClient(mongodb_url, **client_options)
-            self.db = self.client[db_name]
-            
-            # Test connection
-            await self.client.admin.command('ping')
-            print(f"- Connected to MongoDB: {db_name}")
-            
-            # Create indexes
-            await self._create_indexes()
-            
-        except Exception as e:
-            error_msg = str(e)
-            print(f"x Failed to connect to MongoDB: {mongodb_url.split('@')[-1]}")
-            print(f"  Error: {error_msg}")
-            
-            if "[Errno 11001]" in error_msg or "getaddrinfo failed" in error_msg or "DNS" in error_msg:
-                print("\n- DNS RESOLUTION ERROR DETECTED")
-                print("Your computer cannot resolve the MongoDB Atlas address.")
-                print("FIX: See MONGODB_DNS_FIX.md in the project root.")
-                print("Quick Fix: Change your Windows DNS to 8.8.8.8 (Google DNS).\n")
-            elif "timed out" in error_msg.lower():
-                print("\n- CONNECTION TIMEOUT")
-                print("Could not reach the database. Check if your IP is whitelisted in MongoDB Atlas.")
-                print("Or if you are using localhost, ensure MongoDB is actually running locally.\n")
-            
-            raise
+        # Atlas-friendly defaults for hosted environments (cold starts, DNS jitter).
+        server_selection_timeout = int(os.getenv("MONGODB_SERVER_SELECTION_TIMEOUT_MS", "30000"))
+        connect_timeout = int(os.getenv("MONGODB_CONNECT_TIMEOUT_MS", "20000"))
+        socket_timeout = int(os.getenv("MONGODB_SOCKET_TIMEOUT_MS", "60000"))
+        max_pool_size = int(os.getenv("MONGODB_MAX_POOL_SIZE", "30"))
+        min_pool_size = int(os.getenv("MONGODB_MIN_POOL_SIZE", "0"))
+
+        client_options = {
+            "serverSelectionTimeoutMS": server_selection_timeout,
+            "connectTimeoutMS": connect_timeout,
+            "socketTimeoutMS": socket_timeout,
+            "maxPoolSize": max_pool_size,
+            "minPoolSize": min_pool_size,
+            "maxIdleTimeMS": 60000,
+            "appName": "interveuu-backend",
+            "retryWrites": True,
+        }
+
+        if mongodb_url.startswith("mongodb+srv://"):
+            client_options["tls"] = True
+
+        last_error = None
+        for attempt in range(1, 4):
+            try:
+                self.client = AsyncIOMotorClient(mongodb_url, **client_options)
+                self.db = self.client[db_name]
+
+                # Test connection
+                await self.client.admin.command("ping")
+                print(f"- Connected to MongoDB: {db_name}")
+
+                # Create indexes
+                await self._create_indexes()
+                return
+            except Exception as e:
+                last_error = e
+                if self.client:
+                    self.client.close()
+                self.client = None
+                self.db = None
+                print(f"x MongoDB connection attempt {attempt}/3 failed: {e}")
+                if attempt < 3:
+                    await asyncio.sleep(attempt * 2)
+
+        error_msg = str(last_error)
+        print(f"x Failed to connect to MongoDB: {mongodb_url.split('@')[-1]}")
+        print(f"  Error: {error_msg}")
+
+        if "[Errno 11001]" in error_msg or "getaddrinfo failed" in error_msg or "DNS" in error_msg:
+            print("\n- DNS RESOLUTION ERROR DETECTED")
+            print("Could not resolve the MongoDB Atlas hostname from the hosting environment.")
+            print("Verify the Atlas SRV URL and hosting DNS/network egress settings.\n")
+        elif "timed out" in error_msg.lower() or "serverselectiontimeout" in error_msg.lower():
+            print("\n- CONNECTION TIMEOUT")
+            print("Could not reach MongoDB Atlas in time.")
+            print("Check Atlas Network Access allowlist and cluster status.\n")
+
+        raise last_error
     
     async def disconnect(self):
         """Close MongoDB connection."""
