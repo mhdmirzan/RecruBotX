@@ -52,15 +52,25 @@ const DemoInterviewModal = ({ isOpen, onClose }) => {
       submitData.append("job_title", formData.jobTitle);
       submitData.append("candidate_name", formData.candidateName || "Demo User");
 
+      console.log('Starting demo interview call to:', `${API_BASE_URL}/interview/start-demo`);
+      
       const response = await fetch(`${API_BASE_URL}/interview/start-demo`, {
         method: "POST",
         body: submitData
       });
 
-      const data = await response.json();
-
+      console.log('Response status:', response.status);
+      
       if (!response.ok) {
-        throw new Error(data.detail || "Failed to start demo interview");
+        const error_data = await response.json();
+        throw new Error(error_data.detail || `HTTP ${response.status}: Failed to start interview`);
+      }
+
+      const data = await response.json();
+      console.log('Interview started successfully:', data);
+
+      if (!data.session_id) {
+        throw new Error("No session ID returned from server");
       }
 
       // Pre-close so we don't see it when pressing back
@@ -69,13 +79,14 @@ const DemoInterviewModal = ({ isOpen, onClose }) => {
       navigate("/candidate/interview-room", {
         state: {
           sessionId: data.session_id,
-          candidateName: data.candidate_name,
-          jobTitle: data.job_title,
+          candidateName: data.candidate_name || formData.candidateName,
+          jobTitle: data.job_title || formData.jobTitle,
           isDemo: true
         }
       });
     } catch (err) {
-      setError(err.message);
+      console.error('Error starting demo interview:', err);
+      setError(err.message || "Failed to start interview. Please try again.");
       setIsLoading(false);
     }
   };

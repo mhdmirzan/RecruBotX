@@ -230,7 +230,7 @@ const SuperuserAdmins = () => {
                             <div>
                                 <label className="block text-xs font-medium text-gray-600 mb-1">Email</label>
                                 <input type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                    required placeholder="admin@interveuu.com"
+                                    required placeholder="interveuu@gmail.com"
                                     className="w-full rounded-xl px-3 py-2.5 text-sm text-gray-900 bg-gray-50 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#0a2a5e]/30" />
                             </div>
 
