@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { TrendingDown, Clock, Users, Award, Target, Zap } from "lucide-react";
 
@@ -7,45 +7,103 @@ const fadeInUp = {
   animate: { opacity: 1, y: 0, transition: { duration: 0.6 } },
 };
 
+const CountUpValue = ({
+  target,
+  prefix = "",
+  suffix = "",
+  duration = 1400,
+  trigger = 0,
+}) => {
+  const [value, setValue] = useState(0);
+
+  useEffect(() => {
+    let frameId;
+    const startTime = performance.now();
+    setValue(0);
+
+    const animate = (now) => {
+      const progress = Math.min((now - startTime) / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setValue(target * eased);
+
+      if (progress < 1) {
+        frameId = requestAnimationFrame(animate);
+      }
+    };
+
+    frameId = requestAnimationFrame(animate);
+
+    return () => {
+      if (frameId) cancelAnimationFrame(frameId);
+    };
+  }, [duration, target, trigger]);
+
+  return <>{`${prefix}${Math.round(value)}${suffix}`}</>;
+};
+
+const statCardVariants = {
+  initial: { opacity: 0, y: 30 },
+  animate: ({ index, total, direction }) => ({
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.55,
+      ease: "easeOut",
+      delay: (direction === "topToBottom" ? index : total - 1 - index) * 0.1,
+    },
+  }),
+};
+
 const Stats = () => {
+  const sectionRef = useRef(null);
+  const [countTrigger, setCountTrigger] = useState(0);
+  const [isInView, setIsInView] = useState(false);
+  const [staggerDirection, setStaggerDirection] = useState("topToBottom");
+
   const data = [
     {
-      value: "95%",
+      target: 95,
+      suffix: "%",
       label: "Bias Reduction",
       icon: TrendingDown,
       gradient: "from-emerald-500 to-teal-400",
       description: "Fairer hiring decisions",
     },
     {
-      value: "70%",
+      target: 70,
+      suffix: "%",
       label: "Time Saved",
       icon: Clock,
       gradient: "from-blue-500 to-cyan-400",
       description: "Faster recruitment process",
     },
     {
-      value: "10k+",
+      target: 10,
+      suffix: "k+",
       label: "Interviews Conducted",
       icon: Users,
       gradient: "from-violet-500 to-purple-400",
       description: "Successful placements",
     },
     {
-      value: "98%",
+      target: 98,
+      suffix: "%",
       label: "Client Satisfaction",
       icon: Award,
       gradient: "from-amber-500 to-orange-400",
       description: "Happy customers",
     },
     {
-      value: "50+",
+      target: 50,
+      suffix: "+",
       label: "Enterprise Clients",
       icon: Target,
       gradient: "from-pink-500 to-rose-400",
       description: "Trusted partnerships",
     },
     {
-      value: "24/7",
+      target: 24,
+      suffix: "/7",
       label: "AI Availability",
       icon: Zap,
       gradient: "from-indigo-500 to-blue-400",
@@ -53,8 +111,34 @@ const Stats = () => {
     },
   ];
 
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsInView(true);
+          setCountTrigger((prev) => prev + 1);
+          setStaggerDirection((prev) =>
+            prev === "topToBottom" ? "bottomToTop" : "topToBottom"
+          );
+        } else {
+          setIsInView(false);
+        }
+      },
+      { threshold: 0.25 }
+    );
+
+    if (sectionRef.current) {
+      observer.observe(sectionRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, []);
+
   return (
-    <section className="relative px-6 md:px-16 py-20 bg-gradient-to-br from-[#0a1f44] via-[#0a2a5e] to-[#1a3a6e] overflow-hidden">
+    <section
+      ref={sectionRef}
+      className="relative px-6 md:px-16 py-20 bg-gradient-to-br from-[#0a1f44] via-[#0a2a5e] to-[#1a3a6e] overflow-hidden"
+    >
       {/* Background decorative elements */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute top-1/4 right-1/4 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl" />
@@ -82,15 +166,19 @@ const Stats = () => {
         <motion.div
           className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-5"
           initial="initial"
-          whileInView="animate"
-          viewport={{ once: true }}
+          animate={isInView ? "animate" : "initial"}
         >
           {data.map((item, i) => {
             const IconComponent = item.icon;
             return (
               <motion.div
                 key={i}
-                variants={fadeInUp}
+                variants={statCardVariants}
+                custom={{
+                  index: i,
+                  total: data.length,
+                  direction: staggerDirection,
+                }}
                 className="group bg-white/5 backdrop-blur-md border border-white/10 p-6 rounded-2xl shadow-lg hover:shadow-xl hover:bg-white/10 transition-all duration-500 text-center relative overflow-hidden"
               >
                 {/* Icon */}
@@ -102,7 +190,12 @@ const Stats = () => {
 
                 {/* Value */}
                 <h3 className="text-3xl font-bold bg-gradient-to-r from-white to-blue-200 bg-clip-text text-transparent mb-1">
-                  {item.value}
+                  <CountUpValue
+                    target={item.target}
+                    suffix={item.suffix}
+                    trigger={countTrigger}
+                    duration={1500 + i * 120}
+                  />
                 </h3>
 
                 {/* Label */}

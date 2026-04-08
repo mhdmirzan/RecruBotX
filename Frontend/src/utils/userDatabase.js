@@ -1,7 +1,7 @@
 // User database integration with MongoDB backend
 
 import API_BASE_URL from "../apiConfig";
-const CURRENT_USER_KEY = 'interveuu_current_user';
+const CURRENT_USER_KEY = 'recrubotx_current_user';
 
 // No longer need to initialize dummy users - they're in MongoDB
 export const initializeDummyUsers = () => {

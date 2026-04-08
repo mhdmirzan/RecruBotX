@@ -92,7 +92,7 @@ const SuperuserAdmins = () => {
             {/* Sidebar */}
             <aside className="w-72 h-screen bg-white shadow-xl flex flex-col p-6 border-r border-gray-200 flex-shrink-0">
                 <div className="mb-8 text-center flex-shrink-0">
-                    <h1 className="text-3xl font-bold text-[#0a2a5e]">Interveuu</h1>
+                    <h1 className="text-3xl font-bold text-[#0a2a5e]">RecruBotX</h1>
                     <span className="inline-flex items-center gap-1.5 mt-2 text-xs font-medium text-[#0a2a5e]/70 bg-[#0a2a5e]/5 px-3 py-1 rounded-full">
                         <ShieldCheck className="w-3.5 h-3.5" /> Admin Panel
                     </span>
@@ -230,7 +230,7 @@ const SuperuserAdmins = () => {
                             <div>
                                 <label className="block text-xs font-medium text-gray-600 mb-1">Email</label>
                                 <input type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                    required placeholder="admin@interveuu.com"
+                                    required placeholder="admin@recrubotx.com"
                                     className="w-full rounded-xl px-3 py-2.5 text-sm text-gray-900 bg-gray-50 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#0a2a5e]/30" />
                             </div>
 

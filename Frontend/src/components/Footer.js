@@ -13,7 +13,7 @@ const Footer = () => {
           {/* Left: Logo & Tagline - Takes 4 columns */}
           <div className="md:col-span-4 space-y-6">
             <Link to="/" className="flex items-center space-x-2">
-              <Logo className="h-10 w-auto" />
+              <Logo className="h-10 w-auto brightness-0 invert" />
             </Link>
             <p className="text-sm max-w-sm leading-relaxed text-blue-200/80">
               AI-powered interview automation for smarter hiring. Transform your recruitment process with intelligent conversations.
