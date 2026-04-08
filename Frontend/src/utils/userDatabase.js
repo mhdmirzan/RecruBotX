@@ -1,7 +1,8 @@
 // User database integration with MongoDB backend
 
 import API_BASE_URL from "../apiConfig";
-const CURRENT_USER_KEY = 'recrubotx_current_user';
+const CURRENT_USER_KEY = 'interveuu_current_user';
+const LEGACY_CURRENT_USER_KEY = 'recrubotx_current_user';
 
 // No longer need to initialize dummy users - they're in MongoDB
 export const initializeDummyUsers = () => {
@@ -162,11 +163,16 @@ export const loginUser = async (email, password) => {
 // Logout user
 export const logoutUser = () => {
   localStorage.removeItem(CURRENT_USER_KEY);
+  localStorage.removeItem(LEGACY_CURRENT_USER_KEY);
 };
 
 // Get current logged in user
 export const getCurrentUser = () => {
-  const user = localStorage.getItem(CURRENT_USER_KEY);
+  const user = localStorage.getItem(CURRENT_USER_KEY) || localStorage.getItem(LEGACY_CURRENT_USER_KEY);
+  if (user && !localStorage.getItem(CURRENT_USER_KEY)) {
+    localStorage.setItem(CURRENT_USER_KEY, user);
+    localStorage.removeItem(LEGACY_CURRENT_USER_KEY);
+  }
   return user ? JSON.parse(user) : null;
 };
 
