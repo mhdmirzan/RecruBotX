@@ -198,37 +198,51 @@ class InterviewService:
         # If user_input was INIT, request the AI to initiate the intro instead of simulating candidate readiness.
         prompt_input = "Please initiate the interview. Welcome me and follow your introduction instructions." if user_input == "INIT" else user_input
         
-        async for chunk in self.llm_service.generate_response(prompt_input, history=history):
-            ai_response_chunks.append(chunk)
-            yield chunk
+        try:
+            async for chunk in self.llm_service.generate_response(prompt_input, history=history):
+                ai_response_chunks.append(chunk)
+                yield chunk
+        except Exception as e:
+            # We catch exceptions to gracefully handle cancellations
+            pass
 
-        full_response = "".join(ai_response_chunks)
-        
-        # 5. Update Transcript with AI Response
-        session.transcript.append({"role": "interviewer", "content": full_response})
-        
-        # Determine if finished based on LLM output
-        response_lower = full_response.lower()
-        if any(phrase in response_lower for phrase in [
-            "interview is now concluded", 
-            "thank you for your time", 
-            "interview is concluded",
-            "concluding the interview",
-            "ending the interview",
-            "interview concluded"
-        ]):
-            session.stage = InterviewStage.FINISHED
-            
-        await self.db.interview_sessions.update_one(
-            {"session_id": session_id},
-            {
-                "$push": {"transcript": {"role": "interviewer", "content": full_response, "timestamp": datetime.utcnow()}},
-                "$set": {
-                    "state_overrides.stage": session.stage.value
-                }
-            },
-            upsert=False
-        )
+        finally:
+            full_response = "".join(ai_response_chunks)
+            if full_response.strip():
+                # 5. Update Transcript with AI Response
+                session.transcript.append({"role": "interviewer", "content": full_response})
+                
+                # Determine if finished based on LLM output
+                response_lower = full_response.lower()
+                if any(phrase in response_lower for phrase in [
+                    "interview is now concluded", 
+                    "thank you for your time", 
+                    "interview is concluded",
+                    "concluding the interview",
+                    "ending the interview",
+                    "interview concluded"
+                ]):
+                    session.stage = InterviewStage.FINISHED
+                    
+                import asyncio
+                
+                async def safe_db_update(sid, resp, stage_val):
+                    try:
+                        await self.db.interview_sessions.update_one(
+                            {"session_id": sid},
+                            {
+                                "$push": {"transcript": {"role": "interviewer", "content": resp, "timestamp": datetime.utcnow()}},
+                                "$set": {
+                                    "state_overrides.stage": stage_val
+                                }
+                            },
+                            upsert=False
+                        )
+                    except Exception as e:
+                        print(f"Error in safe DB update: {e}")
+
+                # Using create_task to ensure DB update survives task cancellation
+                asyncio.create_task(safe_db_update(session_id, full_response, session.stage.value))
 
     async def transcribe_audio(self, audio_bytes: bytes) -> str:
         return await self.stt_service.transcribe(audio_bytes)
