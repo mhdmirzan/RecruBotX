@@ -151,31 +151,29 @@ const LiveInterviewSession = ({
             {/* TOP HEADER OVERLAY */}
             <header className="w-full max-w-7xl mx-auto py-6 px-8 flex items-center justify-between z-20 relative">
                 <Logo className="h-8 w-auto relative z-50" />
+                
                 <div className="flex items-center gap-3">
-                    <div className="px-4 py-2 bg-white/60 backdrop-blur-md rounded-full shadow-[0_2px_10px_rgba(0,0,0,0.02)] border border-gray-100 flex items-center gap-2">
-                        <div className={`w-2 h-2 rounded-full ${isAiSpeaking ? 'bg-blue-500 animate-pulse' : isListening ? 'bg-red-500 animate-pulse' : 'bg-gray-300'}`}></div>
-                        <span className="text-sm font-medium text-[#111827]">
-                            {isAiSpeaking ? 'AI is speaking' : isListening ? 'Listening...' : 'Thinking...'}
-                        </span>
-                        <div className="w-px h-4 bg-gray-200 mx-1"></div>
-                        <span className="text-sm font-mono text-gray-500 flex items-center gap-1.5">
-                            <Clock className="w-3.5 h-3.5" />
+                    <div className="px-5 py-2.5 bg-white/80 backdrop-blur-xl rounded-full shadow-[0_2px_15px_rgba(0,0,0,0.03)] border border-gray-100 flex items-center gap-4 transition-all">
+                        <span className="text-sm font-semibold tracking-wide text-gray-700 flex items-center gap-1.5">
+                            <Clock className="w-4 h-4 text-[#3A7DFF]" />
                             {formatTime(elapsedTime)}
                         </span>
-                    </div>
-
-                    <div className="px-4 py-2 bg-white/60 backdrop-blur-md rounded-full shadow-[0_2px_10px_rgba(0,0,0,0.02)] border border-gray-100 font-medium text-[#111827] flex items-center gap-2 text-sm">
-                        <span>{jobRole}</span>
+                        
                         {isConnected !== undefined && (
                             <>
-                                <div className="w-px h-4 bg-gray-200 mx-1"></div>
+                                <div className="w-px h-4 bg-gray-200"></div>
                                 {isConnected ? (
-                                    <span className="flex items-center gap-1.5 text-green-600 font-medium text-xs uppercase tracking-wider">
-                                        <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span> Connected
+                                    <span className="flex items-center gap-2 text-[#111827] font-semibold text-sm">
+                                        <span className="relative flex h-2.5 w-2.5">
+                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                                            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
+                                        </span>
+                                        Connected
                                     </span>
                                 ) : (
-                                    <span className="flex items-center gap-1.5 text-orange-500 font-medium text-xs uppercase tracking-wider">
-                                        <span className="w-2 h-2 rounded-full bg-orange-500"></span> Connecting
+                                    <span className="flex items-center gap-2 text-gray-500 font-semibold text-sm">
+                                        <span className="w-2.5 h-2.5 rounded-full bg-orange-400 animate-pulse"></span> 
+                                        Connecting
                                     </span>
                                 )}
                             </>
