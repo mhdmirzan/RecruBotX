@@ -195,7 +195,7 @@ const LiveInterviewSession = ({
                         className="p-6 bg-white/80 backdrop-blur-xl rounded-[24px] shadow-[0_8px_40px_rgb(0,0,0,0.04)] border border-gray-100 flex items-center gap-5 transition-all duration-300 hover:shadow-[0_12px_50px_rgb(0,0,0,0.06)] shrink-0"
                     >
                         <div className="relative">
-                            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#0A2540] to-[#3A7DFF] flex items-center justify-center p-[2px] shadow-sm">
+                            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#0a2a5e] to-[#3A7DFF] flex items-center justify-center p-[2px] shadow-sm">
                                 <div className="w-full h-full bg-white rounded-[14px] flex items-center justify-center overflow-hidden">
                                     <Logo className="w-8 h-auto object-contain" />
                                 </div>
@@ -250,7 +250,7 @@ const LiveInterviewSession = ({
                                     {msg.role !== 'candidate' ? (
                                         <>
                                             <div className="flex items-center gap-2 ml-1">
-                                                <div className="w-6 h-6 rounded-md bg-[#0A2540] text-white flex items-center justify-center text-[10px] font-bold tracking-wider">AI</div>
+                                                <div className="w-6 h-6 rounded-md bg-[#0a2a5e] text-white flex items-center justify-center text-[10px] font-bold tracking-wider">AI</div>
                                             </div>
                                             <div className="bg-[#F8FAFC] p-4 lg:p-5 rounded-[20px] rounded-tl-sm border border-gray-100 shadow-sm relative">
                                                 <p className="text-[#111827] leading-relaxed text-sm whitespace-pre-wrap"><TypewriterText text={correctGrammar(msg.content)} typingSpeed={msg.speed || 40} /></p>
@@ -260,11 +260,11 @@ const LiveInterviewSession = ({
                                         <>
                                             <div className="flex items-center gap-2 mr-1">
                                                 <span className="text-xs font-medium text-gray-400">You</span>
-                                                <div className="w-6 h-6 rounded-md bg-gray-200 text-[#111827] flex items-center justify-center text-[10px] font-bold uppercase">
+                                                <div className="w-6 h-6 rounded-md bg-gray-200 text-[#0a2a5e] flex items-center justify-center text-[10px] font-bold uppercase">
                                                     {candidateName ? candidateName.charAt(0) : 'U'}
                                                 </div>
                                             </div>
-                                            <div className="bg-[#111827] p-4 lg:p-5 rounded-[20px] rounded-tr-sm shadow-[0_4px_14px_rgba(17,24,39,0.1)] text-white max-w-[90%]">
+                                            <div className="bg-[#0a2a5e] p-4 lg:p-5 rounded-[20px] rounded-tr-sm shadow-[0_4px_14px_rgba(10,37,64,0.25)] text-white max-w-[90%]">
                                                 <p className="text-sm leading-relaxed whitespace-pre-wrap opacity-95">{correctGrammar(msg.content)}</p>
                                             </div>
                                         </>
