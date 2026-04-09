@@ -30,26 +30,31 @@ manager = ConnectionManager()
 
 async def tts_worker(session_id: str, queue: asyncio.Queue, tts_service, web_manager: ConnectionManager):
     import base64
-    while True:
-        try:
+    try:
+        while True:
             text = await queue.get()
             if text is None:  # Sentinel
                 queue.task_done()
                 break
                 
-            tts_bytes = await tts_service.generate_speech(text)
-            if tts_bytes:
-                b64 = base64.b64encode(tts_bytes).decode('utf-8')
-                await web_manager.send_json(session_id, {
-                    "type": "audio_output",
-                    "payload": b64
-                })
-        except asyncio.CancelledError:
-            break
-        except Exception as e:
-            print(f"TTS Worker Error: {e}")
-        finally:
-            queue.task_done()
+            try:
+                tts_bytes = await tts_service.generate_speech(text)
+                if tts_bytes:
+                    b64 = base64.b64encode(tts_bytes).decode('utf-8')
+                    await web_manager.send_json(session_id, {
+                        "type": "audio_output",
+                        "payload": b64,
+                        "text": text
+                    })
+            except asyncio.CancelledError:
+                queue.task_done()
+                break
+            except Exception as e:
+                print(f"TTS Worker Error: {e}")
+            finally:
+                queue.task_done()
+    except asyncio.CancelledError:
+        pass
 
 async def process_llm_and_tts(session_id: str, input_text: str, service: InterviewService, web_manager: ConnectionManager):
     queue = asyncio.Queue()

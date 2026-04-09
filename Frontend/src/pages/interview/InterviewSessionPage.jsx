@@ -18,43 +18,44 @@ function App() {
   const [messages, setMessages] = useState([]);
   const [interimText, setInterimText] = useState('');
   const [liveCaption, setLiveCaption] = useState(''); // Live caption state
-  const pendingInterviewerText = useRef(''); // Buffer incoming text chunks
-  const wordBufferRef = useRef([]); // Buffer for incoming words
-  const captionIntervalRef = useRef(null);
+  const audioQueueRef = useRef([]); // FIFO Audio Queue
+  const endInterviewTimerRef = useRef(null); // Fix for overlapping listening state resets
+  const activeAudiosRef = useRef(new Set()); // For Crossfading multiple audios
+  const isBufferingRef = useRef(false);
 
-  // Synchronized Caption Streaming Effect
+  const [activeSentence, setActiveSentence] = useState(null); // { text, audioObj, words }
+  
+  // Custom caption rendering engine mapped to audio.currentTime
   useEffect(() => {
-    if (currentState === ConversationState.AI_SPEAKING) {
-      // Start streaming words
-      captionIntervalRef.current = setInterval(() => {
-        if (wordBufferRef.current.length > 0) {
-          // Take next word
-          const nextWord = wordBufferRef.current.shift();
-          setLiveCaption(prev => {
-            // Logic: Accumulate words until line is full (5 words), then clear and start fresh.
-            // This prevents multi-line wrap and keeps it synchronized.
-            const words = prev ? prev.split(' ') : [];
-            if (words.length >= 5) {
-              return nextWord; // Start new line
-            }
-            return prev ? prev + " " + nextWord : nextWord;
-          });
-        }
-      }, 270); // ADJUST SPEED HERE (Lower = Faster, Higher = Slower). 275ms = ~3.6 words/sec
-    } else {
-      // Cleanup when not speaking
-      if (captionIntervalRef.current) clearInterval(captionIntervalRef.current);
-      // Clear buffer and caption after short delay
-      if (wordBufferRef.current.length > 0 || liveCaption) {
-        const timer = setTimeout(() => {
-          setLiveCaption('');
-          wordBufferRef.current = [];
-        }, 500);
-        return () => clearTimeout(timer);
-      }
+    if (!activeSentence || !activeSentence.audioObj) {
+      return;
     }
-    return () => clearInterval(captionIntervalRef.current);
-  }, [currentState]);
+
+    const { audioObj, words } = activeSentence;
+    if (words.length === 0) return;
+
+    let animationFrameId;
+
+    const renderCaption = () => {
+      let progress = 0;
+      if (audioObj.duration && audioObj.duration > 0) {
+        progress = audioObj.currentTime / audioObj.duration;
+      }
+      
+      const wordsToShow = Math.max(1, Math.ceil(progress * words.length));
+      const textToDisplay = words.slice(0, wordsToShow).join(' ');
+      
+      setLiveCaption(textToDisplay);
+      
+      if (progress < 1) {
+        animationFrameId = requestAnimationFrame(renderCaption);
+      }
+    };
+
+    animationFrameId = requestAnimationFrame(renderCaption);
+
+    return () => cancelAnimationFrame(animationFrameId);
+  }, [activeSentence]);
 
   const [reportData, setReportData] = useState(null); // Stores report when interview ends
 
@@ -157,19 +158,17 @@ function App() {
         break;
 
       case 'text_chunk':
-        // Append streamed text to an invisible buffer rather than state directly to wait for audio
-        if (data.payload) {
-          pendingInterviewerText.current += data.payload;
-
-          // Push words to buffer for synchronized captioning
-          const words = data.payload.split(' ').filter(w => w.length > 0);
-          wordBufferRef.current.push(...words);
-        }
+        // Audio is now the single source of truth, text_chunks ignored for captions
         break;
 
       case 'audio_output':
         logDebug(`🔊 Audio Received`);
-        playAudio(data.payload);
+        if (endInterviewTimerRef.current) {
+            clearTimeout(endInterviewTimerRef.current);
+            endInterviewTimerRef.current = null;
+        }
+        audioQueueRef.current.push({ audio: data.payload, text: data.text });
+        processAudioQueue();
         break;
 
       case 'transcription':
@@ -208,11 +207,31 @@ function App() {
   };
 
   // --- Audio Logic ---
-  const playAudio = (base64String) => {
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.onended = null;
+  const processAudioQueue = () => {
+    if (audioQueueRef.current.length === 0) return;
+    
+    // Feature 4: Buffer until 2 chunks ready, or if it's been active already
+    if (activeAudiosRef.current.size === 0 && audioQueueRef.current.length < 2 && !isWrappingUp.current) {
+        if (!isBufferingRef.current) {
+            isBufferingRef.current = true;
+            // 1.0s fallback timeout in case the LLM only outputs 1 chunk overall
+            setTimeout(() => {
+                if (isBufferingRef.current) {
+                    processAudioQueueForce();
+                }
+            }, 1000);
+        }
+        return; 
     }
+    
+    processAudioQueueForce();
+  };
+
+  const processAudioQueueForce = () => {
+    if (audioQueueRef.current.length === 0) return;
+    isBufferingRef.current = false;
+    
+    const { audio: base64String, text } = audioQueueRef.current.shift();
 
     try {
       const byteCharacters = atob(base64String);
@@ -225,67 +244,82 @@ function App() {
       const url = URL.createObjectURL(blob);
 
       const audio = new Audio(url);
+      audio.crossfadeTriggered = false;
+      activeAudiosRef.current.add(audio);
       audioRef.current = audio;
+      
+      const sentenceWords = (text || "").split(' ').filter(w => w.trim().length > 0);
 
       audio.onplay = () => {
-        // Now that audio is actually playing, flush the buffered text!
-        if (pendingInterviewerText.current) {
-          const textToReveal = pendingInterviewerText.current;
+        // Render captions exactly matched to current audio time!
+        setActiveSentence({ text, audioObj: audio, words: sentenceWords });
 
-          // Calculate dynamic typing speed based on audio duration
-          let charSpeed = 40; // Default fallback
-          if (audio.duration && audio.duration !== Infinity) {
-            charSpeed = (audio.duration * 1000) / textToReveal.length;
-            charSpeed = Math.max(20, Math.min(charSpeed, 80)); // Clamp between reasonable bounds
-          } else {
-            charSpeed = 1000 / 18;  // Estimate ~18 chars/sec
-          }
-
-          pendingInterviewerText.current = ''; // Reset buffer
-
+        // Push text to transcript immediately
+        if (text) {
           setMessages(prev => {
             const lastMsg = prev[prev.length - 1];
             if (lastMsg && lastMsg.role === 'interviewer') {
               const newPrev = [...prev];
               newPrev[prev.length - 1] = {
                 ...lastMsg,
-                content: lastMsg.content + "\n\n" + textToReveal,
-                speed: charSpeed
+                content: lastMsg.content + " " + text,
+                speed: 0 // instantly appear since we use continuous audio pacing
               };
               return newPrev;
             }
-            return [...prev, { role: 'interviewer', content: textToReveal, speed: charSpeed }];
+            return [...prev, { role: 'interviewer', content: text, speed: 0 }];
           });
         }
+        
         conversationStateMachine.transition(ConversationState.AI_SPEAKING, { source: 'audio_started' });
+      };
+
+      // Feature 6: Crossfade logic
+      audio.ontimeupdate = () => {
+          if (audio.duration && audio.currentTime >= audio.duration - 0.08) {
+              if (!audio.crossfadeTriggered) {
+                  audio.crossfadeTriggered = true;
+                  if (audioQueueRef.current.length > 0) {
+                      processAudioQueueForce();
+                  }
+              }
+          }
       };
 
       audio.onended = () => {
         URL.revokeObjectURL(url);
-        audioRef.current = null;
-
-        if (isWrappingUp.current) {
-          // If we have report data already, skip loading screen and show report
-          if (reportData) {
-            setIsConcluding(false);
-            setSessionActive(false);
-          } else {
-            setIsConcluding(true);
-          }
-        } else {
-          // Delay listening to prevent self-hearing (echo cancellation buffer)
-          setTimeout(() => {
-            conversationStateMachine.transition(ConversationState.LISTENING, { source: 'audio_finished' });
-          }, 800);
+        activeAudiosRef.current.delete(audio);
+        
+        if (activeAudiosRef.current.size === 0 && audioQueueRef.current.length === 0) {
+            if (isWrappingUp.current) {
+              if (reportData) {
+                setIsConcluding(false);
+                setSessionActive(false);
+              } else {
+                setIsConcluding(true);
+              }
+            } else {
+              // Feature 7/8: Spectrum State Control & Continuity Layer
+              endInterviewTimerRef.current = setTimeout(() => {
+                setLiveCaption('');
+                setActiveSentence(null);
+                conversationStateMachine.transition(ConversationState.LISTENING, { source: 'audio_finished' });
+              }, 400); 
+            }
+        } else if (audioQueueRef.current.length > 0 && activeAudiosRef.current.size === 0) {
+            // Failsafe queue trigger
+            processAudioQueueForce();
         }
       };
 
       audio.play().catch(e => {
         logDebug(`⚠️ Play Error: ${e.message}`);
-        conversationStateMachine.transition(ConversationState.LISTENING, { source: 'autoplay_fail' });
+        activeAudiosRef.current.delete(audio);
+        if (audioQueueRef.current.length > 0) processAudioQueueForce();
       });
     } catch (e) {
       console.error(e);
+      if (audioQueueRef.current.length > 0) processAudioQueueForce();
     }
   };
 
@@ -302,10 +336,23 @@ function App() {
   const handleInterrupt = () => {
     logDebug('🛑 Interrupt!');
     setLiveCaption(''); // Clear caption on interrupt
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current = null;
+    setActiveSentence(null);
+    
+    if (endInterviewTimerRef.current) {
+        clearTimeout(endInterviewTimerRef.current);
+        endInterviewTimerRef.current = null;
     }
+    
+    audioQueueRef.current = []; // Clear queue
+    isBufferingRef.current = false;
+    
+    activeAudiosRef.current.forEach(audioObj => {
+        audioObj.pause();
+        audioObj.onended = null;
+        audioObj.ontimeupdate = null;
+    });
+    activeAudiosRef.current.clear();
+    audioRef.current = null;
     if (ws.current?.readyState === WebSocket.OPEN) {
       ws.current.send(JSON.stringify({ type: 'interrupt', payload: {} }));
     }
