@@ -8,6 +8,8 @@ import {
 import { getCurrentUser, logoutUser } from "./utils/userDatabase";
 import API_BASE_URL from "./apiConfig";
 import Logo from "./components/Logo";
+import { motion } from "framer-motion";
+import VoiceSpectrum from "./components/VoiceSpectrum";
 
 const VoiceInterview = () => {
   const navigate = useNavigate();
@@ -885,157 +887,256 @@ const VoiceInterview = () => {
   }
 
   // Interview Screen
+  const spectrumMode = isSpeaking ? 'ai' : isRecording ? 'user' : 'idle';
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 p-6">
-      <div className="max-w-4xl mx-auto">
-        <div className="bg-white rounded-3xl shadow-2xl p-8">
-          {/* Header */}
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <h2 className="text-2xl font-bold text-gray-800">{interviewField}</h2>
-              <p className="text-gray-600">{positionLevel} Level</p>
-            </div>
-            <div className="text-right">
-              <div className="text-3xl font-bold text-indigo-600">
-                {currentQuestionNum}/{totalQuestions}
-              </div>
-              <p className="text-sm text-gray-600">Questions</p>
-            </div>
+    <div className="min-h-screen bg-[#FFFFFF] flex flex-col font-sans relative overflow-hidden">
+      {/* Subtle Background Elements */}
+      <div className="absolute top-[-15%] left-[-10%] w-[40rem] h-[40rem] bg-gradient-to-br from-blue-50 to-transparent rounded-full mix-blend-multiply filter blur-3xl opacity-60"></div>
+      <div className="absolute bottom-[-10%] right-[-10%] w-[35rem] h-[35rem] bg-gradient-to-tl from-indigo-50 to-transparent rounded-full mix-blend-multiply filter blur-3xl opacity-60"></div>
+
+      {/* Top Header */}
+      <header className="w-full max-w-7xl mx-auto py-6 px-8 flex items-center justify-between z-10 relative">
+        <Logo className="h-8 w-auto grayscale opacity-80" />
+        <div className="flex items-center gap-3">
+          <div className="px-4 py-2 bg-white/60 backdrop-blur-md rounded-full shadow-[0_2px_10px_rgba(0,0,0,0.02)] border border-gray-100 flex items-center gap-2">
+            <div className={`w-2 h-2 rounded-full ${isSpeaking ? 'bg-blue-500 animate-pulse' : isRecording ? 'bg-red-500 animate-pulse' : 'bg-gray-300'}`}></div>
+            <span className="text-sm font-medium text-[#111827]">
+              {isSpeaking ? 'AI is speaking' : isRecording ? 'Recording...' : 'Session Active'}
+            </span>
           </div>
-
-          {/* Progress Bar */}
-          <div className="mb-8">
-            <div className="w-full bg-gray-200 rounded-full h-3">
-              <div
-                className="bg-gradient-to-r from-indigo-600 to-purple-600 h-3 rounded-full transition-all duration-500"
-                style={{ width: `${(currentQuestionNum / totalQuestions) * 100}%` }}
-              ></div>
-            </div>
-          </div>
-
-          {/* Voice Visualization */}
-          <div className="flex justify-center mb-8">
-            <div className="relative">
-              <div
-                className={`w-32 h-32 rounded-full flex items-center justify-center transition-all duration-300 ${
-                  isSpeaking
-                    ? "bg-gradient-to-br from-blue-400 to-purple-500 shadow-xl"
-                    : isRecording
-                    ? "bg-gradient-to-br from-red-400 to-pink-500 shadow-xl"
-                    : "bg-gradient-to-br from-gray-300 to-gray-400"
-                }`}
-                style={{
-                  transform: `scale(${1 + audioLevel / 200})`,
-                }}
-              >
-                {isSpeaking ? (
-                  <Volume2 className="w-16 h-16 text-white" />
-                ) : isRecording ? (
-                  <Mic className="w-16 h-16 text-white animate-pulse" />
-                ) : (
-                  <MicOff className="w-16 h-16 text-white" />
-                )}
-              </div>
-              
-              {/* Animated rings */}
-              {(isSpeaking || isRecording) && (
-                <>
-                  <div className="absolute inset-0 rounded-full border-4 border-white/30 animate-ping"></div>
-                  <div className="absolute inset-0 rounded-full border-4 border-white/20 animate-pulse"></div>
-                </>
-              )}
-            </div>
-          </div>
-
-          {/* Question */}
-          <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-2xl p-6 mb-6">
-            <p className="text-sm text-gray-600 mb-2 font-semibold">Question:</p>
-            <p className="text-xl text-gray-800 font-medium">{currentQuestion}</p>
-          </div>
-
-          {/* Recording Status */}
-          {isRecording && (
-            <div className="bg-red-50 border-2 border-red-200 rounded-2xl p-4 mb-6">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
-                  <span className="text-red-700 font-semibold">Recording your answer...</span>
-                </div>
-                <span className="text-sm text-red-600">
-                  Stops after 4s silence or 1 minute max
-                </span>
-              </div>
-              <div className="mt-3 text-sm text-red-600">
-                💡 Speak clearly into your microphone. Recording will auto-stop when you're done.
-              </div>
-            </div>
-          )}
-
-          {/* Answer Input */}
-          <div className="mb-6">
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Your Answer {!isRecording && "(or type below)"}:
-            </label>
-            <textarea
-              value={userAnswer}
-              onChange={(e) => setUserAnswer(e.target.value)}
-              placeholder="Voice recording in progress... or type your answer here"
-              className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-indigo-500 focus:outline-none transition resize-none"
-              rows="6"
-              disabled={isProcessing || isRecording}
-            />
-          </div>
-
-          {/* Feedback */}
-          {feedback && (
-            <div className={`rounded-2xl p-6 mb-6 ${currentScore >= 70 ? 'bg-green-50' : currentScore >= 50 ? 'bg-yellow-50' : 'bg-red-50'}`}>
-              <div className="flex items-start gap-3">
-                {currentScore >= 70 ? (
-                  <CheckCircle className="w-6 h-6 text-green-600 flex-shrink-0 mt-1" />
-                ) : (
-                  <XCircle className="w-6 h-6 text-orange-600 flex-shrink-0 mt-1" />
-                )}
-                <div>
-                  <p className="font-semibold text-gray-800 mb-1">Feedback:</p>
-                  <p className="text-gray-700">{feedback}</p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Action Buttons */}
-          <div className="flex gap-4">
-            {isRecording ? (
-              <button
-                onClick={stopRecording}
-                disabled={isProcessing}
-                className="flex-1 bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white py-4 rounded-xl font-semibold transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              >
-                <MicOff className="w-5 h-5" />
-                Stop Recording Now
-              </button>
-            ) : (
-              <button
-                onClick={submitAnswer}
-                disabled={isProcessing || !userAnswer.trim()}
-                className="flex-1 bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-4 rounded-xl font-semibold hover:from-indigo-700 hover:to-purple-700 transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              >
-                {isProcessing ? (
-                  <>
-                    <Loader className="w-5 h-5 animate-spin" />
-                    Processing...
-                  </>
-                ) : (
-                  <>
-                    <Send className="w-5 h-5" />
-                    Submit Typed Answer
-                  </>
-                )}
-              </button>
-            )}
+          <div className="px-4 py-2 bg-white/60 backdrop-blur-md rounded-full shadow-[0_2px_10px_rgba(0,0,0,0.02)] border border-gray-100 font-medium text-[#111827] flex items-center gap-2 text-sm">
+            <span>{currentQuestionNum} <span className="text-gray-400">/ {totalQuestions}</span></span>
           </div>
         </div>
-      </div>
+      </header>
+
+      <main className="flex-1 w-full max-w-7xl mx-auto px-8 flex flex-col lg:flex-row gap-8 lg:gap-16 z-10 pb-8 h-[calc(100vh-100px)]">
+        
+        {/* Left Side - Transcript & Context */}
+        <div className="flex-1 flex flex-col gap-6 max-w-md h-full">
+          {/* AI Avatar Card */}
+          <motion.div 
+            initial={{ opacity: 0, x: -20, y: 10 }}
+            animate={{ opacity: 1, x: 0, y: 0 }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
+            className="p-6 bg-white/80 backdrop-blur-xl rounded-[24px] shadow-[0_8px_40px_rgb(0,0,0,0.04)] border border-gray-100 flex items-center gap-5 transition-all duration-300 hover:shadow-[0_12px_50px_rgb(0,0,0,0.06)]"
+          >
+            <div className="relative">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#0A2540] to-[#3A7DFF] flex items-center justify-center p-[2px] shadow-sm">
+                <div className="w-full h-full bg-white rounded-[14px] flex items-center justify-center overflow-hidden">
+                   <Logo className="w-8 h-auto object-contain" />
+                </div>
+              </div>
+              {isSpeaking && (
+                 <span className="absolute -bottom-1 -right-1 flex h-4 w-4">
+                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#3A7DFF] opacity-75"></span>
+                   <span className="relative inline-flex rounded-full h-4 w-4 bg-[#3A7DFF] border-2 border-white"></span>
+                 </span>
+              )}
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-[#111827] tracking-tight">INTERVEUU AI</h2>
+              <p className="text-sm text-gray-500 font-medium mt-0.5">
+                {interviewField} • {positionLevel}
+              </p>
+            </div>
+          </motion.div>
+
+          {/* Transcript Area */}
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
+            className="flex-1 bg-white/80 backdrop-blur-xl rounded-[24px] p-6 shadow-[0_8px_40px_rgb(0,0,0,0.04)] border border-gray-100 flex flex-col overflow-hidden transition-all duration-300 hover:shadow-[0_12px_50px_rgb(0,0,0,0.06)]"
+          >
+            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-5 flex items-center gap-2">
+              <div className="w-1.5 h-1.5 rounded-full bg-blue-500"></div>
+              Live Transcript
+            </h3>
+            
+            <div className="flex-1 overflow-y-auto space-y-6 pr-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] flex flex-col">
+              {/* Question Bubble */}
+              <motion.div 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex flex-col gap-2"
+              >
+                <div className="flex items-center gap-2 ml-1">
+                  <div className="w-6 h-6 rounded-md bg-[#0A2540] text-white flex items-center justify-center text-[10px] font-bold tracking-wider">AI</div>
+                </div>
+                <div className="bg-[#F8FAFC] p-5 rounded-[20px] rounded-tl-sm border border-gray-100 shadow-sm relative">
+                  <p className="text-[#111827] leading-relaxed text-sm whitespace-pre-wrap">
+                    {currentQuestion}
+                    {isSpeaking && (
+                      <motion.span 
+                        animate={{ opacity: [0, 1, 0] }} 
+                        transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
+                        className="inline-block w-1.5 h-3.5 bg-[#3A7DFF] ml-1.5 rounded-sm align-middle"
+                      />
+                    )}
+                  </p>
+                </div>
+              </motion.div>
+
+              {/* Typed Answer / Voice Transcription representation */}
+              {(userAnswer || isRecording) && (
+                <motion.div 
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="flex flex-col gap-2 items-end mt-2"
+                >
+                  <div className="flex items-center gap-2 mr-1">
+                    <span className="text-xs font-medium text-gray-400">You</span>
+                    <div className="w-6 h-6 rounded-md bg-gray-200 text-[#111827] flex items-center justify-center text-xs font-bold uppercase">
+                       {candidateName ? candidateName.charAt(0) : 'U'}
+                    </div>
+                  </div>
+                  <div className={`p-5 rounded-[20px] rounded-tr-sm max-w-[90%] shadow-sm ${
+                    isRecording && !userAnswer
+                      ? 'bg-blue-50 border border-blue-100'
+                      : 'bg-[#111827] text-white'
+                  }`}>
+                    {isRecording && !userAnswer ? (
+                      <div className="flex items-center gap-2 text-[#3A7DFF]">
+                         <Mic className="w-4 h-4 animate-pulse opacity-80" />
+                         <span className="text-sm font-medium opacity-80 italic animate-pulse">Listening...</span>
+                      </div>
+                    ) : (
+                      <p className="text-sm leading-relaxed whitespace-pre-wrap opacity-95">{userAnswer}</p>
+                    )}
+                  </div>
+                </motion.div>
+              )}
+
+              {/* Feedback Block */}
+              {feedback && (
+                <motion.div 
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                  className={`p-5 rounded-[20px] flex gap-3 mt-4 border ${
+                    currentScore >= 70 
+                      ? 'bg-[#F0FDF4] border-[#BBF7D0] shadow-[0_4px_20px_rgba(34,197,94,0.05)]' 
+                      : 'bg-[#FFFBEB] border-[#FDE68A] shadow-[0_4px_20px_rgba(245,158,11,0.05)]'
+                  }`}
+                >
+                  {currentScore >= 70 ? (
+                    <div className="bg-white rounded-full p-1 mt-0.5 shadow-sm h-min"><CheckCircle className="w-5 h-5 text-[#16A34A]" /></div>
+                  ) : (
+                    <div className="bg-white rounded-full p-1 mt-0.5 shadow-sm h-min"><XCircle className="w-5 h-5 text-[#D97706]" /></div>
+                  )}
+                  <div>
+                     <span className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-1 block">Feedback</span>
+                     <p className="text-sm text-[#111827] leading-relaxed opacity-90">{feedback}</p>
+                  </div>
+                </motion.div>
+              )}
+            </div>
+            
+            {/* Typing input fallback */}
+            {!isRecording && !isProcessing && !feedback && (
+              <motion.div 
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} delay={0.5}
+                className="mt-5 pt-5 border-t border-gray-100 flex gap-2 items-end"
+              >
+                <div className="flex-1 bg-gray-50 border border-gray-200 focus-within:border-[#3A7DFF] focus-within:bg-white focus-within:ring-4 focus-within:ring-blue-50/50 rounded-2xl transition-all duration-200">
+                  <textarea
+                    value={userAnswer}
+                    onChange={(e) => setUserAnswer(e.target.value)}
+                    placeholder="Type your response..."
+                    className="w-full bg-transparent px-4 py-3.5 text-sm text-[#111827] border-none focus:outline-none focus:ring-0 resize-none h-14 placeholder-gray-400 font-medium"
+                    disabled={isProcessing}
+                  />
+                </div>
+                {userAnswer.trim().length > 0 && (
+                  <button
+                    onClick={submitAnswer}
+                    disabled={isProcessing}
+                    className="mb-1 h-12 w-12 rounded-full bg-[#111827] text-white flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-[0_4px_14px_rgba(0,0,0,0.1)] flex-shrink-0"
+                  >
+                    {isProcessing ? <Loader className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
+                  </button>
+                )}
+              </motion.div>
+            )}
+          </motion.div>
+        </div>
+
+        {/* Right Side - Spectrum & Main Focus */}
+        <div className="flex-1 flex flex-col justify-center items-center relative py-12">
+           
+           <motion.div 
+             initial={{ opacity: 0, y: -10 }}
+             animate={{ opacity: 1, y: 0 }}
+             className="absolute top-[15%] text-center"
+           >
+             <h3 className="text-2xl font-semibold text-[#111827] tracking-tight mb-2">
+                {isSpeaking ? "Interviewer speaking..." : isRecording ? "Listening..." : "Ready."}
+             </h3>
+             {isRecording && (
+                <p className="text-[#3A7DFF] text-sm font-medium animate-pulse flex items-center justify-center gap-2">
+                   <div className="w-1.5 h-1.5 rounded-full bg-[#3A7DFF]"></div>
+                   Speak clearly into your microphone
+                </p>
+             )}
+           </motion.div>
+
+           <div className="w-full flex justify-center scale-110 sm:scale-125 md:scale-150 my-auto pointer-events-none origin-center">
+             <VoiceSpectrum 
+               mode={spectrumMode} 
+               audioStream={audioStreamRef.current} 
+             />
+           </div>
+
+           {/* Controls */}
+           <motion.div 
+              initial={{ y: 30, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.3, type: "spring", stiffness: 400, damping: 25 }}
+              className="absolute bottom-[5%] flex items-center gap-4 bg-white/90 backdrop-blur-xl p-2.5 rounded-full border border-white/50 shadow-[0_12px_40px_rgba(10,37,64,0.08)]"
+           >
+              {isRecording ? (
+                <button
+                  onClick={stopRecording}
+                  disabled={isProcessing}
+                  className="group flex items-center gap-3 px-6 py-3.5 bg-[#111827] text-white rounded-full font-semibold hover:scale-[1.02] active:scale-95 transition-all shadow-[0_8px_25px_rgba(17,24,39,0.25)] hover:shadow-[0_12px_30px_rgba(17,24,39,0.3)] disabled:opacity-50"
+                >
+                  <div className="relative flex items-center justify-center">
+                    <div className="absolute w-6 h-6 bg-red-500/20 rounded-full animate-ping"></div>
+                    <div className="w-3 h-3 rounded-sm bg-red-500 group-hover:bg-red-400 transition-colors"></div>
+                  </div>
+                  Pause Recording
+                </button>
+              ) : (
+                <>
+                  <button
+                    onClick={() => startRecording(false)}
+                    disabled={isProcessing || isSpeaking}
+                    className={`flex items-center gap-3 px-6 py-3.5 rounded-full font-semibold transition-all duration-300 ${
+                      isProcessing || isSpeaking 
+                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed opacity-70' 
+                        : 'bg-[#111827] text-white hover:scale-[1.02] active:scale-95 shadow-[0_8px_25px_rgba(17,24,39,0.25)] hover:shadow-[0_12px_30px_rgba(17,24,39,0.3)]'
+                    }`}
+                  >
+                    <Mic className={`w-5 h-5 ${isProcessing || isSpeaking ? '' : 'text-[#6FA8FF]'}`} />
+                    Answer with Voice
+                  </button>
+                  
+                  {userAnswer.trim() && !isProcessing && (
+                     <button
+                       onClick={submitAnswer}
+                       className="flex items-center gap-2 px-5 py-3.5 rounded-full font-semibold bg-[#3A7DFF] text-white hover:bg-blue-600 hover:scale-[1.02] active:scale-95 transition-all shadow-[0_8px_20px_rgba(58,125,255,0.3)]"
+                     >
+                       Submit Result
+                       <Send className="w-4 h-4 ml-1" />
+                     </button>
+                  )}
+                </>
+              )}
+           </motion.div>
+        </div>
+      </main>
     </div>
   );
 };
