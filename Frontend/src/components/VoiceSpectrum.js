@@ -16,29 +16,39 @@ const VoiceSpectrum = ({ mode, audioStream }) => {
     let cleanUpOwnStream = false;
 
     const setupContext = async () => {
-      if (mode === 'user') {
-        try {
-          const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-          const analyser = audioCtx.createAnalyser();
-          analyser.fftSize = 64; // 32 frequency bins
-          analyser.smoothingTimeConstant = 0.8; // Smoothing factor
-          
+      if (mode === 'idle') return;
+
+      try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') {
+            await audioCtx.resume();
+        }
+        const analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 64; // 32 frequency bins
+        analyser.smoothingTimeConstant = 0.8; // Smoothing factor
+        
+        let source;
+        if (mode === 'user') {
           let sourceStream = audioStream;
           if (!sourceStream) {
             localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
             sourceStream = localStream;
             cleanUpOwnStream = true;
           }
-          
-          const source = audioCtx.createMediaStreamSource(sourceStream);
+          source = audioCtx.createMediaStreamSource(sourceStream);
           source.connect(analyser);
-          
-          audioContextRef.current = audioCtx;
-          analyserRef.current = analyser;
-          dataArrayRef.current = new Uint8Array(analyser.frequencyBinCount);
-        } catch (err) {
-          console.error("Error setting up audio context for spectrum", err);
+        } else if (mode === 'ai') {
+          if (!window.aiAudioElement) return;
+          source = audioCtx.createMediaElementSource(window.aiAudioElement);
+          source.connect(analyser);
+          analyser.connect(audioCtx.destination); // Must route AI audio to speakers
         }
+        
+        audioContextRef.current = audioCtx;
+        analyserRef.current = analyser;
+        dataArrayRef.current = new Uint8Array(analyser.frequencyBinCount);
+      } catch (err) {
+        console.error("Error setting up audio context for spectrum", err);
       }
     };
 
@@ -91,7 +101,7 @@ const VoiceSpectrum = ({ mode, audioStream }) => {
       
       let targetHeights = new Array(numPills).fill(8); // Base height
       
-      if (isUser && analyserRef.current && dataArrayRef.current) {
+      if ((isUser || isAI) && analyserRef.current && dataArrayRef.current) {
         analyserRef.current.getByteFrequencyData(dataArrayRef.current);
         const step = Math.floor(dataArrayRef.current.length / numPills);
         for (let i = 0; i < numPills; i++) {
@@ -104,17 +114,12 @@ const VoiceSpectrum = ({ mode, audioStream }) => {
            // Apply a bell curve envelope so the center reacts more
            let envelope = Math.sin(Math.PI * i / (numPills - 1));
            let normalized = (val / 255) * envelope;
-           targetHeights[i] = 12 + normalized * (height - 24);
-        }
-      } else if (isAI) {
-        // AI Speaking Simulation: controlled, slightly rhythmic, natural-looking variations
-        for (let i = 0; i < numPills; i++) {
-          const envelope = Math.sin(Math.PI * i / (numPills - 1));
-          const wave1 = Math.sin(timeRef.current * 1.8 + i * 0.4) * 0.5 + 0.5;
-          const wave2 = Math.sin(timeRef.current * 1.0 - i * 0.2) * 0.5 + 0.5;
-          const randomVariation = Math.random() * 0.2;
-          let intensity = (wave1 * 0.6 + wave2 * 0.4 + randomVariation);
-          targetHeights[i] = 12 + intensity * envelope * (height - 30);
+           
+           let finalHeight = 12 + normalized * (height - 30);
+           // Boost AI mode slightly so it feels powerful
+           if (isAI) finalHeight = 12 + normalized * (height - 10) * 1.3;
+           
+           targetHeights[i] = Math.min(finalHeight, height - 8);
         }
       } else {
         // Idle Simulation: very gentle breathing

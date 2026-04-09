@@ -202,6 +202,7 @@ const LiveInterviewRoute = () => {
             const url = URL.createObjectURL(blob);
             const audio = new Audio(url);
             audioRef.current = audio;
+            window.aiAudioElement = audio; // Expose globally for VoiceSpectrum sync
 
             audio.onplay = () => {
                 conversationStateMachine.transition(ConversationState.AI_SPEAKING, { source: 'audio_started' });
