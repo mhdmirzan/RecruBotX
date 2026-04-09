@@ -8,6 +8,13 @@ import SecureInterviewWrapper from "../../components/interview/SecureInterviewWr
 import { conversationStateMachine, ConversationState } from "../../services/ConversationStateMachine";
 import API_BASE_URL from "../../apiConfig";
 
+// Create a single, persistent audio element perfectly synced with VoiceSpectrum.
+// This guarantees we never have to disconnect/reconnect the WebAudio AnalyserNode.
+if (typeof window !== "undefined" && !window.aiAudioElement) {
+    window.aiAudioElement = new window.Audio();
+    window.aiAudioElement.crossOrigin = "anonymous";
+}
+
 const LiveInterviewRoute = () => {
     const location = useLocation();
     const navigate = useNavigate();
@@ -26,6 +33,9 @@ const LiveInterviewRoute = () => {
     const captionIntervalRef = useRef(null);
     const ws = useRef(null);
     const audioRef = useRef(null);
+    const audioQueueRef = useRef([]);
+    const isPlayingRef = useRef(false);
+    const emptyQueueTimeoutRef = useRef(null);
     const isConnecting = useRef(false);
 
     // If candidate landed here without going through the start form
@@ -159,24 +169,21 @@ const LiveInterviewRoute = () => {
                 }
                 break;
             case 'audio_output':
-                playAudio(data.payload);
+                queueAudio(data.payload);
                 break;
             case 'transcription':
                 setMessages(prev => [...prev, { role: 'candidate', content: data.payload }]);
                 break;
             case 'report':
-                // Instead of abruptly closing, flag that we are wrapping up.
-                // The actual navigation will happen after the last audio chunk finishes playing,
-                // or immediately if audio has already finished.
                 isWrappingUp.current = true;
-                if (!audioRef.current || audioRef.current.paused) {
+                if (!isPlayingRef.current) {
                     ws.current?.close();
                     navigate("/candidate/interview-complete", { state: { sessionId, candidateName, jobTitle, isDemo } });
                 }
                 break;
             case 'interview_concluding':
                 isWrappingUp.current = true;
-                if (!audioRef.current || audioRef.current.paused) {
+                if (!isPlayingRef.current) {
                     ws.current?.close();
                     navigate("/candidate/interview-complete", { state: { sessionId, candidateName, jobTitle, isDemo } });
                 }
@@ -186,11 +193,69 @@ const LiveInterviewRoute = () => {
         }
     };
 
-    const playAudio = (base64String) => {
-        if (audioRef.current) {
-            audioRef.current.pause();
-            audioRef.current.onended = null;
+    // Cleanup empty queue timeouts on unmount
+    useEffect(() => {
+        return () => {
+            if (emptyQueueTimeoutRef.current) clearTimeout(emptyQueueTimeoutRef.current);
+        };
+    }, []);
+
+    const processAudioQueue = () => {
+        if (isPlayingRef.current) return;
+        
+        if (audioQueueRef.current.length === 0) {
+            // Queue finished
+            if (isWrappingUp.current) {
+                // Sequence finished. Wait a final 2 seconds for dramatic effect, then close.
+                setTimeout(() => {
+                    ws.current?.close();
+                    navigate("/candidate/interview-complete", { state: { sessionId, candidateName, jobTitle, isDemo } });
+                }, 2000);
+            } else {
+                emptyQueueTimeoutRef.current = setTimeout(() => {
+                    if (!isPlayingRef.current) {
+                        conversationStateMachine.transition(ConversationState.LISTENING, { source: 'audio_finished' });
+                    }
+                }, 400); 
+            }
+            return;
         }
+
+        isPlayingRef.current = true;
+        
+        // If a timeout was counting down to go to LISTENING, cancel it perfectly!
+        if (emptyQueueTimeoutRef.current) {
+            clearTimeout(emptyQueueTimeoutRef.current);
+            emptyQueueTimeoutRef.current = null;
+        }
+        
+        const nextUrl = audioQueueRef.current.shift();
+        
+        // Reuse the exact same persistent HTML audio element!
+        const audio = window.aiAudioElement;
+        audioRef.current = audio;
+        audio.src = nextUrl;
+        
+        audio.onplay = () => {
+            if (conversationStateMachine.getState() !== ConversationState.AI_SPEAKING) {
+                conversationStateMachine.transition(ConversationState.AI_SPEAKING, { source: 'audio_started' });
+            }
+        };
+        
+        audio.onended = () => {
+            URL.revokeObjectURL(nextUrl);
+            isPlayingRef.current = false;
+            processAudioQueue(); // Process next item cleanly
+        };
+        
+        audio.play().catch(e => {
+            console.error("Audio play error", e);
+            isPlayingRef.current = false;
+            processAudioQueue(); // Skip to next if fails
+        });
+    };
+
+    const queueAudio = (base64String) => {
         try {
             const byteCharacters = atob(base64String);
             const byteNumbers = new Array(byteCharacters.length);
@@ -200,32 +265,12 @@ const LiveInterviewRoute = () => {
             const byteArray = new Uint8Array(byteNumbers);
             const blob = new Blob([byteArray], { type: 'audio/mpeg' });
             const url = URL.createObjectURL(blob);
-            const audio = new Audio(url);
-            audioRef.current = audio;
-            window.aiAudioElement = audio; // Expose globally for VoiceSpectrum sync
-
-            audio.onplay = () => {
-                conversationStateMachine.transition(ConversationState.AI_SPEAKING, { source: 'audio_started' });
-            };
-            audio.onended = () => {
-                URL.revokeObjectURL(url);
-                audioRef.current = null;
-
-                if (isWrappingUp.current) {
-                    // Sequence finished. Wait a final 2 seconds for dramatic effect, then close.
-                    setTimeout(() => {
-                        ws.current?.close();
-                        navigate("/candidate/interview-complete", { state: { sessionId, candidateName, jobTitle, isDemo } });
-                    }, 2000);
-                } else {
-                    setTimeout(() => {
-                        conversationStateMachine.transition(ConversationState.LISTENING, { source: 'audio_finished' });
-                    }, 800);
-                }
-            };
-            audio.play().catch(e => {
-                conversationStateMachine.transition(ConversationState.LISTENING, { source: 'autoplay_fail' });
-            });
+            
+            // Push URL to queue
+            audioQueueRef.current.push(url);
+            
+            // Call processQueue which will play it if nothing is currently playing
+            processAudioQueue();
         } catch (e) {
             console.error(e);
         }
@@ -233,8 +278,17 @@ const LiveInterviewRoute = () => {
 
     const handleInterrupt = () => {
         setLiveCaption('');
+        audioQueueRef.current = []; // Wipe the pending queue
+        isPlayingRef.current = false;
+        
+        if (emptyQueueTimeoutRef.current) {
+            clearTimeout(emptyQueueTimeoutRef.current);
+        }
+        
         if (audioRef.current) {
+            audioRef.current.onended = null;
             audioRef.current.pause();
+            audioRef.current.src = ""; // Clear buffer
             audioRef.current = null;
         }
         if (ws.current?.readyState === WebSocket.OPEN) {
