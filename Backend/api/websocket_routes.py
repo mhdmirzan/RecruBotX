@@ -86,6 +86,12 @@ async def process_llm_and_tts(session_id: str, input_text: str, service: Intervi
         
     await queue.join()
     
+    # Notify Frontend that the AI is fully done generating this response
+    await web_manager.send_json(session_id, {
+        "type": "response_complete",
+        "payload": "done"
+    })
+    
     # Check if finished
     session_data = await service.get_session(session_id)
     if session_data:

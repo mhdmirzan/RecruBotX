@@ -10,6 +10,7 @@ const VoiceSpectrum = ({ mode, audioStream, isDarkMode }) => {
   
   // Realism enhancements: time for simulation
   const timeRef = useRef(0);
+  const lastActiveTime = useRef(Date.now());
 
   useEffect(() => {
     let localStream = null;
@@ -103,23 +104,46 @@ const VoiceSpectrum = ({ mode, audioStream, isDarkMode }) => {
       
       if ((isUser || isAI) && analyserRef.current && dataArrayRef.current) {
         analyserRef.current.getByteFrequencyData(dataArrayRef.current);
-        const step = Math.floor(dataArrayRef.current.length / numPills);
-        for (let i = 0; i < numPills; i++) {
-           // Average several points for smoother spectrum
-           let sum = 0;
-           for(let j=0; j<step; j++) {
-               sum += dataArrayRef.current[(i * step) + j] || 0;
-           }
-           let val = sum / step;
-           // Apply a bell curve envelope so the center reacts more
-           let envelope = Math.sin(Math.PI * i / (numPills - 1));
-           let normalized = (val / 255) * envelope;
-           
-           let finalHeight = 12 + normalized * (height - 30);
-           // Boost AI mode slightly so it feels powerful
-           if (isAI) finalHeight = 12 + normalized * (height - 10) * 1.3;
-           
-           targetHeights[i] = Math.min(finalHeight, height - 8);
+        
+        let totalSum = 0;
+        for (let j = 0; j < dataArrayRef.current.length; j++) {
+            totalSum += dataArrayRef.current[j];
+        }
+        
+        if (totalSum > 5) {
+            lastActiveTime.current = Date.now();
+        }
+        
+        const isActuallyIdle = (Date.now() - lastActiveTime.current) > 300;
+        
+        if (isActuallyIdle) {
+            // Idle Simulation Fallback Gap Masking
+            for (let i = 0; i < numPills; i++) {
+              const envelope = Math.sin(Math.PI * i / (numPills - 1));
+              const breathe = Math.sin(timeRef.current * 0.4) * 0.5 + 0.5;
+              targetHeights[i] = 8 + breathe * envelope * 8; 
+            }
+        } else {
+            const step = Math.floor(dataArrayRef.current.length / numPills);
+            for (let i = 0; i < numPills; i++) {
+               let sum = 0;
+               for(let j=0; j<step; j++) {
+                   sum += dataArrayRef.current[(i * step) + j] || 0;
+               }
+               let val = sum / step;
+               let envelope = Math.sin(Math.PI * i / (numPills - 1));
+               let normalized = (val / 255) * envelope;
+               
+               let finalHeight = 12 + normalized * (height - 30);
+               if (isAI) finalHeight = 12 + normalized * (height - 10) * 1.3;
+               
+               // Soft mask during the 300ms delay window (micro-gap)
+               if (totalSum <= 5 && !isActuallyIdle) {
+                   finalHeight = Math.max(finalHeight, 15 + Math.sin(timeRef.current * 1.5) * 4 * envelope);
+               }
+               
+               targetHeights[i] = Math.min(finalHeight, height - 8);
+            }
         }
       } else {
         // Idle Simulation: very gentle breathing

@@ -22,6 +22,7 @@ function App() {
   const endInterviewTimerRef = useRef(null); // Fix for overlapping listening state resets
   const activeAudiosRef = useRef(new Set()); // For Crossfading multiple audios
   const isBufferingRef = useRef(false);
+  const isGeneratingRef = useRef(false); // FLAG for response-level state lock
 
   const [activeSentence, setActiveSentence] = useState(null); // { text, audioObj, words }
   
@@ -43,9 +44,12 @@ function App() {
       }
       
       const wordsToShow = Math.max(1, Math.ceil(progress * words.length));
-      const textToDisplay = words.slice(0, wordsToShow).join(' ');
       
-      setLiveCaption(textToDisplay);
+      setLiveCaption({
+        words,
+        activeIndex: wordsToShow - 1,
+        progress
+      });
       
       if (progress < 1) {
         animationFrameId = requestAnimationFrame(renderCaption);
@@ -154,6 +158,7 @@ function App() {
       case 'session_created':
         logDebug('✅ Session Started');
         setSessionActive(true);
+        isGeneratingRef.current = true;
         conversationStateMachine.transition(ConversationState.PROCESSING, { source: 'session_created' });
         break;
 
@@ -163,6 +168,7 @@ function App() {
 
       case 'audio_output':
         logDebug(`🔊 Audio Received`);
+        isGeneratingRef.current = true; // Ensure state lock
         if (endInterviewTimerRef.current) {
             clearTimeout(endInterviewTimerRef.current);
             endInterviewTimerRef.current = null;
@@ -201,7 +207,19 @@ function App() {
         break;
 
       case 'response_complete':
-        // Check if we should end interview? handled by report message
+        logDebug('✅ Response Complete');
+        isGeneratingRef.current = false;
+        // Trigger condition for audio queue finished
+        if (activeAudiosRef.current.size === 0 && audioQueueRef.current.length === 0) {
+            endInterviewTimerRef.current = setTimeout(() => {
+                // Strict Failsafe check to prevent false positives
+                if (!isGeneratingRef.current && activeAudiosRef.current.size === 0) {
+                    setLiveCaption(null);
+                    setActiveSentence(null);
+                    conversationStateMachine.transition(ConversationState.LISTENING, { source: 'response_complete' });
+                }
+            }, 600); 
+        }
         break;
     }
   };
@@ -210,8 +228,18 @@ function App() {
   const processAudioQueue = () => {
     if (audioQueueRef.current.length === 0) return;
     
-    // Feature 4: Buffer until 2 chunks ready, or if it's been active already
-    if (activeAudiosRef.current.size === 0 && audioQueueRef.current.length < 2 && !isWrappingUp.current) {
+    // CRITICAL FIX: If audio is currently playing, DO NOT force playback! 
+    // The existing audio's `ontimeupdate` or `onended` events will safely pull the next chunk from the queue.
+    if (activeAudiosRef.current.size > 0) {
+        return;
+    }
+    
+    // Check if this is the start of the response or a mid-response gap
+    const isMidResponseGap = conversationStateMachine.getState() === ConversationState.AI_SPEAKING;
+    
+    // Feature 4: Buffer until 2 chunks ready ONLY for the first chunks to eliminate initial gaps.
+    // If we're mid-response and starved, play immediately to reduce robotic pausing.
+    if (!isMidResponseGap && audioQueueRef.current.length < 2 && !isWrappingUp.current) {
         if (!isBufferingRef.current) {
             isBufferingRef.current = true;
             // 1.0s fallback timeout in case the LLM only outputs 1 chunk overall
@@ -276,7 +304,7 @@ function App() {
 
       // Feature 6: Crossfade logic
       audio.ontimeupdate = () => {
-          if (audio.duration && audio.currentTime >= audio.duration - 0.08) {
+          if (audio.duration && audio.currentTime >= Math.max(0, audio.duration - 0.2)) { // 200ms overlap
               if (!audio.crossfadeTriggered) {
                   audio.crossfadeTriggered = true;
                   if (audioQueueRef.current.length > 0) {
@@ -298,13 +326,18 @@ function App() {
               } else {
                 setIsConcluding(true);
               }
-            } else {
+            } else if (!isGeneratingRef.current) {
               // Feature 7/8: Spectrum State Control & Continuity Layer
               endInterviewTimerRef.current = setTimeout(() => {
-                setLiveCaption('');
-                setActiveSentence(null);
-                conversationStateMachine.transition(ConversationState.LISTENING, { source: 'audio_finished' });
-              }, 400); 
+                // Strict Failsafe check to prevent false positives
+                if (!isGeneratingRef.current && activeAudiosRef.current.size === 0) {
+                    setLiveCaption(null);
+                    setActiveSentence(null);
+                    conversationStateMachine.transition(ConversationState.LISTENING, { source: 'audio_finished' });
+                }
+              }, 600); 
+            } else {
+              // We are still generating. Gap masking: do NOT clear UI! keep in SPEAKING mode!
             }
         } else if (audioQueueRef.current.length > 0 && activeAudiosRef.current.size === 0) {
             // Failsafe queue trigger
@@ -363,6 +396,7 @@ function App() {
   const handleAudioData = (audioBlob) => {
     if (conversationStateMachine.getState() !== ConversationState.LISTENING) return;
 
+    isGeneratingRef.current = true; // Set generation lock
     conversationStateMachine.transition(ConversationState.PROCESSING);
 
     const reader = new FileReader();
