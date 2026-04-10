@@ -22,16 +22,45 @@ import TypewriterText from './TypewriterText';
 import Logo from '../Logo';
 import VoiceSpectrum from '../VoiceSpectrum';
 
-// Live Caption Component (Updated for Relative Flow)
-const LiveCaption = ({ text, isVisible, isDarkMode }) => {
+// Premium Sync-driven Caption Component
+const LiveCaption = ({ captionObj, isVisible, isDarkMode }) => {
+    const hasContent = captionObj && captionObj.words && captionObj.words.length > 0;
+    
     return (
         <div
-            className={`transition-all duration-300 transform
-                ${isVisible && text ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}
+            className={`transition-all duration-[400ms] ease-out transform max-w-3xl w-full mx-auto
+                ${isVisible && hasContent ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}
             `}
         >
-            <div className={`text-xl md:text-2xl font-semibold leading-relaxed tracking-tight text-center px-4 ${isDarkMode ? 'text-[#E5E7EB] drop-shadow-[0_2px_8px_rgba(255,255,255,0.15)]' : 'text-[#111827] drop-shadow-sm'} live-caption`}>
-                {text}
+            <div 
+                className={`py-3 px-5 md:py-4 md:px-6 rounded-[16px] backdrop-blur-xl border transition-colors duration-300 shadow-[0_8px_30px_rgba(0,0,0,0.12)] max-w-[85%] sm:max-w-xl md:max-w-2xl mx-auto text-center
+                ${isDarkMode ? 'bg-black/60 border-gray-700/50' : 'bg-white/85 border-white/60'}`}
+            >
+                <div className={`text-lg sm:text-xl md:text-[22px] font-medium leading-[1.6] tracking-tight ${isDarkMode ? 'text-[#E5E7EB]' : 'text-[#111827]'} font-sans`}>
+                    {hasContent ? captionObj.words.map((word, idx) => {
+                        const isActive = idx === captionObj.activeIndex;
+                        const isPast = idx < captionObj.activeIndex;
+                        
+                        // Smart Grouping: Fade out lines far behind
+                        if (captionObj.activeIndex - idx > 12) return null; // Hide far past words
+                        
+                        let opacityClass = 'opacity-[0.15]';
+                        let glowClass = '';
+                        
+                        if (isActive) {
+                            opacityClass = 'opacity-100 font-semibold';
+                            glowClass = isDarkMode ? 'text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]' : 'drop-shadow-[0_0_1px_rgba(0,0,0,0.6)]';
+                        } else if (isPast) {
+                            opacityClass = 'opacity-60';
+                        }
+                        
+                        return (
+                            <span key={idx} className={`inline-block mx-[3px] transition-all duration-[150ms] ${opacityClass} ${glowClass}`}>
+                                {word}
+                            </span>
+                        );
+                    }) : null}
+                </div>
             </div>
         </div>
     );
@@ -366,8 +395,8 @@ const LiveInterviewSession = ({
                             {isAiSpeaking ? "Interviewer speaking..." : isListening ? "Listening to you..." : "Analyzing..."}
                         </h3>
                         {/* Live Caption mapped correctly directly beneath title */}
-                        <div className="min-h-[3rem] flex items-center justify-center w-full relative z-40">
-                            <LiveCaption text={correctGrammar(liveCaption)} isVisible={isAiSpeaking} isDarkMode={isDarkMode} />
+                        <div className="min-h-[6rem] flex items-center justify-center w-full relative z-40">
+                            <LiveCaption captionObj={liveCaption} isVisible={isAiSpeaking} isDarkMode={isDarkMode} />
                         </div>
                     </motion.div>
 
