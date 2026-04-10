@@ -208,7 +208,7 @@ const LiveInterviewSession = ({
                     <div className={`px-5 py-2.5 backdrop-blur-xl rounded-full shadow-[0_2px_15px_rgba(0,0,0,0.03)] border flex items-center gap-4 transition-all duration-300 ${isDarkMode ? 'bg-[#111827]/80 border-gray-800' : 'bg-white/80 border-gray-100'}`}>
                         <span className={`text-sm font-semibold tracking-wide flex items-center gap-1.5 transition-colors duration-300 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                             <Clock className={`w-4 h-4 ${isDarkMode ? 'text-[#4F8CFF]' : 'text-[#3A7DFF]'}`} />
-                            {formatTime(elapsedTime)}
+                            <span className="tabular-nums w-10 text-center inline-block">{formatTime(elapsedTime)}</span>
                         </span>
                         
                         {isConnected !== undefined && (
