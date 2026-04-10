@@ -175,9 +175,9 @@ const VoiceSpectrum = ({ mode, audioStream, isDarkMode }) => {
           ctx.shadowColor = isDarkMode ? 'rgba(79, 140, 255, 0.6)' : 'rgba(58, 125, 255, 0.4)';
           ctx.shadowBlur = isDarkMode ? 12 : 8;
         } else if (isAI) {
-          gradient.addColorStop(0, isDarkMode ? '#8DE4FF' : '#6FA8FF');
-          gradient.addColorStop(1, isDarkMode ? '#3A7DFF' : '#3A7DFF');
-          ctx.shadowColor = isDarkMode ? 'rgba(141, 228, 255, 0.8)' : 'rgba(111, 168, 255, 0.6)';
+          gradient.addColorStop(0, isDarkMode ? '#60A5FA' : '#6FA8FF');
+          gradient.addColorStop(1, isDarkMode ? '#2563EB' : '#3A7DFF');
+          ctx.shadowColor = isDarkMode ? 'rgba(59, 130, 246, 0.8)' : 'rgba(111, 168, 255, 0.6)';
           ctx.shadowBlur = isDarkMode ? 20 : 12; // Glowing effect
         } else {
           gradient.addColorStop(0, isDarkMode ? '#334155' : '#E2E8F0');
@@ -206,7 +206,7 @@ const VoiceSpectrum = ({ mode, audioStream, isDarkMode }) => {
       transition={{ duration: 0.6, ease: "easeOut" }}
       className={`relative w-full max-w-sm h-32 flex items-center justify-center p-4 rounded-3xl backdrop-blur-md transition-all duration-300 ${
         isDarkMode 
-          ? 'bg-[#111827]/60 border border-gray-700/60 ' + (mode === 'ai' ? 'shadow-[0_8px_32px_rgba(141,228,255,0.15)]' : 'shadow-[0_4px_20px_rgba(0,0,0,0.3)]')
+          ? 'bg-[#111827]/60 border border-gray-700/60 ' + (mode === 'ai' ? 'shadow-[0_8px_32px_rgba(59,130,246,0.2)]' : 'shadow-[0_4px_20px_rgba(0,0,0,0.3)]')
           : 'bg-white/40 border border-white/60 ' + (mode === 'ai' ? 'shadow-[0_8px_32px_rgba(111,168,255,0.2)]' : 'shadow-[0_8px_32px_rgba(0,0,0,0.04)]')
       }`}
     >
