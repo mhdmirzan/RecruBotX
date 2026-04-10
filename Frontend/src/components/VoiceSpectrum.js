@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 
-const VoiceSpectrum = ({ mode, audioStream }) => {
+const VoiceSpectrum = ({ mode, audioStream, isDarkMode }) => {
   const canvasRef = useRef(null);
   const audioContextRef = useRef(null);
   const analyserRef = useRef(null);
@@ -146,18 +146,18 @@ const VoiceSpectrum = ({ mode, audioStream }) => {
         // Gradient Colors
         const gradient = ctx.createLinearGradient(0, y, 0, y + pillHeight);
         if (isUser) {
-          gradient.addColorStop(0, '#3A7DFF');
-          gradient.addColorStop(1, '#0A2540');
-          ctx.shadowColor = 'rgba(58, 125, 255, 0.4)';
-          ctx.shadowBlur = 8;
+          gradient.addColorStop(0, isDarkMode ? '#4F8CFF' : '#3A7DFF');
+          gradient.addColorStop(1, isDarkMode ? '#1E40AF' : '#0A2540');
+          ctx.shadowColor = isDarkMode ? 'rgba(79, 140, 255, 0.6)' : 'rgba(58, 125, 255, 0.4)';
+          ctx.shadowBlur = isDarkMode ? 12 : 8;
         } else if (isAI) {
-          gradient.addColorStop(0, '#6FA8FF');
-          gradient.addColorStop(1, '#3A7DFF');
-          ctx.shadowColor = 'rgba(111, 168, 255, 0.6)';
-          ctx.shadowBlur = 12; // Glowing effect
+          gradient.addColorStop(0, isDarkMode ? '#8DE4FF' : '#6FA8FF');
+          gradient.addColorStop(1, isDarkMode ? '#3A7DFF' : '#3A7DFF');
+          ctx.shadowColor = isDarkMode ? 'rgba(141, 228, 255, 0.8)' : 'rgba(111, 168, 255, 0.6)';
+          ctx.shadowBlur = isDarkMode ? 20 : 12; // Glowing effect
         } else {
-          gradient.addColorStop(0, '#E2E8F0');
-          gradient.addColorStop(1, '#94A3B8');
+          gradient.addColorStop(0, isDarkMode ? '#334155' : '#E2E8F0');
+          gradient.addColorStop(1, isDarkMode ? '#1E293B' : '#94A3B8');
           ctx.shadowColor = 'transparent';
           ctx.shadowBlur = 0;
         }
@@ -180,7 +180,11 @@ const VoiceSpectrum = ({ mode, audioStream }) => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, ease: "easeOut" }}
-      className={`relative w-full max-w-sm h-32 flex items-center justify-center p-4 rounded-3xl bg-white/40 backdrop-blur-md border border-white/60 transition-all duration-300 ${mode === 'ai' ? 'shadow-[0_8px_32px_rgba(111,168,255,0.2)]' : 'shadow-[0_8px_32px_rgba(0,0,0,0.04)]'}`}
+      className={`relative w-full max-w-sm h-32 flex items-center justify-center p-4 rounded-3xl backdrop-blur-md transition-all duration-300 ${
+        isDarkMode 
+          ? 'bg-[#111827]/60 border border-gray-700/60 ' + (mode === 'ai' ? 'shadow-[0_8px_32px_rgba(141,228,255,0.15)]' : 'shadow-[0_4px_20px_rgba(0,0,0,0.3)]')
+          : 'bg-white/40 border border-white/60 ' + (mode === 'ai' ? 'shadow-[0_8px_32px_rgba(111,168,255,0.2)]' : 'shadow-[0_8px_32px_rgba(0,0,0,0.04)]')
+      }`}
     >
        <canvas ref={canvasRef} className="w-full h-full" style={{ display: 'block' }} />
     </motion.div>
