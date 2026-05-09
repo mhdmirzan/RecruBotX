@@ -1,236 +1,217 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
-import { Check, X, Star, ArrowRight, Zap, Building2, Crown } from "lucide-react";
-
-// ✅ Minimal Button Component
-const Button = ({ children, className = "", asChild, ...props }) => {
-  const Comp = asChild ? Link : "button";
-  return (
-    <Comp
-      className={`inline-flex items-center justify-center rounded-lg font-medium transition px-5 py-3 ${className}`}
-      {...props}
-    >
-      {children}
-    </Comp>
-  );
-};
-
-// ✅ Minimal Card Component
-const Card = ({ children, className = "" }) => (
-  <div
-    className={`rounded-2xl border bg-white shadow-md hover:shadow-lg transition ${className}`}
-  >
-    {children}
-  </div>
-);
-
-const CardHeader = ({ children, className = "" }) => (
-  <div className={`px-6 pt-8 pb-4 ${className}`}>{children}</div>
-);
-const CardContent = ({ children, className = "" }) => (
-  <div className={`px-6 pb-8 ${className}`}>{children}</div>
-);
-const CardTitle = ({ children, className = "" }) => (
-  <h3 className={`text-2xl font-semibold ${className}`}>{children}</h3>
-);
+import { motion, AnimatePresence } from "framer-motion";
+import { PricingCard } from "./ui/price";
+import { User, Building2, Star, Zap, Crown } from "lucide-react";
 
 const PricingPage = () => {
-  const fadeInUp = {
-    initial: { opacity: 0, y: 20 },
-    animate: { opacity: 1, y: 0 },
-    transition: { duration: 0.6 },
+  const [billingMode, setBillingMode] = useState("candidate"); // 'candidate' or 'recruiter'
+
+  const containerVariants = {
+    hidden: {},
+    visible: {
+      transition: {
+        staggerChildren: 0.15,
+      },
+    },
   };
 
-  const staggerContainer = {
-    animate: { transition: { staggerChildren: 0.15 } },
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.5,
+        ease: "easeOut",
+      },
+    },
   };
 
-  const plans = [
+  const candidatePlans = [
     {
-      name: "Basic",
-      price: "$99",
-      period: "per month",
-      description: "Perfect for small teams getting started",
-      icon: Zap,
+      planName: "Basic (Free)",
+      description: "For individuals entering the job market",
+      price: 0,
+      billingCycle: "/month",
       features: [
-        "Up to 50 candidates per month",
-        "Basic AI CV screening",
-        "Standard interview templates",
-        "Email support",
-        "Basic analytics dashboard",
-        "Single user account",
+        "3 Resume Analysis / month",
+        "2 AI Interviews / month",
+        "1 Resume Builder Template",
+        "Basic AI Feedback Quality",
+        "Standard Processing Speed",
       ],
-      notIncluded: [
-        "Custom interview questions",
-        "Advanced analytics",
-        "API access",
-        "White-label branding",
-      ],
-      popular: false,
-      cta: "Start Basic Plan",
+      buttonText: "Start Free",
+
+      icon: <User />,
     },
     {
-      name: "Professional",
-      price: "$299",
-      period: "per month",
-      description: "Ideal for growing companies",
-      icon: Building2,
+      planName: "Silver (Pro)",
+      variant: "popular",
+      description: "For active job seekers looking for an edge",
+      price: 15,
+      billingCycle: "/month",
       features: [
-        "Up to 200 candidates per month",
-        "Advanced AI CV screening",
-        "Custom interview templates",
-        "Priority email & chat support",
-        "Advanced analytics & reports",
-        "Up to 5 user accounts",
-        "Facial expression analysis",
-        "Custom scoring criteria",
-        "Calendar integration",
+        "20 Resume Analysis / month",
+        "10 AI Interviews / month",
+        "5 Resume Builder Templates",
+        "Detailed AI Feedback",
+        "10 Resume Report Downloads / month",
+        "Interview Performance Insights",
+        "Faster Processing Speed",
       ],
-      notIncluded: ["API access", "White-label branding"],
-      popular: true,
-      cta: "Start Professional Plan",
+      buttonText: "Get Silver",
+      icon: <Zap />,
     },
     {
-      name: "Enterprise",
-      price: "Custom",
-      period: "contact us",
-      description: "For large organizations with custom needs",
-      icon: Crown,
+      planName: "Gold (Advanced)",
+      description: "For relentless job hunting preparation",
+      price: 30,
+      billingCycle: "/month",
       features: [
-        "Unlimited candidates",
-        "Full AI suite access",
-        "Custom interview workflows",
-        "24/7 dedicated support",
-        "White-label branding",
-        "API access & integrations",
-        "Unlimited user accounts",
-        "Custom analytics & reporting",
-        "SAML/SSO integration",
-        "Dedicated account manager",
-        "Custom training & onboarding",
+        "50 Resume Analysis / month",
+        "25 AI Interviews / month",
+        "12 Resume Builder Templates",
+        "Advanced (deep insights) AI Feedback",
+        "Unlimited Resume Report Downloads",
+        "Detailed Interview Performance Insights",
+        "Priority (fastest) Processing Speed",
       ],
-      notIncluded: [],
-      popular: false,
-      cta: "Contact Sales",
+      buttonText: "Get Gold",
+      icon: <Crown />,
     },
   ];
 
+  const recruiterPlans = [
+    {
+      planName: "Basic",
+      description: "For small teams getting started",
+      price: 99,
+      billingCycle: "/month",
+      features: [
+        "3 Job Posts",
+        "100 CV Screening / month",
+        "20 Candidate PDF Reports / month",
+        "Advanced Ranking System",
+        "Basic Candidate Reports Detail",
+        "Standard Processing Speed",
+        "1 Team Seat",
+      ],
+      buttonText: "Get Basic",
+      icon: <Building2 />,
+    },
+    {
+      planName: "Silver",
+      variant: "popular",
+      description: "For growing companies",
+      price: 199,
+      billingCycle: "/month",
+      features: [
+        "10 Job Posts",
+        "500 CV Screening / month",
+        "100 Candidate PDF Reports / month",
+        "Advanced Ranking System",
+        "Full Candidate Reports Detail",
+        "Standard Processing Speed",
+        "3 Team Seats",
+      ],
+      buttonText: "Get Silver",
+      icon: <Zap />,
+    },
+    {
+      planName: "Gold",
+      description: "For large organizations",
+      price: 449,
+      billingCycle: "/month",
+      features: [
+        "25 Job Posts",
+        "2000 CV Screening / month",
+        "Unlimited Candidate PDF Reports",
+        "Advanced Ranking System",
+        "Full + Insights Candidate Reports Detail",
+        "Full Analytics & Hiring Insights",
+        "Priority AI Processing",
+        "10 Team Seats",
+      ],
+      buttonText: "Get Gold",
+      icon: <Crown />,
+    },
+  ];
+
+  const activePlans = billingMode === "candidate" ? candidatePlans : recruiterPlans;
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 pb-20">
       {/* Hero Section */}
-      <section className="py-20 bg-gradient-to-br from-blue-100/50 to-blue-50">
-        <div className="max-w-3xl mx-auto text-center px-6">
-          <motion.div {...fadeInUp}>
-            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
-              Simple, Transparent Pricing
-            </h1>
-            <p className="text-lg md:text-xl text-gray-600 mb-8">
-              Choose the plan that fits your hiring needs. Start with a free trial
-              and scale as you grow.
-            </p>
-            <div className="inline-flex items-center space-x-2 bg-green-100 text-green-800 px-5 py-2 rounded-full">
-              <Star className="w-4 h-4" aria-hidden="true" />
-              <span className="text-sm font-medium">
-                14-day free trial • No credit card required
-              </span>
+      <section className="py-20 bg-[#0a2a5e] text-center px-6">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="max-w-3xl mx-auto"
+        >
+          <div className="inline-flex items-center space-x-2 bg-blue-500 text-white px-5 py-2 rounded-full mb-8 shadow-sm border border-blue-400">
+            <Star className="w-4 h-4 text-blue-200" aria-hidden="true" />
+            <span className="text-sm font-medium">
+              Find the plan that matches your ambition
+            </span>
+          </div>
+          <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">
+            Simple, Transparent Pricing
+          </h1>
+          <p className="text-lg md:text-xl text-blue-100 mb-8">
+            Choose the plan that fits your goals. Whether you're a candidate preparing for interviews or a recruiter hiring the best talent.
+          </p>
+          
+          {/* Toggle */}
+          <div className="flex justify-center mb-8">
+            <div className="relative flex items-center p-1 bg-blue-700/50 rounded-full shadow-inner backdrop-blur-sm">
+              <button
+                className={`relative w-40 py-2.5 text-sm font-semibold rounded-full z-10 transition-colors duration-300 ${
+                  billingMode === "candidate" ? "text-blue-600" : "text-blue-100 hover:text-white"
+                }`}
+                onClick={() => setBillingMode("candidate")}
+              >
+                Candidate
+              </button>
+              <button
+                className={`relative w-40 py-2.5 text-sm font-semibold rounded-full z-10 transition-colors duration-300 ${
+                  billingMode === "recruiter" ? "text-blue-600" : "text-blue-100 hover:text-white"
+                }`}
+                onClick={() => setBillingMode("recruiter")}
+              >
+                Recruiter
+              </button>
+              <div
+                className="absolute top-1 bottom-1 w-40 bg-white rounded-full shadow-sm transition-transform duration-300 ease-in-out z-0"
+                style={{
+                  transform: billingMode === "candidate" ? "translateX(0)" : "translateX(100%)"
+                }}
+              />
             </div>
-          </motion.div>
-        </div>
+          </div>
+        </motion.div>
       </section>
 
-      {/* Pricing Plans */}
-      <section className="py-20">
-        <div className="max-w-7xl mx-auto px-6">
+      {/* Pricing Cards */}
+      <div className="w-full max-w-6xl mx-auto px-4 -mt-8 relative z-10">
+        <AnimatePresence mode="wait">
           <motion.div
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10"
-            variants={staggerContainer}
-            initial="initial"
-            whileInView="animate"
-            viewport={{ once: true }}
+            key={billingMode}
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 items-stretch"
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+            exit={{ opacity: 0, y: -20, transition: { duration: 0.2 } }}
           >
-            {plans.map((plan) => (
-              <motion.div key={plan.name} variants={fadeInUp}>
-                <Card
-                  className={`h-full relative flex flex-col ${plan.popular ? "ring-2 ring-blue-500 shadow-xl" : ""
-                    }`}
-                >
-                  {plan.popular && (
-                    <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                      <span className="bg-blue-500 text-white px-4 py-1 rounded-full text-sm font-medium">
-                        Most Popular
-                      </span>
-                    </div>
-                  )}
-                  <CardHeader className="text-center">
-                    <div
-                      className={`w-14 h-14 mx-auto mb-6 rounded-lg flex items-center justify-center ${plan.popular ? "bg-blue-500" : "bg-blue-400"
-                        }`}
-                    >
-                      <plan.icon className="w-7 h-7 text-white" />
-                    </div>
-                    <CardTitle className="text-2xl text-gray-900">
-                      {plan.name}
-                    </CardTitle>
-                    <div className="mt-4 mb-2">
-                      <span className="text-4xl font-bold text-gray-900">
-                        {plan.price}
-                      </span>
-                      <span className="text-gray-500 ml-2">{plan.period}</span>
-                    </div>
-                    <p className="text-gray-600">{plan.description}</p>
-                  </CardHeader>
-                  <CardContent className="flex-1 flex flex-col justify-between">
-                    <div className="space-y-4">
-                      {plan.features.map((feature, i) => (
-                        <div key={i} className="flex items-start space-x-3">
-                          <Check
-                            className="w-5 h-5 text-green-500 mt-1"
-                            aria-hidden="true"
-                          />
-                          <span className="text-sm text-gray-700">{feature}</span>
-                        </div>
-                      ))}
-                      {plan.notIncluded.map((feature, i) => (
-                        <div
-                          key={i}
-                          className="flex items-start space-x-3 opacity-60"
-                        >
-                          <X
-                            className="w-5 h-5 text-gray-400 mt-1"
-                            aria-hidden="true"
-                          />
-                          <span className="text-sm text-gray-500">{feature}</span>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="pt-8">
-                      <Button
-                        className={`w-full py-3 text-lg ${plan.popular
-                            ? "bg-blue-500 text-white hover:bg-blue-600"
-                            : "bg-gray-100 text-gray-800 hover:bg-gray-200"
-                          }`}
-                        asChild
-                      >
-                        <Link
-                          to={
-                            plan.name === "Enterprise"
-                              ? "/contact"
-                              : "/recruiter/signup"
-                          }
-                        >
-                          {plan.cta}
-                          <ArrowRight className="ml-2 w-5 h-5" />
-                        </Link>
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
+            {activePlans.map((plan, index) => (
+              <motion.div key={index} variants={itemVariants} className="h-full">
+                <PricingCard {...plan} />
               </motion.div>
             ))}
           </motion.div>
-        </div>
-      </section>
+        </AnimatePresence>
+      </div>
     </div>
   );
 };

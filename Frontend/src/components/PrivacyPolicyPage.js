@@ -372,11 +372,11 @@ const PrivacyPolicyPage = () => {
                             Contact our team for any privacy-related inquiries
                         </p>
                         <a
-                            href="mailto:interveuu@gmail.com"
+                            href="mailto:interveuu@uettaxila.edu.pk"
                             className="inline-flex items-center gap-2 bg-white text-[#0a2a5e] px-5 py-2.5 rounded-lg font-medium text-sm hover:bg-blue-50 transition-colors"
                         >
                             <Mail className="w-4 h-4" />
-                            interveuu@gmail.com
+                            interveuu@uettaxila.edu.pk
                         </a>
                     </motion.div>
                 </div>
