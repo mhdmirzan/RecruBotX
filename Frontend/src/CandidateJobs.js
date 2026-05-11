@@ -109,33 +109,44 @@ const CandidateJobs = () => {
     const fetchJobPostings = async () => {
         try {
             setIsLoadingJobs(true);
-            const response = await fetch(`${API_BASE_URL}/jobs/all`);
-            if (response.ok) {
-                const data = await response.json();
-                // Filter out CV Screening postings — only show real job postings
-                const jobsOnly = data.filter(job => job.status !== "Screening");
-                const transformed = jobsOnly.map(job => ({
-                    id: job._id || job.id,
-                    company: job.companyName || job.interviewField + " Company",
-                    title: job.interviewField,
-                    position: job.positionLevel,
-                    interviewField: job.interviewField,
-                    workModel: job.workModel,
-                    status: job.status,
-                    location: job.location,
-                    salaryRange: job.salaryRange,
-                    experienceRange: job.experienceRange,
-                    industryDomain: job.industryDomain,
-                    jobDescription: job.jobDescription,
-                    numberOfVacancies: job.numberOfVacancies || 1,
-                    deadline: job.deadline ? new Date(job.deadline) : null,
-                    appliedDate: new Date(job.createdAt),
-                    isActive: job.isActive
-                }));
-                setJobPostings(transformed);
+            const apiUrl = `${API_BASE_URL}/jobs/all`;
+            console.log("Fetching jobs from:", apiUrl);
+            const response = await fetch(apiUrl);
+            
+            if (!response.ok) {
+                console.error(`API Error: ${response.status} ${response.statusText}`);
+                const errorText = await response.text();
+                console.error("Error response:", errorText);
+                return;
             }
+            
+            const data = await response.json();
+            console.log("Jobs received:", data);
+            
+            // Filter out CV Screening postings — only show real job postings
+            const jobsOnly = data.filter(job => job.status !== "Screening");
+            const transformed = jobsOnly.map(job => ({
+                id: job._id || job.id,
+                company: job.companyName || job.interviewField + " Company",
+                title: job.interviewField,
+                position: job.positionLevel,
+                interviewField: job.interviewField,
+                workModel: job.workModel,
+                status: job.status,
+                location: job.location,
+                salaryRange: job.salaryRange,
+                experienceRange: job.experienceRange,
+                industryDomain: job.industryDomain,
+                jobDescription: job.jobDescription,
+                numberOfVacancies: job.numberOfVacancies || 1,
+                deadline: job.deadline ? new Date(job.deadline) : null,
+                appliedDate: new Date(job.createdAt),
+                isActive: job.isActive
+            }));
+            setJobPostings(transformed);
         } catch (error) {
             console.error("Error fetching jobs:", error);
+            console.error("API_BASE_URL was:", API_BASE_URL);
         } finally {
             setIsLoadingJobs(false);
         }
